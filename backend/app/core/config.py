@@ -17,18 +17,34 @@ Environment = Literal["development", "test", "production"]
 _DEFAULT_CORS_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
 
 
-def _resolve_env_file() -> Path | None:
+def _resolve_env_files() -> tuple[Path, ...]:
+    """Environment files, in increasing order of precedence.
+
+    `.env.{environment}` is committed and holds non-secret development defaults.
+    `.env.local` is gitignored and holds real credentials — database passwords,
+    service-account paths. Keeping them in separate files is what stops a real
+    password from being committed by accident.
+    """
     environment = os.getenv("ENVIRONMENT", "development")
-    candidate = BACKEND_DIR / f".env.{environment}"
-    if candidate.exists():
-        return candidate
-    fallback = BACKEND_DIR / ".env"
-    return fallback if fallback.exists() else None
+
+    files: list[Path] = []
+    committed = BACKEND_DIR / f".env.{environment}"
+    if committed.exists():
+        files.append(committed)
+    elif (BACKEND_DIR / ".env").exists():
+        files.append(BACKEND_DIR / ".env")
+
+    # Loaded last, so it overrides the committed defaults.
+    local_override = BACKEND_DIR / ".env.local"
+    if local_override.exists():
+        files.append(local_override)
+
+    return tuple(files)
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=_resolve_env_file(),
+        env_file=_resolve_env_files(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
