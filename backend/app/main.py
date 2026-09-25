@@ -128,6 +128,9 @@ def _build_api_router() -> APIRouter:
     from app.tributes.router import moderation_router as tribute_moderation_router
     from app.tributes.router import router as tributes_router
     from app.users.router import router as users_router
+    from app.verification.router import admin_router as verification_admin_router
+    from app.verification.router import evidence_router as verification_evidence_router
+    from app.verification.router import router as verification_router
 
     api = APIRouter(prefix=settings.api_v1_prefix)
     api.include_router(users_router)
@@ -140,6 +143,9 @@ def _build_api_router() -> APIRouter:
     api.include_router(media_router)
     api.include_router(tributes_router)
     api.include_router(tribute_moderation_router)
+    api.include_router(verification_router)
+    api.include_router(verification_evidence_router)
+    api.include_router(verification_admin_router)
     return api
 
 

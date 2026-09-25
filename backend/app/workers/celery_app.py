@@ -19,6 +19,7 @@ celery_app = Celery(
     include=[
         "app.workers.tasks.media_tasks",
         "app.workers.tasks.maintenance_tasks",
+        "app.verification.tasks",
     ],
 )
 

@@ -59,6 +59,49 @@ class VerificationState(StrEnum):
     APPEAL = "appeal"
 
 
+# Legal transitions. Anything not listed here is a 409, not a silent write — an
+# illegal jump would let a submission reach APPROVED without ever being reviewed.
+VERIFICATION_TRANSITIONS: dict[VerificationState, frozenset[VerificationState]] = {
+    VerificationState.DRAFT: frozenset({VerificationState.SUBMITTED}),
+    VerificationState.SUBMITTED: frozenset({VerificationState.VERIFICATION_PENDING}),
+    VerificationState.VERIFICATION_PENDING: frozenset({VerificationState.VERIFICATION_REVIEW}),
+    VerificationState.VERIFICATION_REVIEW: frozenset(
+        {
+            VerificationState.APPROVED,
+            VerificationState.REJECTED,
+            VerificationState.NEEDS_MORE_INFORMATION,
+        }
+    ),
+    # The submitter can act on a request for more information.
+    VerificationState.NEEDS_MORE_INFORMATION: frozenset(
+        {VerificationState.SUBMITTED, VerificationState.DRAFT}
+    ),
+    VerificationState.REJECTED: frozenset({VerificationState.APPEAL}),
+    VerificationState.APPEAL: frozenset({VerificationState.VERIFICATION_REVIEW}),
+    # Terminal.
+    VerificationState.APPROVED: frozenset(),
+}
+
+
+class VerificationDecision(StrEnum):
+    # Recorded in the history alongside reviewer decisions, so the timeline of a
+    # submission reads correctly from the submitter's side too.
+    SUBMITTED = "submitted"
+    APPEALED = "appealed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    NEEDS_MORE_INFORMATION = "needs_more_information"
+
+
+class VerificationDocumentType(StrEnum):
+    DEATH_CERTIFICATE = "death_certificate"
+    OBITUARY = "obituary"
+    FUNERAL_NOTICE = "funeral_notice"
+    IDENTITY_PROOF = "identity_proof"
+    RELATIONSHIP_PROOF = "relationship_proof"
+    OTHER = "other"
+
+
 class MemorialTheme(StrEnum):
     CLASSIC = "classic"
     GARDEN = "garden"

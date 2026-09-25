@@ -18,6 +18,11 @@ from app.memorials.models import (
 from app.offerings.models import Offering
 from app.tributes.models import Tribute
 from app.users.models import User
+from app.verification.models import (
+    VerificationDecisionRecord,
+    VerificationEvidence,
+    VerificationSubmission,
+)
 from app.workers.models import TaskFailure
 
 __all__ = [
@@ -35,4 +40,7 @@ __all__ = [
     "TimelineEvent",
     "Tribute",
     "User",
+    "VerificationDecisionRecord",
+    "VerificationEvidence",
+    "VerificationSubmission",
 ]
