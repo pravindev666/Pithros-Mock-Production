@@ -1,0 +1,105 @@
+# Pithros — production overlay.
+#
+#     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Cloudflare sits in front for DNS, TLS, WAF and CDN. The bundled Caddy proxy is
+# opt-in (`--profile proxy`) because Dokploy and Cloudflare Tunnel already
+# terminate TLS — running a third proxy layer would be pointless.
+
+name: pithros
+
+services:
+  postgres:
+    ports: []
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  redis:
+    ports: []
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    deploy:
+      resources:
+        limits:
+          memory: 320m
+
+  minio:
+    ports: []
+
+  minio-init:
+    entrypoint: ["/bin/sh", "-c", "echo 'Production uses Cloudflare R2 — bucket bootstrap skipped.'; exit 0"]
+
+  backend:
+    env_file:
+      - ./backend/.env.production
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "false"
+    ports: []
+    volumes:
+      - ./backend/secrets:/run/secrets:ro
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+
+  worker:
+    env_file:
+      - ./backend/.env.production
+    environment:
+      ENVIRONMENT: production
+    volumes:
+      - ./backend/secrets:/run/secrets:ro
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=4"]
+
+  beat:
+    env_file:
+      - ./backend/.env.production
+
+  frontend:
+    build:
+      context: ./Pithros
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}
+        VITE_DEMO_MODE: "false"
+    ports: []
+
+  proxy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+
+  backup:
+    build:
+      context: ./backend
+    profiles: ["backup"]
+    entrypoint: ["/bin/sh", "/app/scripts/backup.sh"]
+    env_file:
+      - ./backend/.env.production
+    volumes:
+      - ./backend/secrets:/run/secrets:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  caddydata:
+  caddyconfig:

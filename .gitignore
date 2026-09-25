@@ -1,0 +1,40 @@
+# Root ignore rules for the Pithros monorepo.
+
+# ─── Node / frontend ───────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# ─── Python / backend ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# ─── Secrets ───────────────────────────────────────────────────────────────
+# .env.example and .env.development are safe to commit (placeholder/dev-only
+# values). Anything that could hold a real credential is not.
+.env
+.env.local
+.env.production
+backend/secrets/
+*.pem
+*.key
+firebase-service-account*.json
+
+# ─── Local tooling ─────────────────────────────────────────────────────────
+# Command Code agent configuration: installed skills and learned preferences.
+# Machine-specific, not project code — keep it out of the repository.
+.commandcode/
+
+# ─── Editors / OS ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

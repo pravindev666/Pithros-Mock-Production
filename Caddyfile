@@ -1,0 +1,29 @@
+# Optional bundled reverse proxy (compose profile: proxy).
+#
+# Only needed when nothing else terminates TLS in front of the stack. Behind
+# Cloudflare Tunnel or Dokploy, leave this profile off.
+
+{
+	email {$ACME_EMAIL}
+}
+
+pithros.in, www.pithros.in {
+	encode gzip zstd
+	reverse_proxy frontend:80
+}
+
+api.pithros.in {
+	encode gzip zstd
+
+	# Webhook endpoints must reach FastAPI byte-for-byte so signatures verify.
+	reverse_proxy backend:8000 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		flush_interval -1
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

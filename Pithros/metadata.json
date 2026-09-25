@@ -1,0 +1,6 @@
+{
+  "name": "Pithros — Digital Memorial & Remembrance Platform",
+  "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

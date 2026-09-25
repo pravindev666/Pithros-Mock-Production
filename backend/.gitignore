@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Secrets — never commit
+secrets/
+*.pem
+.env
+.env.production
+.env.local
+
+# Local scratch
+*.sqlite3
+*.log
+
+# Development object storage. The filesystem storage adapter writes uploads here
+# when STORAGE_BACKEND=local; production uses Cloudflare R2 and never touches it.
+var/

@@ -1,0 +1,67 @@
+[project]
+name = "pithros-backend"
+version = "0.1.0"
+description = "Pithros digital memorial platform — FastAPI backend"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app", "tests"]
+# extend-exclude, not exclude: setting `exclude` replaces ruff's defaults and
+# makes it lint .venv.
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "SIM",
+    "S",
+    "RUF",
+]
+ignore = [
+    # assert is how pytest states expectations.
+    "S101",
+    # B008 flags FastAPI's Depends() in argument defaults, which is the framework's
+    # documented and intended style.
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S311"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+strict_equality = true
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["alembic/versions/"]
+
+[[tool.mypy.overrides]]
+module = ["firebase_admin.*", "celery.*", "boto3.*", "botocore.*", "PIL.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: requires a live PostgreSQL and Redis",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

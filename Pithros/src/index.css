@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+:root {
+  /* LIGHT THEME — Indian Indigo + Sand + Brass */
+  --color-canvas: #F3EEE4;
+  --color-canvas-subtle: #EBE5DA;
+  --color-surface: #FCFAF5;
+  --color-surface-elevated: #E5DED2;
+  --color-surface-hover: #ECE4D8;
+  --color-card: #FFFFFF;
+
+  --color-text-primary: #26262A;
+  --color-text-headline: #20242A;
+  --color-text-warm: #554F48;
+  --color-text-secondary: #554F48;
+  --color-text-muted: #7D766D;
+  --color-text-dim: #7D766D;
+
+  --color-brand-primary: #23324A;
+  --color-brand-strong: #182337;
+  --color-brand-soft: #E5DED2;
+  --color-brand-indigo: #23324A;
+  --color-brand-ink: #17191C;
+  --color-brand-brass: #B99452;
+  --color-brand-brass-light: #D1B477;
+  --color-brand-rose: #A66B76;
+
+  --color-accent: #B99452;
+  --color-gold-primary: #B99452;
+  --color-gold-muted: #D1B477;
+  --color-accent-soft: rgba(185, 148, 82, 0.12);
+  --color-accent-hover: #D1B477;
+
+  --color-border: #E5DED2;
+  --color-border-subtle: #EDE7DD;
+  --color-border-strong: #D5CDC0;
+
+  --color-success: #397A5E;
+  --color-danger: #B85B63;
+  --color-overlay: rgba(23, 25, 28, 0.45);
+}
+
+.dark {
+  /* DARK THEME — Pithros Indigo + Deep Indigo + Antique Brass */
+  --color-canvas: #111820;
+  --color-canvas-subtle: #182337;
+  --color-surface: #182337;
+  --color-surface-elevated: #202C40;
+  --color-surface-hover: #283750;
+  --color-card: #202C40;
+
+  --color-text-primary: #F8F5EE;
+  --color-text-headline: #F8F5EE;
+  --color-text-warm: #D9D2C6;
+  --color-text-secondary: #D9D2C6;
+  --color-text-muted: #9EA3AA;
+  --color-text-dim: #737982;
+
+  --color-brand-primary: #B99452;
+  --color-brand-strong: #D1B477;
+  --color-brand-soft: rgba(35, 50, 74, 0.4);
+  --color-brand-indigo: #23324A;
+  --color-brand-ink: #17191C;
+  --color-brand-brass: #B99452;
+  --color-brand-brass-light: #D1B477;
+  --color-brand-rose: #A66B76;
+
+  --color-accent: #B99452;
+  --color-gold-primary: #B99452;
+  --color-gold-muted: #D1B477;
+  --color-accent-soft: rgba(185, 148, 82, 0.15);
+  --color-accent-hover: #D1B477;
+
+  --color-border: #202C40;
+  --color-border-subtle: #182337;
+  --color-border-strong: #2D3D56;
+
+  --color-success: #4C8A6A;
+  --color-danger: #C75B63;
+  --color-overlay: rgba(0, 0, 0, 0.75);
+}
+
+@theme {
+  --font-serif: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'Noto Serif Telugu', 'Noto Serif Kannada', 'Noto Serif Malayalam', 'Noto Serif Bengali', 'Noto Serif Gujarati', 'Noto Serif Gurmukhi', Georgia, serif;
+  --font-display: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'Noto Serif Telugu', 'Noto Serif Kannada', 'Noto Serif Malayalam', 'Noto Serif Bengali', 'Noto Serif Gujarati', 'Noto Serif Gurmukhi', Georgia, serif;
+  --font-editorial: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'Noto Serif Telugu', 'Noto Serif Kannada', 'Noto Serif Malayalam', 'Noto Serif Bengali', 'Noto Serif Gujarati', 'Noto Serif Gurmukhi', Georgia, serif;
+  --font-sans: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Bengali', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-cinzel: 'Noto Serif', 'Noto Serif Devanagari', Georgia, serif;
+}
+
+/* Script-specific Noto Sans UI & Serif variants dynamically bound by active locale */
+[data-script="devanagari"] {
+  --font-sans: 'Noto Sans Devanagari UI', 'Noto Sans Devanagari', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Devanagari UI', 'Noto Sans Devanagari', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Devanagari', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Devanagari', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Devanagari', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="tamil"] {
+  --font-sans: 'Noto Sans Tamil UI', 'Noto Sans Tamil', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Tamil UI', 'Noto Sans Tamil', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Tamil', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Tamil', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Tamil', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="telugu"] {
+  --font-sans: 'Noto Sans Telugu UI', 'Noto Sans Telugu', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Telugu UI', 'Noto Sans Telugu', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Telugu', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Telugu', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Telugu', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="kannada"] {
+  --font-sans: 'Noto Sans Kannada UI', 'Noto Sans Kannada', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Kannada UI', 'Noto Sans Kannada', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Kannada', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Kannada', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Kannada', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="malayalam"] {
+  --font-sans: 'Noto Sans Malayalam UI', 'Noto Sans Malayalam', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Malayalam UI', 'Noto Sans Malayalam', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Malayalam', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Malayalam', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Malayalam', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="bengali"] {
+  --font-sans: 'Noto Sans Bengali UI', 'Noto Sans Bengali', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Bengali UI', 'Noto Sans Bengali', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Bengali', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Bengali', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Bengali', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="gujarati"] {
+  --font-sans: 'Noto Sans Gujarati UI', 'Noto Sans Gujarati', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Gujarati UI', 'Noto Sans Gujarati', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Gujarati', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Gujarati', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Gujarati', 'Noto Serif', Georgia, serif;
+}
+
+[data-script="gurmukhi"] {
+  --font-sans: 'Noto Sans Gurmukhi UI', 'Noto Sans Gurmukhi', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: 'Noto Sans Gurmukhi UI', 'Noto Sans Gurmukhi', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Noto Serif Gurmukhi', 'Noto Serif', Georgia, serif;
+  --font-display: 'Noto Serif Gurmukhi', 'Noto Serif', Georgia, serif;
+  --font-editorial: 'Noto Serif Gurmukhi', 'Noto Serif', Georgia, serif;
+}
+
+/* UI Components (Navigation, Cards, Forms, Inputs, Buttons) dynamically bound to Noto Sans Indic UI */
+nav,
+header,
+input,
+textarea,
+select,
+button,
+label,
+.font-sans,
+[data-ui-component="navigation"],
+[data-ui-component="card"],
+[data-ui-component="form"] {
+  font-family: var(--font-sans);
+}
+
+/* Indic UI Line-Height Normalization to avoid vertical clipping of conjuncts and matras */
+[data-script="devanagari"] input,
+[data-script="devanagari"] select,
+[data-script="devanagari"] button,
+[data-script="tamil"] input,
+[data-script="tamil"] select,
+[data-script="tamil"] button,
+[data-script="telugu"] input,
+[data-script="telugu"] select,
+[data-script="telugu"] button,
+[data-script="kannada"] input,
+[data-script="kannada"] select,
+[data-script="kannada"] button,
+[data-script="malayalam"] input,
+[data-script="malayalam"] select,
+[data-script="malayalam"] button,
+[data-script="bengali"] input,
+[data-script="bengali"] select,
+[data-script="bengali"] button,
+[data-script="gujarati"] input,
+[data-script="gujarati"] select,
+[data-script="gujarati"] button,
+[data-script="gurmukhi"] input,
+[data-script="gurmukhi"] select,
+[data-script="gurmukhi"] button {
+  line-height: 1.5;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    overflow-x: hidden;
+    transition: background-color 0.25s ease-out, color 0.25s ease-out;
+  }
+}
+
+/* Accessible reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}

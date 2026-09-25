@@ -1,0 +1,16 @@
+# Backend build context exclusions.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+secrets/
+.env
+.env.production
+.env.local
+tests/
+*.log
