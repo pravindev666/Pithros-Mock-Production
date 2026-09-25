@@ -9,6 +9,7 @@ from sqlalchemy import CompoundSelect, Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.enums import ContributorStatus, PrivacyLevel, PublicationState
+from app.core.pagination import DEFAULT_LIMIT, Cursor, Page
 from app.memorials.models import Memorial, MemorialContributor, MemorialSteward
 
 _SLUG_STRIP = re.compile(r"[^a-z0-9]+")
@@ -55,14 +56,28 @@ def _membership_subquery(user_id: uuid.UUID) -> CompoundSelect:
     return steward_ids.union(contributor_ids)
 
 
-def list_for_user(db: Session, user_id: uuid.UUID) -> list[Memorial]:
+def list_for_user(
+    db: Session,
+    user_id: uuid.UUID,
+    *,
+    limit: int | None = None,
+    cursor: Cursor | None = None,
+) -> Page:
     """Only memorials where the caller has a real membership. Never the whole table."""
+    from app.core.pagination import PageParams, paginate
+
     stmt = _not_deleted(
-        select(Memorial)
-        .where(Memorial.id.in_(_membership_subquery(user_id)))
-        .order_by(Memorial.updated_at.desc())
+        select(Memorial).where(Memorial.id.in_(_membership_subquery(user_id)))
+    ).options(*with_full_detail())
+
+    return paginate(
+        db,
+        stmt,
+        model=Memorial,
+        params=PageParams(limit=limit or DEFAULT_LIMIT, cursor=cursor),
+        order_field="updated_at",
+        descending=True,
     )
-    return list(db.scalars(stmt.options(*with_full_detail())).unique())
 
 
 def list_publicly_discoverable(

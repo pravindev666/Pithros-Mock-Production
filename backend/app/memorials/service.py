@@ -49,7 +49,8 @@ def _apply_story(db: Session, memorial: Memorial, payload: StoryIn) -> Story:
     story.passions_and_values = payload.passions_and_values
     story.enduring_legacy = payload.enduring_legacy
     story.favorite_quotes = list(payload.favorite_quotes or [])
-    db.flush()
+    # No flush here: the caller flushes once, so a single logical edit produces a
+    # single UPDATE and therefore a single version increment.
     return story
 
 
@@ -131,13 +132,10 @@ def create_memorial(
         db.add(memorial)
         db.flush()
 
-        db.add(
-            MemorialSteward(
-                memorial_id=memorial.id,
-                user_id=actor.id,
-                is_primary=True,
-            )
-        )
+        # Appended through the relationship rather than `db.add(...)`: that keeps
+        # `memorial.stewards` consistent in memory, so `primary_steward` reflects
+        # the new row immediately instead of relying on a later lazy load.
+        memorial.stewards.append(MemorialSteward(user_id=actor.id, is_primary=True))
 
         if payload.story is not None:
             _apply_story(db, memorial, payload.story)
@@ -148,7 +146,6 @@ def create_memorial(
             actor.role = UserRole.FAMILY_STEWARD.value
 
         db.flush()
-        db.refresh(memorial)
         _refresh_completeness(memorial)
 
         audit_record(
@@ -200,9 +197,12 @@ def update_memorial(
         if payload.story is not None:
             _apply_story(db, memorial, payload.story)
 
-        db.flush()
-        db.refresh(memorial)
+        # Recomputed before the single flush so one logical edit produces exactly
+        # one UPDATE — and therefore exactly one version increment. Flushing twice
+        # would advance `version` by two for a single user action, which makes the
+        # concurrency token harder to reason about than it needs to be.
         _refresh_completeness(memorial)
+        db.flush()
 
         audit_record(
             db,

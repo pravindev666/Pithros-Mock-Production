@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     cors_origins: str = _DEFAULT_CORS_ORIGINS
 
     rate_limit_enabled: bool = True
+    idempotency_enabled: bool = True
     celery_task_always_eager: bool = False
 
     max_upload_bytes: int = 25 * 1024 * 1024

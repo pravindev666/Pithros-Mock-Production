@@ -24,6 +24,7 @@ from app.core.enums import (
     StorageTier,
     TributeStatus,
 )
+from app.core.pagination import Cursor, Page, PageParams, paginate
 from app.media.models import MediaItem
 from app.media.storage import get_storage
 from app.memorials.models import (
@@ -162,7 +163,9 @@ def load_media(
     *,
     include_private: bool,
     kinds: Sequence[MediaKind] | None = None,
-) -> list[MediaItem]:
+    limit: int | None = None,
+    cursor: Cursor | None = None,
+) -> Page:
     stmt = (
         select(MediaItem)
         .where(
@@ -171,37 +174,71 @@ def load_media(
             MediaItem.deleted_at.is_(None),
         )
         .options(selectinload(MediaItem.uploaded_by))
-        .order_by(MediaItem.created_at.desc())
-        .limit(MEDIA_DISPLAY_LIMIT)
     )
     if not include_private:
         stmt = stmt.where(MediaItem.privacy == PrivacyLevel.PUBLIC.value)
     if kinds:
         stmt = stmt.where(MediaItem.kind.in_([kind.value for kind in kinds]))
 
-    return list(db.scalars(stmt))
+    return paginate(
+        db,
+        stmt,
+        model=MediaItem,
+        params=PageParams(limit=limit or MEDIA_DISPLAY_LIMIT, cursor=cursor),
+    )
 
 
 def load_tributes(
-    db: Session, memorial_id: uuid.UUID, *, include_unapproved: bool
-) -> list[Tribute]:
+    db: Session,
+    memorial_id: uuid.UUID,
+    *,
+    include_unapproved: bool,
+    limit: int | None = None,
+    cursor: Cursor | None = None,
+    pinned_first: bool = False,
+) -> Page:
+    """Tributes for a memorial.
+
+    `pinned_first` and cursor paging are mutually exclusive on purpose. A cursor
+    encodes only `(created_at, id)`, so paging a list that is *also* ordered by
+    `is_pinned` lets a pinned row appear on more than one page — the secondary sort
+    key is invisible to the cursor. The embedded projection uses `pinned_first`
+    with a fixed slice and never pages; the public endpoint pages and uses a pure
+    `created_at` keyset.
+    """
     stmt = select(Tribute).where(Tribute.memorial_id == memorial_id, Tribute.deleted_at.is_(None))
     if not include_unapproved:
         stmt = stmt.where(Tribute.status == TributeStatus.APPROVED.value)
-    stmt = stmt.order_by(Tribute.is_pinned.desc(), Tribute.created_at.desc()).limit(
-        TRIBUTE_DISPLAY_LIMIT
-    )
-    return list(db.scalars(stmt))
+
+    size = limit or TRIBUTE_DISPLAY_LIMIT
+
+    if pinned_first:
+        rows = list(
+            db.scalars(
+                stmt.order_by(Tribute.is_pinned.desc(), Tribute.created_at.desc()).limit(size)
+            )
+        )
+        return Page(items=rows, next_cursor=None, has_more=False)
+
+    return paginate(db, stmt, model=Tribute, params=PageParams(limit=size, cursor=cursor))
 
 
-def load_offerings(db: Session, memorial_id: uuid.UUID) -> list[Offering]:
-    stmt = (
-        select(Offering)
-        .where(Offering.memorial_id == memorial_id, Offering.deleted_at.is_(None))
-        .order_by(Offering.created_at.desc())
-        .limit(OFFERING_DISPLAY_LIMIT)
+def load_offerings(
+    db: Session,
+    memorial_id: uuid.UUID,
+    *,
+    limit: int | None = None,
+    cursor: Cursor | None = None,
+) -> Page:
+    stmt = select(Offering).where(
+        Offering.memorial_id == memorial_id, Offering.deleted_at.is_(None)
     )
-    return list(db.scalars(stmt))
+    return paginate(
+        db,
+        stmt,
+        model=Offering,
+        params=PageParams(limit=limit or OFFERING_DISPLAY_LIMIT, cursor=cursor),
+    )
 
 
 def tribute_out(tribute: Tribute) -> TributeOut:
@@ -311,10 +348,15 @@ def memorial_public_out(
         theme=memorial.theme,
         timeline=_timeline_out(timeline),
         media=_media_list(
-            load_media(db, memorial.id, include_private=False), include_private=False
+            load_media(db, memorial.id, include_private=False).items, include_private=False
         ),
-        tributes=[tribute_out(t) for t in load_tributes(db, memorial.id, include_unapproved=False)],
-        offerings=[offering_out(o) for o in load_offerings(db, memorial.id)],
+        tributes=[
+            tribute_out(t)
+            for t in load_tributes(
+                db, memorial.id, include_unapproved=False, pinned_first=True
+            ).items
+        ],
+        offerings=[offering_out(o) for o in load_offerings(db, memorial.id).items],
         legacy_links=_legacy_out(legacy_links),
         steward_name=primary.user.name if primary and primary.user else None,
         steward_relationship=None,
@@ -355,13 +397,22 @@ def memorial_detail_out(
         verification_badge_type=memorial.verification_badge_type,
         theme=memorial.theme,
         completeness_percent=memorial.completeness_percent,
+        version=memorial.version,
         timeline=_timeline_out(timeline),
         family=_family_out(memorial, access),
-        media=_media_list(load_media(db, memorial.id, include_private=True), include_private=True),
+        media=_media_list(
+            load_media(db, memorial.id, include_private=True).items, include_private=True
+        ),
         tributes=[
-            tribute_out(t) for t in load_tributes(db, memorial.id, include_unapproved=can_moderate)
+            tribute_out(t)
+            for t in load_tributes(
+                db,
+                memorial.id,
+                include_unapproved=can_moderate,
+                pinned_first=True,
+            ).items
         ],
-        offerings=[offering_out(o) for o in load_offerings(db, memorial.id)],
+        offerings=[offering_out(o) for o in load_offerings(db, memorial.id).items],
         legacy_links=_legacy_out(legacy_links),
         steward_id=str(primary.user_id) if primary else None,
         steward_name=primary.user.name if primary and primary.user else None,

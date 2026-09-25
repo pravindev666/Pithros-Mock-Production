@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import OptionalUser
 from app.core.database import get_db
+from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit
 from app.memorials import service as memorial_service
 from app.memorials.projections import load_offerings, load_tributes, offering_out, tribute_out
@@ -66,14 +67,35 @@ def submit_offering(
 
 
 @router.get("/tributes", response_model=list[TributeOut])
-def list_tributes(slug: str, db: DbSession, user: OptionalUser) -> list[TributeOut]:
+def list_tributes(
+    slug: str,
+    response: Response,
+    db: DbSession,
+    user: OptionalUser,
+    page: Annotated[PageParams, Depends(page_params)],
+) -> list[TributeOut]:
     """Approved tributes only, unless the caller is a member of the memorial."""
     memorial, access = memorial_service.resolve_public_access(db, slug, user)
-    tributes = load_tributes(db, memorial.id, include_unapproved=access.is_member)
-    return [tribute_out(tribute) for tribute in tributes]
+    result = load_tributes(
+        db,
+        memorial.id,
+        include_unapproved=access.is_member,
+        limit=page.limit,
+        cursor=page.cursor,
+    )
+    apply_page_headers(response, result)
+    return [tribute_out(tribute) for tribute in result.items]
 
 
 @router.get("/offerings", response_model=list[OfferingOut])
-def list_offerings(slug: str, db: DbSession, user: OptionalUser) -> list[OfferingOut]:
+def list_offerings(
+    slug: str,
+    response: Response,
+    db: DbSession,
+    user: OptionalUser,
+    page: Annotated[PageParams, Depends(page_params)],
+) -> list[OfferingOut]:
     memorial, _ = memorial_service.resolve_public_access(db, slug, user)
-    return [offering_out(offering) for offering in load_offerings(db, memorial.id)]
+    result = load_offerings(db, memorial.id, limit=page.limit, cursor=page.cursor)
+    apply_page_headers(response, result)
+    return [offering_out(offering) for offering in result.items]

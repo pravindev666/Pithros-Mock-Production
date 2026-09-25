@@ -14,9 +14,11 @@ from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser, OptionalUser
+from app.core.concurrency import ensure_version, etag, parse_if_match
 from app.core.database import get_db
 from app.core.enums import MemorialPermission, PrivacyLevel, PublicationState
 from app.core.errors import NotFoundError
+from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit
 from app.memorials import repository, service
 from app.memorials.models import Memorial
@@ -56,13 +58,20 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 
 @me_router.get("/memorials", response_model=list[MemorialSummaryOut])
-def list_my_memorials(user: CurrentUser, db: DbSession) -> list[MemorialSummaryOut]:
+def list_my_memorials(
+    response: Response,
+    user: CurrentUser,
+    db: DbSession,
+    page: Annotated[PageParams, Depends(page_params)],
+) -> list[MemorialSummaryOut]:
     """Only memorials where the caller holds a real membership.
 
-    The browser never receives the full memorial table.
+    The browser never receives the full memorial table. The body stays an array
+    (the frontend contract) and paging metadata travels in headers.
     """
-    memorials = repository.list_for_user(db, user.id)
-    return [memorial_summary_out(memorial) for memorial in memorials]
+    result = repository.list_for_user(db, user.id, limit=page.limit, cursor=page.cursor)
+    apply_page_headers(response, result)
+    return [memorial_summary_out(memorial) for memorial in result.items]
 
 
 # ─── Authenticated: memorial CRUD ───────────────────────────────────────────
@@ -94,12 +103,13 @@ def create_memorial(
 
 @router.get("/{memorial_id}", response_model=MemorialDetailOut)
 def get_memorial(
+    response: Response,
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
     user: CurrentUser,
     db: DbSession,
 ) -> MemorialDetailOut:
     access = resolve_access(db, memorial, user)
-    return memorial_detail_out(
+    detail = memorial_detail_out(
         db,
         memorial,
         access,
@@ -107,12 +117,15 @@ def get_memorial(
         timeline=memorial.timeline_events,
         legacy_links=memorial.legacy_links,
     )
+    response.headers["ETag"] = etag(memorial.version)
+    return detail
 
 
 @router.patch("/{memorial_id}", response_model=MemorialDetailOut)
 def update_memorial(
     payload: MemorialUpdate,
     request: Request,
+    response: Response,
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
     user: CurrentUser,
     db: DbSession,
@@ -122,12 +135,21 @@ def update_memorial(
     The dependency proves membership and read access; `update_memorial` then
     checks each submitted field against the permission that field requires, so a
     biographer can edit the story without being able to rename the memorial.
+
+    Send `If-Match: <version>` to make the write conditional. A stale version is a
+    409 rather than a silent overwrite of someone else's edit.
     """
+    ensure_version(
+        current=memorial.version,
+        expected=parse_if_match(request),
+        what="memorial",
+    )
+
     access = resolve_access(db, memorial, user)
     updated = service.update_memorial(
         db, memorial=memorial, access=access, payload=payload, request=request
     )
-    return memorial_detail_out(
+    detail = memorial_detail_out(
         db,
         updated,
         access,
@@ -135,16 +157,25 @@ def update_memorial(
         timeline=updated.timeline_events,
         legacy_links=updated.legacy_links,
     )
+    response.headers["ETag"] = etag(updated.version)
+    return detail
 
 
 @router.post("/{memorial_id}/publication", response_model=MemorialDetailOut)
 def set_publication(
     payload: MemorialPublishRequest,
     request: Request,
+    response: Response,
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.PUBLISH))],
     user: CurrentUser,
     db: DbSession,
 ) -> MemorialDetailOut:
+    ensure_version(
+        current=memorial.version,
+        expected=parse_if_match(request),
+        what="memorial",
+    )
+
     access = resolve_access(db, memorial, user)
     updated = service.set_publication_state(
         db,

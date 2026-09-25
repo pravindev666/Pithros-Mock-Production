@@ -8,8 +8,10 @@ from typing import Any
 
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.config import settings
+from app.core.errors import ConflictError
 
 NAMING_CONVENTION = {
     "ix": "ix_%(table_name)s_%(column_0_N_name)s",
@@ -58,10 +60,21 @@ def transaction(db: Session) -> Iterator[Session]:
     Services own their transactions so multi-step operations — creating a
     memorial and its steward, moving stewardship, recording a verification
     decision — cannot half-apply.
+
+    A lost optimistic-concurrency race surfaces here rather than in each service:
+    SQLAlchemy raises `StaleDataError` when a versioned UPDATE matches no row,
+    which means someone else wrote first. Translating it once means every
+    versioned model gets the correct 409 for free.
     """
     try:
         yield db
         db.commit()
+    except StaleDataError as exc:
+        db.rollback()
+        raise ConflictError(
+            "This record was changed by someone else while you were editing it. "
+            "Reload and reapply your changes."
+        ) from exc
     except Exception:
         db.rollback()
         raise

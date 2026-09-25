@@ -19,12 +19,18 @@ logger = logging.getLogger(__name__)
 _LAST_SEEN_REFRESH = timedelta(minutes=15)
 
 
-def _find_by_uid(db: Session, uid: str) -> User | None:
-    return db.scalar(select(User).where(User.firebase_uid == uid))
+def _find_by_uid(db: Session, uid: str, *, include_deleted: bool = False) -> User | None:
+    stmt = select(User).where(User.firebase_uid == uid)
+    if not include_deleted:
+        stmt = stmt.where(User.deleted_at.is_(None))
+    return db.scalar(stmt)
 
 
-def _find_by_email(db: Session, email: str) -> User | None:
-    return db.scalar(select(User).where(User.email == email))
+def _find_by_email(db: Session, email: str, *, include_deleted: bool = False) -> User | None:
+    stmt = select(User).where(User.email == email)
+    if not include_deleted:
+        stmt = stmt.where(User.deleted_at.is_(None))
+    return db.scalar(stmt)
 
 
 def resolve_or_provision_user(db: Session, identity: FirebaseIdentity) -> User:
@@ -34,14 +40,23 @@ def resolve_or_provision_user(db: Session, identity: FirebaseIdentity) -> User:
     visitor and is promoted only by an explicit domain action (creating a
     memorial makes you its steward) or by an administrator.
     """
-    user = _find_by_uid(db, identity.uid)
+    # Check for a soft-deleted account *before* anything else. Previously the
+    # revoked row was found by uid, profile-synced, and only then rejected — and
+    # the email-adoption path could re-bind `firebase_uid` onto a deleted row.
+    # Doing this first means a deleted account is never mutated on the way to
+    # being refused.
+    deleted = _find_by_uid(db, identity.uid, include_deleted=True)
+    if deleted is not None and deleted.deleted_at is not None:
+        logger.warning("sign_in_attempt_deleted_account", extra={"user_id": str(deleted.id)})
+        raise ForbiddenError("This account has been closed. Please contact support.")
 
+    user = _find_by_uid(db, identity.uid)
     if user is None:
         user = _adopt_or_create(db, identity)
     else:
         _sync_profile(user, identity)
 
-    if user.status != "active" or user.deleted_at is not None:
+    if user.status != "active":
         raise ForbiddenError("This account is not active. Please contact support.")
 
     _touch_last_seen(user)
@@ -55,6 +70,9 @@ def _adopt_or_create(db: Session, identity: FirebaseIdentity) -> User:
     # Adopt an existing row only when Firebase has proven the caller owns the
     # address. Adopting on an unverified email would let anyone claim another
     # person's account by signing up with their address.
+    #
+    # Soft-deleted rows are excluded: adopting one would hand a closed account's
+    # history to a new signup.
     if email and identity.email_verified:
         existing = _find_by_email(db, email)
         if existing is not None:
@@ -63,6 +81,16 @@ def _adopt_or_create(db: Session, identity: FirebaseIdentity) -> User:
             db.flush()
             logger.info("user_identity_linked", extra={"user_id": str(existing.id)})
             return existing
+
+        # A closed account still holds this address, and `users.email` is unique —
+        # so falling through would raise a constraint violation and a 500. Refusing
+        # with an explanation is the honest outcome until account recovery exists.
+        closed = _find_by_email(db, email, include_deleted=True)
+        if closed is not None:
+            logger.warning("signup_collided_with_closed_account", extra={"user_id": str(closed.id)})
+            raise ForbiddenError(
+                "This email address belongs to a closed account. Please contact support."
+            )
 
     user = User(
         firebase_uid=identity.uid,

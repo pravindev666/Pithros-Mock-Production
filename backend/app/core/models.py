@@ -6,9 +6,9 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, ForeignKey, func, text
+from sqlalchemy import DateTime, ForeignKey, Integer, func, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 
 def allowed_values(enum_cls: type[StrEnum]) -> str:
@@ -53,3 +53,24 @@ class ActorMixin:
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+
+class VersionMixin:
+    """Optimistic concurrency.
+
+    SQLAlchemy appends `AND version = <old>` to every UPDATE and raises
+    `StaleDataError` when no row matches — so two editors cannot silently
+    overwrite each other. The check happens in the database, not in Python,
+    which is what makes it race-free.
+    """
+
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default=text("1"),
+    )
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, object]:
+        return {"version_id_col": cls.__table__.c.version}  # type: ignore[attr-defined]

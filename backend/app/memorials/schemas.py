@@ -199,6 +199,8 @@ class MemorialDetailOut(CamelModel):
     verification_badge_type: str | None = None
     theme: str
     completeness_percent: int = 0
+    # Optimistic concurrency token. Callers echo it back in `If-Match` on write.
+    version: int = 1
     timeline: list[TimelineEventOut] = Field(default_factory=list)
     family: list[FamilyMemberOut] = Field(default_factory=list)
     media: list[MediaItemOut] = Field(default_factory=list)

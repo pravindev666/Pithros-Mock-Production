@@ -53,6 +53,27 @@ function toWritePayload(input: Partial<Memorial>): Record<string, unknown> {
   return payload;
 }
 
+/**
+ * Last-seen version per memorial, so writes can be made conditional.
+ *
+ * Kept here rather than in the views because the facade's method signatures are
+ * fixed by `typeof demoApi` — there is no parameter to thread a version through.
+ * A 409 from the server surfaces as `ConflictError`, which the UI already handles.
+ */
+const versionCache = new Map<string, number>();
+
+function remember(memorial: Memorial): Memorial {
+  if (typeof memorial.version === 'number') {
+    versionCache.set(memorial.id, memorial.version);
+  }
+  return memorial;
+}
+
+function ifMatchHeaders(id: string): Record<string, string> {
+  const version = versionCache.get(id);
+  return typeof version === 'number' ? { 'If-Match': String(version) } : {};
+}
+
 export const memorialsApi = {
   /**
    * The caller's memorials, in full.
@@ -67,11 +88,11 @@ export const memorialsApi = {
     const details = await Promise.all(
       summaries.map((summary) => http.get<ApiMemorial>(`/memorials/${summary.id}`)),
     );
-    return details.map(toMemorial);
+    return details.map((detail) => remember(toMemorial(detail)));
   },
 
   async getById(id: string): Promise<Memorial> {
-    return toMemorial(await http.get<ApiMemorial>(`/memorials/${id}`));
+    return remember(toMemorial(await http.get<ApiMemorial>(`/memorials/${id}`)));
   },
 
   async getPublicBySlug(slug: string): Promise<Memorial | null> {
@@ -88,18 +109,24 @@ export const memorialsApi = {
 
   async create(input: Partial<Memorial>): Promise<Memorial> {
     const payload = toWritePayload(input);
-    return toMemorial(await http.post<ApiMemorial>('/memorials', payload));
+    return remember(toMemorial(await http.post<ApiMemorial>('/memorials', payload)));
   },
 
   async update(id: string, updates: Partial<Memorial>): Promise<Memorial> {
     const payload = toWritePayload(updates);
-    return toMemorial(await http.patch<ApiMemorial>(`/memorials/${id}`, payload));
+    const updated = await http.patch<ApiMemorial>(`/memorials/${id}`, payload, {
+      headers: ifMatchHeaders(id),
+    });
+    return remember(toMemorial(updated));
   },
 
   async setPublication(id: string, state: 'draft' | 'published' | 'archived'): Promise<Memorial> {
-    return toMemorial(
-      await http.post<ApiMemorial>(`/memorials/${id}/publication`, { publicationState: state }),
+    const updated = await http.post<ApiMemorial>(
+      `/memorials/${id}/publication`,
+      { publicationState: state },
+      { headers: ifMatchHeaders(id) },
     );
+    return remember(toMemorial(updated));
   },
 
   async remove(id: string): Promise<void> {

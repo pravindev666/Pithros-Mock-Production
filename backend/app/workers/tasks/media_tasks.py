@@ -33,7 +33,14 @@ def process_uploaded_media(self: Any, media_id: str) -> dict[str, str]:
     Idempotent: re-running overwrites the same derived keys.
     """
     with SessionLocal() as db:
-        item = db.scalar(select(MediaItem).where(MediaItem.id == uuid.UUID(media_id)))
+        item = db.scalar(
+            select(MediaItem).where(
+                MediaItem.id == uuid.UUID(media_id),
+                # A row soft-deleted between upload and processing must not be
+                # thumbnailed — that would resurrect storage for deleted media.
+                MediaItem.deleted_at.is_(None),
+            )
+        )
         if item is None:
             logger.warning("media_task_missing_row", extra={"media_id": media_id})
             return {"status": "missing"}
@@ -101,6 +108,10 @@ def purge_abandoned_uploads(max_age_hours: int = 24) -> dict[str, int]:
                 select(MediaItem).where(
                     MediaItem.status == MediaStatus.PENDING.value,
                     MediaItem.created_at < cutoff,
+                    # Explicit, not incidental: this sweep hard-deletes abandoned
+                    # uploads. Soft-deleted rows are the retention workflow's
+                    # business and are deliberately left alone.
+                    MediaItem.deleted_at.is_(None),
                 )
             )
         )

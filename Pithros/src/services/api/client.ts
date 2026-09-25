@@ -118,6 +118,8 @@ interface RequestOptions {
   signal?: AbortSignal;
   /** Skip the auth header entirely (public endpoints). */
   anonymous?: boolean;
+  /** Extra headers, e.g. If-Match for optimistic concurrency. */
+  headers?: Record<string, string>;
 }
 
 function buildUrl(path: string, query?: RequestOptions['query']): string {
@@ -172,7 +174,7 @@ async function parseBody(response: Response): Promise<unknown> {
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, query, signal, anonymous = false } = options;
+  const { method = 'GET', body, query, signal, anonymous = false, headers: extraHeaders } = options;
 
   const send = async (forceRefresh: boolean): Promise<Response> => {
     const headers: Record<string, string> = { Accept: 'application/json' };
@@ -180,6 +182,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (!anonymous) {
       Object.assign(headers, await authorizationHeader(forceRefresh));
     }
+    if (extraHeaders) Object.assign(headers, extraHeaders);
 
     try {
       return await fetch(buildUrl(path, query), {

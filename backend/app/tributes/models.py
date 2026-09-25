@@ -29,6 +29,8 @@ class Tribute(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __table_args__ = (
         CheckConstraint(f"status IN ({_allowed(TributeStatus)})", name="status_valid"),
         Index("ix_tributes_memorial_status", "memorial_id", "status"),
+        # A moderation queue spans memorials, so it needs status on its own.
+        Index("ix_tributes_status", "status"),
     )
 
     memorial_id: Mapped[uuid.UUID] = mapped_column(

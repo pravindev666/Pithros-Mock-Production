@@ -128,6 +128,7 @@ export interface ApiMemorial {
   stewardEmail?: string | null;
   myRole?: string | null;
   myPermissions?: string[];
+  version?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -241,6 +242,7 @@ export function toMemorial(api: ApiMemorial): Memorial {
     stewardRelationship: api.stewardRelationship ?? undefined,
     stewardEmail: api.stewardEmail ?? '',
     completenessPercent: api.completenessPercent ?? 0,
+    version: api.version,
     createdAt: api.createdAt,
     updatedAt: api.updatedAt,
   };

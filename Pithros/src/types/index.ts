@@ -193,6 +193,11 @@ export interface Memorial {
   stewardRelationship?: string;
   stewardEmail: string;
   completenessPercent: number;
+  /**
+   * Optimistic concurrency token. Echoed back in `If-Match` on write so two
+   * editors cannot silently overwrite each other; a stale value yields a 409.
+   */
+  version?: number;
   createdAt: string;
   updatedAt: string;
 }

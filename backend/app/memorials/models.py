@@ -36,6 +36,7 @@ from app.core.models import (
     SoftDeleteMixin,
     TimestampMixin,
     UUIDPrimaryKeyMixin,
+    VersionMixin,
     allowed_values,
 )
 from app.users.models import User
@@ -43,7 +44,7 @@ from app.users.models import User
 _allowed = allowed_values
 
 
-class Memorial(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Memorial(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixin, Base):
     __tablename__ = "memorials"
     __table_args__ = (
         CheckConstraint(f"privacy IN ({_allowed(PrivacyLevel)})", name="privacy_valid"),
@@ -159,6 +160,9 @@ class MemorialSteward(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "memorial_stewards"
     __table_args__ = (
         UniqueConstraint("memorial_id", "user_id", name="memorial_user"),
+        # The composite above is (memorial_id, user_id), so it cannot serve a
+        # lookup by user alone — which is exactly what every membership check does.
+        Index("ix_memorial_stewards_user_id", "user_id"),
         Index(
             "uq_memorial_stewards_one_primary_per_memorial",
             "memorial_id",

@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.enums import MemorialPermission
 from app.core.errors import NotFoundError
+from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.media import service
 from app.media.models import MediaItem
 from app.media.schemas import (
@@ -102,12 +103,21 @@ def complete_upload(
 
 @router.get("", response_model=list[MediaItemOut])
 def list_media(
+    response: Response,
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
     user: CurrentUser,
     db: DbSession,
+    page: Annotated[PageParams, Depends(page_params)],
 ) -> list[MediaItemOut]:
-    items = load_media(db, memorial.id, include_private=True)
-    projected = (media_out(item, include_private=True) for item in items)
+    result = load_media(
+        db,
+        memorial.id,
+        include_private=True,
+        limit=page.limit,
+        cursor=page.cursor,
+    )
+    apply_page_headers(response, result)
+    projected = (media_out(item, include_private=True) for item in result.items)
     return [out for out in projected if out is not None]
 
 

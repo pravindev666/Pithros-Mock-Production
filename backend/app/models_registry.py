@@ -4,6 +4,7 @@ Importing this module (and nothing else) is enough to populate Base.metadata.
 """
 
 from app.audit.models import AuditLog
+from app.core.idempotency import IdempotencyKey
 from app.media.models import MediaItem
 from app.memorials.models import (
     DigitalLegacyLink,
@@ -17,10 +18,12 @@ from app.memorials.models import (
 from app.offerings.models import Offering
 from app.tributes.models import Tribute
 from app.users.models import User
+from app.workers.models import TaskFailure
 
 __all__ = [
     "AuditLog",
     "DigitalLegacyLink",
+    "IdempotencyKey",
     "MediaItem",
     "Memorial",
     "MemorialContributor",
@@ -28,6 +31,7 @@ __all__ = [
     "MemorialSteward",
     "Offering",
     "Story",
+    "TaskFailure",
     "TimelineEvent",
     "Tribute",
     "User",

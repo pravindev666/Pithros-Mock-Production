@@ -20,6 +20,9 @@ class Offering(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __table_args__ = (
         CheckConstraint(f"offering_type IN ({_allowed(OfferingType)})", name="offering_type_valid"),
         Index("ix_offerings_memorial_type", "memorial_id", "offering_type"),
+        # The public memorial page renders offerings newest-first; without this the
+        # order is a full sort of the memorial's rows.
+        Index("ix_offerings_memorial_created", "memorial_id", "created_at"),
     )
 
     memorial_id: Mapped[uuid.UUID] = mapped_column(

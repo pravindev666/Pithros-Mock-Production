@@ -44,6 +44,25 @@ TAGS = [
 
 
 def _register_exception_handlers(app: FastAPI) -> None:
+    """Every failure leaves through one envelope shape.
+
+    The frontend's error handling parses `{error: {code, message, details}}`, so a
+    response that does not match it is worse than useless — the UI cannot tell what
+    went wrong. `requestId` is included so a user can quote it to support.
+    """
+
+    def envelope(
+        request: Request, *, code: str, message: str, details: object = None
+    ) -> dict[str, object]:
+        return {
+            "error": {
+                "code": code,
+                "message": message,
+                "details": details,
+                "requestId": getattr(request.state, "request_id", None),
+            }
+        }
+
     @app.exception_handler(AppError)
     async def _app_error(request: Request, exc: AppError) -> JSONResponse:
         if exc.status_code >= 500:
@@ -54,39 +73,48 @@ def _register_exception_handlers(app: FastAPI) -> None:
             )
         return JSONResponse(
             status_code=exc.status_code,
-            content={
-                "error": {
-                    "code": exc.code,
-                    "message": exc.message,
-                    "details": exc.details,
-                }
-            },
+            content=envelope(request, code=exc.code, message=exc.message, details=exc.details),
         )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(
             status_code=422,
-            content={
-                "error": {
-                    "code": "validation_error",
-                    "message": "The request could not be processed.",
-                    "details": exc.errors(),
-                }
-            },
+            content=envelope(
+                request,
+                code="validation_error",
+                message="The request could not be processed.",
+                details=exc.errors(),
+            ),
         )
 
     @app.exception_handler(StarletteHTTPException)
     async def _http_error(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
-            content={
-                "error": {
-                    "code": f"http_{exc.status_code}",
-                    "message": str(exc.detail),
-                    "details": None,
-                }
-            },
+            content=envelope(
+                request,
+                code=f"http_{exc.status_code}",
+                message=str(exc.detail),
+            ),
+        )
+
+    @app.exception_handler(Exception)
+    async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
+        """Last resort.
+
+        Without this, an unexpected error escapes FastAPI's handlers and Starlette
+        returns a bare `"Internal Server Error"` — a body the frontend cannot parse,
+        so the user sees nothing useful and the request ID is lost.
+        """
+        logger.exception("unhandled_exception", extra={"route": request.url.path})
+        return JSONResponse(
+            status_code=500,
+            content=envelope(
+                request,
+                code="internal_error",
+                message="Something went wrong on our side. Please try again.",
+            ),
         )
 
 
