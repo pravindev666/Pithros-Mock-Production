@@ -125,6 +125,7 @@ def _build_api_router() -> APIRouter:
     from app.media.router import router as media_router
     from app.memorials.router import me_router, public_router
     from app.memorials.router import router as memorials_router
+    from app.tributes.router import moderation_router as tribute_moderation_router
     from app.tributes.router import router as tributes_router
     from app.users.router import router as users_router
 
@@ -138,6 +139,7 @@ def _build_api_router() -> APIRouter:
     api.include_router(contributors_router)
     api.include_router(media_router)
     api.include_router(tributes_router)
+    api.include_router(tribute_moderation_router)
     return api
 
 
