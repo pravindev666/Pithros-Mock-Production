@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.core.enums import VerificationDocumentType, VerificationDecision
+from app.core.enums import VerificationDecision, VerificationDocumentType
 from app.core.schemas import CamelModel, StrictModel
 
 

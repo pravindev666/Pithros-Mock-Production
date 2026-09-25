@@ -28,7 +28,6 @@ from app.core.enums import (
     MediaStatus,
     StorageTier,
     VerificationDecision,
-    VerificationDocumentType,
     VerificationState,
 )
 from app.core.errors import ConflictError, NotFoundError, ValidationError
@@ -88,7 +87,9 @@ def get_open_submission(db: Session, memorial_id: uuid.UUID) -> VerificationSubm
         select(VerificationSubmission)
         .where(
             VerificationSubmission.memorial_id == memorial_id,
-            VerificationSubmission.state.notin_([*TERMINAL_STATES, VerificationState.REJECTED.value]),
+            VerificationSubmission.state.notin_(
+                [*TERMINAL_STATES, VerificationState.REJECTED.value]
+            ),
         )
         .options(
             selectinload(VerificationSubmission.evidence),
@@ -131,9 +132,7 @@ def _load_evidence_media(db: Session, memorial_id: uuid.UUID, media_id: uuid.UUI
     # Evidence must live in the sensitive tier. Refusing anything else keeps
     # certificates out of any bucket that could ever be served publicly.
     if media.storage_tier != StorageTier.SENSITIVE.value:
-        raise ValidationError(
-            "Only documents uploaded as verification evidence can be attached."
-        )
+        raise ValidationError("Only documents uploaded as verification evidence can be attached.")
 
     if media.kind != MediaKind.DOCUMENT.value:
         raise ValidationError("Verification evidence must be a document.")
@@ -248,14 +247,33 @@ def submit(
     return submission
 
 
-def mark_processing(db: Session, submission_id: uuid.UUID) -> VerificationSubmission:
-    """SUBMITTED -> VERIFICATION_PENDING. Called by the worker when it picks up."""
+def _advance(
+    db: Session, submission_id: uuid.UUID, target: VerificationState
+) -> VerificationSubmission:
+    """Move a submission forward and keep the memorial in step.
+
+    Every transition has to sync the memorial — the UI reads
+    `memorial.verification_state`, so a submission that moved alone would leave the
+    two disagreeing and the badge showing a stale state.
+    """
     submission = get_by_id(db, submission_id)
     current = VerificationState(submission.state)
-    if VerificationState.VERIFICATION_PENDING in VERIFICATION_TRANSITIONS[current]:
-        _effective_state(submission, VerificationState.VERIFICATION_PENDING)
-        db.commit()
+    if target not in VERIFICATION_TRANSITIONS[current]:
+        return submission
+
+    _effective_state(submission, target)
+
+    memorial = db.get(Memorial, submission.memorial_id)
+    if memorial is not None:
+        _sync_memorial(memorial, target)
+
+    db.commit()
     return submission
+
+
+def mark_processing(db: Session, submission_id: uuid.UUID) -> VerificationSubmission:
+    """SUBMITTED -> VERIFICATION_PENDING. Called by the worker when it picks up."""
+    return _advance(db, submission_id, VerificationState.VERIFICATION_PENDING)
 
 
 def mark_ready_for_review(db: Session, submission_id: uuid.UUID) -> VerificationSubmission:
@@ -265,12 +283,7 @@ def mark_ready_for_review(db: Session, submission_id: uuid.UUID) -> Verification
     the submission simply becomes reviewable by a human, which is stated plainly
     rather than dressed up as analysis.
     """
-    submission = get_by_id(db, submission_id)
-    current = VerificationState(submission.state)
-    if VerificationState.VERIFICATION_REVIEW in VERIFICATION_TRANSITIONS[current]:
-        _effective_state(submission, VerificationState.VERIFICATION_REVIEW)
-        db.commit()
-    return submission
+    return _advance(db, submission_id, VerificationState.VERIFICATION_REVIEW)
 
 
 def decide(

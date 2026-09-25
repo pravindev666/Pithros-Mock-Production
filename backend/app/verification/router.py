@@ -51,10 +51,6 @@ SubmitLimit = Annotated[
 ]
 
 
-def _out(db: Session, memorial: Memorial, submission) -> VerificationOut:
-    return service.to_out(db, submission)
-
-
 @router.get("", response_model=VerificationOut | None)
 def get_verification(
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
@@ -149,10 +145,10 @@ def get_evidence_url(
         raise NotFoundError("Memorial not found")
 
     access = resolve_access(db, memorial, user)
-    is_reviewer = (
-        user.role == "admin"
-        and user.admin_subrole in {AdminSubRole.VERIFICATION_REVIEWER.value, AdminSubRole.SUPER_ADMIN.value}
-    )
+    is_reviewer = user.role == "admin" and user.admin_subrole in {
+        AdminSubRole.VERIFICATION_REVIEWER.value,
+        AdminSubRole.SUPER_ADMIN.value,
+    }
     if not access.has(MemorialPermission.SUBMIT_VERIFICATION) and not is_reviewer:
         raise ForbiddenError("You do not have permission to view this document.")
 
