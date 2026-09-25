@@ -10,11 +10,13 @@
  * serve invented records to real families.
  */
 
-import { FeatureNotAvailableError } from './client';
+import { FeatureNotAvailableError, ValidationFailedError } from './client';
+import { contributorsApi } from './contributors';
 import { memorialsApi } from './memorials';
 import { mediaApi } from './media';
 import { offeringsApi, tributesApi } from './tributes';
 import type * as demoModule from '../demo/demoApi';
+import type { FamilyMember } from '../../types';
 
 type DemoApi = typeof demoModule.demoApi;
 
@@ -56,8 +58,28 @@ export const liveApi = {
   // ─── Timeline ───────────────────────────────────────────────────────────
   addTimelineEvent: memorialsApi.addTimelineEvent,
 
+  // ─── Contributors ───────────────────────────────────────────────────────
+  async inviteFamilyMember(
+    memorialId: string,
+    member: Omit<FamilyMember, 'id' | 'status'>,
+  ): Promise<FamilyMember> {
+    const email = member.email || member.invitedEmail;
+    if (!email) {
+      throw new ValidationFailedError(
+        'An email address is required so the invitation has somewhere to go.',
+      );
+    }
+
+    const { member: invited } = await contributorsApi.invite(memorialId, {
+      email,
+      role: member.role,
+      relationship: member.relationship,
+      displayName: member.name,
+    });
+    return invited;
+  },
+
   // ─── Not yet implemented on the server ──────────────────────────────────
-  inviteFamilyMember: pending<'inviteFamilyMember'>('Inviting family members'),
   getProviders: pending<'getProviders'>('The farewell network'),
   getProviderBySlug: pending<'getProviderBySlug'>('The farewell network'),
   createLead: pending<'createLead'>('Service enquiries'),
@@ -87,8 +109,14 @@ export const liveApi = {
   markAllNotificationsRead: pending<'markAllNotificationsRead'>('Notifications'),
 };
 
-export { mediaApi, memorialsApi, offeringsApi, tributesApi };
-export { ApiError, FeatureNotAvailableError, ForbiddenError, NotFoundError, UnauthorizedError } from './client';
+export { mediaApi, memorialsApi, offeringsApi, tributesApi, contributorsApi };
+export {
+  ApiError,
+  FeatureNotAvailableError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from './client';
 export { onSessionExpired } from './client';
 export { usersApi } from './users';
 export type { PithrosUser } from './users';

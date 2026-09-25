@@ -108,6 +108,11 @@ class Settings(BaseSettings):
 
     invite_token_ttl_hours: int = Field(default=168, ge=1)
 
+    # Email delivery is not wired yet, so the invitation token is returned in the
+    # API response to keep the flow testable. That is a development affordance:
+    # in production the token must only ever travel by email.
+    expose_invitation_tokens: bool = True
+
     @model_validator(mode="after")
     def _unescape_private_key(self) -> Settings:
         if self.firebase_private_key and "\\n" in self.firebase_private_key:
@@ -126,6 +131,11 @@ class Settings(BaseSettings):
             problems.append("CORS_ORIGINS must not contain a wildcard in production")
         if self.storage_backend != "s3":
             problems.append("STORAGE_BACKEND must be 's3' in production")
+        if self.expose_invitation_tokens:
+            problems.append(
+                "EXPOSE_INVITATION_TOKENS must be false in production — an invitation "
+                "token is a bearer credential for joining a memorial"
+            )
         if not self.firebase_project_id:
             problems.append("FIREBASE_PROJECT_ID is required in production")
         if not (

@@ -119,6 +119,9 @@ def _register_exception_handlers(app: FastAPI) -> None:
 
 
 def _build_api_router() -> APIRouter:
+    from app.contributors.router import invitation_router
+    from app.contributors.router import me_router as contributors_me_router
+    from app.contributors.router import router as contributors_router
     from app.media.router import router as media_router
     from app.memorials.router import me_router, public_router
     from app.memorials.router import router as memorials_router
@@ -128,8 +131,11 @@ def _build_api_router() -> APIRouter:
     api = APIRouter(prefix=settings.api_v1_prefix)
     api.include_router(users_router)
     api.include_router(me_router)
+    api.include_router(contributors_me_router)
+    api.include_router(invitation_router)
     api.include_router(public_router)
     api.include_router(memorials_router)
+    api.include_router(contributors_router)
     api.include_router(media_router)
     api.include_router(tributes_router)
     return api
