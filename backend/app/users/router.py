@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
 from app.core.database import get_db, transaction
+from app.core.rate_limit import user_rate_limit
 from app.users.models import User
 from app.users.schemas import UserOut, UserUpdate
 
@@ -49,7 +50,12 @@ def read_me(user: CurrentUser, db: DbSession) -> UserOut:
 
 
 @router.patch("/me", response_model=UserOut)
-def update_me(payload: UserUpdate, user: CurrentUser, db: DbSession) -> UserOut:
+def update_me(
+    payload: UserUpdate,
+    user: CurrentUser,
+    db: DbSession,
+    _: Annotated[None, Depends(user_rate_limit("me_update", limit=30, window_seconds=3600))],
+) -> UserOut:
     changes = payload.model_dump(exclude_unset=True)
     with transaction(db):
         for field, value in changes.items():

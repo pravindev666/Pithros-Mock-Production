@@ -11,6 +11,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser, OptionalUser
@@ -18,8 +19,9 @@ from app.core.concurrency import ensure_version, etag, parse_if_match
 from app.core.database import get_db
 from app.core.enums import MemorialPermission, PrivacyLevel, PublicationState
 from app.core.errors import NotFoundError
+from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
-from app.core.rate_limit import rate_limit
+from app.core.rate_limit import rate_limit, user_rate_limit
 from app.memorials import repository, service
 from app.memorials.models import Memorial
 from app.memorials.permissions import (
@@ -83,15 +85,29 @@ def create_memorial(
     request: Request,
     user: CurrentUser,
     db: DbSession,
-) -> MemorialDetailOut:
+    _: Annotated[None, Depends(user_rate_limit("memorial_create", limit=10, window_seconds=3600))],
+) -> MemorialDetailOut | JSONResponse:
     """Create a memorial. The authenticated caller becomes its primary steward.
 
     Ownership is never taken from the request body — the schema forbids those
     fields outright, so a client cannot even attempt it.
+
+    Repeating the request with the same `Idempotency-Key` returns the original
+    memorial instead of creating a duplicate.
     """
+    subject = subject_for(request, user)
+    replay = reserve(
+        request,
+        endpoint="memorials.create",
+        body=payload.model_dump(mode="json"),
+        subject=subject,
+    )
+    if replay is not None:
+        return JSONResponse(status_code=replay.status_code, content=replay.body)
+
     memorial = service.create_memorial(db, actor=user, payload=payload, request=request)
     access = service.access_for(db, memorial, user)
-    return memorial_detail_out(
+    detail = memorial_detail_out(
         db,
         memorial,
         access,
@@ -99,6 +115,8 @@ def create_memorial(
         timeline=memorial.timeline_events,
         legacy_links=memorial.legacy_links,
     )
+    record(request, subject=subject, status_code=201, body=detail)
+    return detail
 
 
 @router.get("/{memorial_id}", response_model=MemorialDetailOut)

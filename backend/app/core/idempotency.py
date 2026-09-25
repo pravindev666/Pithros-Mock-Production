@@ -129,11 +129,16 @@ def reserve(
     endpoint: str,
     body: Any,
     subject: str,
+    ttl: timedelta | None = None,
 ) -> Replay | None:
     """Claim the key, or return the response a previous attempt already produced.
 
     Opens its own short session so the reservation is committed independently of
     whatever transaction the handler later uses.
+
+    `ttl` overrides the default window. Upload intents use a window matching the
+    presigned URL's lifetime: replaying one after the URL expired would hand the
+    client a link that no longer works.
     """
     key = _header_key(request)
     if key is None:
@@ -170,7 +175,7 @@ def reserve(
                 endpoint=endpoint,
                 request_hash=digest,
                 status=IdempotencyStatus.IN_PROGRESS.value,
-                expires_at=datetime.now(UTC) + TTL,
+                expires_at=datetime.now(UTC) + (ttl or TTL),
             )
         )
         try:

@@ -8,9 +8,11 @@ caller is refused before the handler runs.
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -18,7 +20,9 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.enums import MemorialPermission
 from app.core.errors import NotFoundError
+from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
+from app.core.rate_limit import user_rate_limit
 from app.media import service
 from app.media.models import MediaItem
 from app.media.schemas import (
@@ -53,17 +57,32 @@ def create_upload_intent(
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.MANAGE_MEDIA))],
     user: CurrentUser,
     db: DbSession,
-) -> UploadIntentResponse:
+    _: Annotated[None, Depends(user_rate_limit("upload_intent", limit=60, window_seconds=3600))],
+) -> UploadIntentResponse | JSONResponse:
     """Authorize the upload and hand back a one-shot URL.
 
     Large files never pass through FastAPI; the browser PUTs straight to storage.
+
+    The idempotency window deliberately matches the presigned URL's lifetime — a
+    replay after the URL expired would return a link that no longer works.
     """
+    subject = subject_for(request, user)
+    replay = reserve(
+        request,
+        endpoint="media.upload_intent",
+        body=payload.model_dump(mode="json"),
+        subject=subject,
+        ttl=timedelta(seconds=settings.r2_presign_expiry_seconds),
+    )
+    if replay is not None:
+        return JSONResponse(status_code=replay.status_code, content=replay.body)
+
     access = resolve_access(db, memorial, user)
     item, upload_url = service.create_upload_intent(
         db, memorial=memorial, access=access, payload=payload, request=request
     )
 
-    return UploadIntentResponse(
+    out = UploadIntentResponse(
         media_id=str(item.id),
         upload_url=upload_url,
         method="PUT",
@@ -71,6 +90,8 @@ def create_upload_intent(
         expires_in=settings.r2_presign_expiry_seconds,
         max_bytes=settings.max_upload_bytes,
     )
+    record(request, subject=subject, status_code=201, body=out)
+    return out
 
 
 @router.post("/{media_id}/complete", response_model=UploadCompleteResponse)

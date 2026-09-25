@@ -14,7 +14,7 @@ import uuid
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import boto3
 from botocore.config import Config as BotoConfig
@@ -55,24 +55,34 @@ class ObjectStorage(Protocol):
     def delete(self, *, tier: StorageTier, key: str) -> None: ...
 
 
+def _build_s3_client() -> Any:
+    """One client configuration, used by both the adapter and the readiness probe.
+
+    `storage_is_reachable` previously built its own client with no Config at all,
+    so the retry and timeout settings applied everywhere except the check whose
+    job is to notice when storage is unhealthy.
+    """
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.r2_endpoint_url,
+        aws_access_key_id=settings.r2_access_key_id,
+        aws_secret_access_key=settings.r2_secret_access_key,
+        region_name=settings.r2_region,
+        config=BotoConfig(
+            signature_version="s3v4",
+            # Bound both phases: a connect that never completes and a read that
+            # stalls are different failures and both need a ceiling.
+            connect_timeout=5,
+            read_timeout=30,
+            retries={"max_attempts": 3, "mode": "standard"},
+            s3={"addressing_style": "path" if "localhost" in settings.r2_endpoint_url else "auto"},
+        ),
+    )
+
+
 class S3ObjectStorage:
     def __init__(self) -> None:
-        self._client = boto3.client(
-            "s3",
-            endpoint_url=settings.r2_endpoint_url,
-            aws_access_key_id=settings.r2_access_key_id,
-            aws_secret_access_key=settings.r2_secret_access_key,
-            region_name=settings.r2_region,
-            config=BotoConfig(
-                signature_version="s3v4",
-                retries={"max_attempts": 3, "mode": "standard"},
-                s3={
-                    "addressing_style": "path"
-                    if "localhost" in settings.r2_endpoint_url
-                    else "auto"
-                },
-            ),
-        )
+        self._client = _build_s3_client()
 
     def bucket_for(self, tier: StorageTier) -> str:
         return {
@@ -195,14 +205,7 @@ def storage_is_reachable() -> bool:
     if settings.storage_backend == "local":
         return True
     try:
-        client = boto3.client(
-            "s3",
-            endpoint_url=settings.r2_endpoint_url,
-            aws_access_key_id=settings.r2_access_key_id,
-            aws_secret_access_key=settings.r2_secret_access_key,
-            region_name=settings.r2_region,
-        )
-        client.head_bucket(Bucket=settings.r2_bucket_private)
+        _build_s3_client().head_bucket(Bucket=settings.r2_bucket_private)
         return True
     except Exception:
         return False

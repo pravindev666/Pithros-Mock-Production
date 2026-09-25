@@ -9,10 +9,12 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import OptionalUser
 from app.core.database import get_db
+from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit
 from app.memorials import service as memorial_service
@@ -37,17 +39,32 @@ def submit_tribute(
     db: DbSession,
     user: OptionalUser,
     _: SubmitLimit,
-) -> TributeOut:
+) -> TributeOut | JSONResponse:
     """Submit a tribute.
 
     Persisted as PENDING_MODERATION unless the author is a member of the
     memorial. The old client-side `isApproved: true` is gone — the server decides.
+
+    Repeating the request with the same `Idempotency-Key` returns the original
+    response instead of creating a second tribute.
     """
+    subject = subject_for(request, user)
+    replay = reserve(
+        request,
+        endpoint="tributes.submit",
+        body=payload.model_dump(mode="json"),
+        subject=subject,
+    )
+    if replay is not None:
+        return JSONResponse(status_code=replay.status_code, content=replay.body)
+
     memorial, access = memorial_service.resolve_public_access(db, slug, user)
     tribute = tribute_service.submit_tribute(
         db, memorial=memorial, access=access, payload=payload, request=request
     )
-    return tribute_out(tribute)
+    out = tribute_out(tribute)
+    record(request, subject=subject, status_code=201, body=out)
+    return out
 
 
 @router.post("/offerings", response_model=OfferingOut, status_code=status.HTTP_201_CREATED)
@@ -58,12 +75,24 @@ def submit_offering(
     db: DbSession,
     user: OptionalUser,
     _: SubmitLimit,
-) -> OfferingOut:
+) -> OfferingOut | JSONResponse:
+    subject = subject_for(request, user)
+    replay = reserve(
+        request,
+        endpoint="offerings.submit",
+        body=payload.model_dump(mode="json"),
+        subject=subject,
+    )
+    if replay is not None:
+        return JSONResponse(status_code=replay.status_code, content=replay.body)
+
     memorial, access = memorial_service.resolve_public_access(db, slug, user)
     offering = offering_service.submit_offering(
         db, memorial=memorial, access=access, payload=payload, request=request
     )
-    return offering_out(offering)
+    out = offering_out(offering)
+    record(request, subject=subject, status_code=201, body=out)
+    return out
 
 
 @router.get("/tributes", response_model=list[TributeOut])

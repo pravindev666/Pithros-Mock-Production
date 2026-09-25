@@ -18,6 +18,7 @@ celery_app = Celery(
     backend=settings.redis_url,
     include=[
         "app.workers.tasks.media_tasks",
+        "app.workers.tasks.maintenance_tasks",
     ],
 )
 
@@ -39,6 +40,10 @@ celery_app.conf.update(
         "purge-expired-media-intents": {
             "task": "app.workers.tasks.media_tasks.purge_abandoned_uploads",
             "schedule": crontab(hour=3, minute=15),
+        },
+        "purge-expired-idempotency-keys": {
+            "task": "app.workers.tasks.maintenance_tasks.purge_expired_idempotency_keys",
+            "schedule": crontab(hour=3, minute=45),
         },
     },
 )

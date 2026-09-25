@@ -18,12 +18,20 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
+from app.audit.service import record_independently
 from app.auth.dependencies import get_current_user
 from app.core.database import get_db
-from app.core.enums import ContributorRole, ContributorStatus, MemorialPermission, PrivacyLevel
+from app.core.enums import (
+    AuditAction,
+    AuditResult,
+    ContributorRole,
+    ContributorStatus,
+    MemorialPermission,
+    PrivacyLevel,
+)
 from app.core.errors import ForbiddenError, NotFoundError
 from app.memorials.models import Memorial
 from app.memorials.repository import get_by_id
@@ -209,8 +217,23 @@ def required_permission_for(field: str) -> MemorialPermission:
 def ensure_can_update(access: MemorialAccess, fields: set[str]) -> None:
     """Refuse an update unless the caller holds every permission the fields need."""
     missing = sorted(field for field in fields if not access.has(required_permission_for(field)))
-    if missing:
-        raise ForbiddenError("You do not have permission to change: " + ", ".join(missing) + ".")
+    if not missing:
+        return
+
+    # This is the escalation-attempt signal: a *member* reaching for a field their
+    # role does not cover (a biographer trying to rename the memorial, say). The
+    # route-level dependency cannot see it, because which permission is required
+    # depends on the request body.
+    record_independently(
+        action=AuditAction.AUTHORIZATION_DENIED,
+        entity="memorial",
+        entity_id=access.memorial.id,
+        actor=access.user,
+        result=AuditResult.DENIED,
+        detail={"deniedFields": missing, "role": access.role},
+    )
+
+    raise ForbiddenError("You do not have permission to change: " + ", ".join(missing) + ".")
 
 
 def authorized(permission: MemorialPermission) -> Callable[..., Memorial]:
@@ -227,6 +250,7 @@ def authorized(permission: MemorialPermission) -> Callable[..., Memorial]:
 
     def dependency(
         memorial_id: uuid.UUID,
+        request: Request,
         user: User = Depends(get_current_user),
         db: Session = Depends(get_db),
     ) -> Memorial:
@@ -237,8 +261,30 @@ def authorized(permission: MemorialPermission) -> Callable[..., Memorial]:
         access = resolve_access(db, memorial, user)
 
         if not access.has(permission):
+            may_view = can_view_memorial(access)
+
+            # Recorded on its own transaction: this request is about to fail, so a
+            # row written here would roll back with it. Refusals are the signal
+            # worth keeping — they are how probing for other people's memorials
+            # becomes visible.
+            record_independently(
+                action=AuditAction.AUTHORIZATION_DENIED,
+                entity="memorial",
+                entity_id=memorial.id,
+                actor=user,
+                result=AuditResult.DENIED,
+                detail={
+                    "permission": permission.value,
+                    "role": access.role,
+                    "privacy": memorial.privacy,
+                    "publicationState": memorial.publication_state,
+                    "revealedExistence": may_view,
+                },
+                request=request,
+            )
+
             # Distinguish "you may not do this" from "this does not exist for you".
-            if not can_view_memorial(access):
+            if not may_view:
                 raise NotFoundError("Memorial not found")
             raise ForbiddenError("You do not have permission to perform this action.")
 

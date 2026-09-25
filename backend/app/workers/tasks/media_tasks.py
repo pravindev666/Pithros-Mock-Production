@@ -17,6 +17,7 @@ from app.core.database import SessionLocal
 from app.core.enums import MediaKind, MediaStatus, StorageTier
 from app.media.models import MediaItem
 from app.media.storage import get_storage
+from app.workers.base import RecordedTask
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,10 @@ THUMBNAIL_MAX_EDGE = 480
 
 
 @celery_app.task(
-    name="app.workers.tasks.media_tasks.process_uploaded_media", bind=True, max_retries=3
+    name="app.workers.tasks.media_tasks.process_uploaded_media",
+    base=RecordedTask,
+    bind=True,
+    max_retries=3,
 )
 def process_uploaded_media(self: Any, media_id: str) -> dict[str, str]:
     """Generate a thumbnail and record image dimensions.
@@ -92,8 +96,16 @@ def process_uploaded_media(self: Any, media_id: str) -> dict[str, str]:
             raise self.retry(exc=exc, countdown=30) from exc
 
 
-@celery_app.task(name="app.workers.tasks.media_tasks.purge_abandoned_uploads")
-def purge_abandoned_uploads(max_age_hours: int = 24) -> dict[str, int]:
+@celery_app.task(
+    name="app.workers.tasks.media_tasks.purge_abandoned_uploads",
+    base=RecordedTask,
+    bind=True,
+    max_retries=3,
+    retry_backoff=True,
+    retry_backoff_max=600,
+    retry_jitter=True,
+)
+def purge_abandoned_uploads(self: Any, max_age_hours: int = 24) -> dict[str, int]:
     """Remove upload rows whose browser never confirmed the transfer.
 
     Without this, every abandoned upload would leave an orphaned metadata row and
