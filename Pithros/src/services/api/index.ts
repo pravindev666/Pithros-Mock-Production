@@ -69,6 +69,10 @@ export const liveApi = {
   },
   removeLegacyLink: memorialsApi.removeLegacyLink,
 
+  // ─── Archive Export ──────────────────────────────────────────────────────
+  exportPdf: memorialsApi.exportPdf,
+  getExportStatus: memorialsApi.getExportStatus,
+
   // ─── Contributors ───────────────────────────────────────────────────────
   async inviteFamilyMember(
     memorialId: string,

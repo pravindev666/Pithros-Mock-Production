@@ -248,4 +248,39 @@ export const memorialsApi = {
   }> {
     return http.get(`/memorials/${memorialId}/permissions`);
   },
+
+  async exportPdf(memorialId: string): Promise<{
+    taskId: string;
+    status: string;
+    memorialId: string;
+    downloadUrl?: string;
+    fileSize?: number;
+  }> {
+    return http.post(`/memorials/${memorialId}/export/pdf`, {});
+  },
+
+  async getExportStatus(
+    memorialId: string,
+    taskId: string,
+  ): Promise<{
+    taskId: string;
+    status: string;
+    downloadUrl?: string;
+    fileSize?: number;
+    error?: string;
+  }> {
+    return http.get(`/memorials/${memorialId}/export/status/${taskId}`);
+  },
+
+  getQrCodeUrl(memorialId: string, format: 'png' | 'svg' = 'png', download: boolean = false): string {
+    const params = new URLSearchParams({ format });
+    if (download) params.set('download', 'true');
+    return `/api/v1/memorials/${memorialId}/qr?${params.toString()}`;
+  },
+
+  getPublicQrCodeUrl(slug: string, format: 'png' | 'svg' = 'png', download: boolean = false): string {
+    const params = new URLSearchParams({ format });
+    if (download) params.set('download', 'true');
+    return `/api/v1/public/memorials/${slug}/qr?${params.toString()}`;
+  },
 };

@@ -54,7 +54,7 @@ ignore_missing_imports = true
 exclude = ["alembic/versions/"]
 
 [[tool.mypy.overrides]]
-module = ["firebase_admin.*", "celery.*", "boto3.*", "botocore.*", "PIL.*"]
+module = ["firebase_admin.*", "celery.*", "boto3.*", "botocore.*", "PIL.*", "qrcode.*", "reportlab.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

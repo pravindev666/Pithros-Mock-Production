@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from starlette.requests import Request
 
 from app.core.database import transaction
+from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
 from app.offerings.models import Offering
@@ -32,4 +33,5 @@ def submit_offering(
         db.flush()
 
     db.refresh(offering)
+    invalidate_public_memorial_cache(memorial.slug)
     return offering

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import Literal
 
+from celery.result import AsyncResult
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.requests import Request
@@ -13,13 +15,16 @@ from app.audit.service import record as audit_record
 from app.core.database import transaction
 from app.core.enums import (
     AuditAction,
+    MemorialPermission,
     PrivacyLevel,
     PublicationState,
+    TributeStatus,
     UserRole,
     VerificationState,
 )
 from app.core.errors import ConflictError, NotFoundError
 from app.memorials import repository
+from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import (
     DigitalLegacyLink,
     Memorial,
@@ -27,13 +32,17 @@ from app.memorials.models import (
     Story,
     TimelineEvent,
 )
+from app.memorials.pdf_export import generate_memorial_pdf
 from app.memorials.permissions import (
     MemorialAccess,
     can_view_memorial,
     ensure_can_update,
     resolve_access,
 )
+from app.memorials.qr import build_memorial_url, generate_qr_code
 from app.memorials.schemas import (
+    ArchiveExportOut,
+    ArchiveExportStatusOut,
     DigitalLegacyLinkIn,
     DigitalLegacyLinkUpdate,
     MemorialCreate,
@@ -41,7 +50,10 @@ from app.memorials.schemas import (
     StoryIn,
     TimelineEventIn,
 )
+from app.tributes.models import Tribute
 from app.users.models import User
+from app.workers.celery_app import celery_app
+from app.workers.tasks.archive_tasks import generate_memorial_pdf_export
 
 
 def _apply_story(db: Session, memorial: Memorial, payload: StoryIn) -> Story:
@@ -183,6 +195,7 @@ def update_memorial(
     access; the per-field permissions are enforced here, because which permission
     is required depends on which fields the request actually touches.
     """
+    old_slug = memorial.slug
     changes = payload.model_dump(exclude_unset=True)
     ensure_can_update(access, set(changes))
 
@@ -226,6 +239,9 @@ def update_memorial(
         )
 
     db.refresh(memorial)
+    invalidate_public_memorial_cache(memorial.slug)
+    if memorial.slug != old_slug:
+        invalidate_public_memorial_cache(old_slug)
     return memorial
 
 
@@ -264,6 +280,7 @@ def set_publication_state(
         )
 
     db.refresh(memorial)
+    invalidate_public_memorial_cache(memorial.slug)
     return memorial
 
 
@@ -286,6 +303,7 @@ def delete_memorial(
             detail={"slug": memorial.slug},
             request=request,
         )
+    invalidate_public_memorial_cache(memorial.slug)
 
 
 def add_timeline_event(
@@ -321,6 +339,7 @@ def add_timeline_event(
             request=request,
         )
     db.refresh(event)
+    invalidate_public_memorial_cache(memorial.slug)
     return event
 
 
@@ -365,6 +384,7 @@ def update_timeline_event(
             request=request,
         )
     db.refresh(event)
+    invalidate_public_memorial_cache(memorial.slug)
     return event
 
 
@@ -387,6 +407,7 @@ def delete_timeline_event(
             detail={"timelineEventRemoved": str(event.id)},
             request=request,
         )
+    invalidate_public_memorial_cache(memorial.slug)
 
 
 def get_legacy_link(
@@ -434,6 +455,7 @@ def add_legacy_link(
             request=request,
         )
     db.refresh(link)
+    invalidate_public_memorial_cache(memorial.slug)
     return link
 
 
@@ -470,6 +492,7 @@ def update_legacy_link(
             request=request,
         )
     db.refresh(link)
+    invalidate_public_memorial_cache(memorial.slug)
     return link
 
 
@@ -492,6 +515,7 @@ def delete_legacy_link(
             detail={"legacyLinkRemoved": str(link.id)},
             request=request,
         )
+    invalidate_public_memorial_cache(memorial.slug)
 
 
 def replace_legacy_links(
@@ -533,6 +557,7 @@ def replace_legacy_links(
             detail={"legacyLinks": len(created)},
             request=request,
         )
+    invalidate_public_memorial_cache(memorial.slug)
     return created
 
 
@@ -557,3 +582,127 @@ def resolve_public_access(
         raise NotFoundError("Memorial not found")
 
     return memorial, access
+
+
+def trigger_pdf_export(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    request: Request | None = None,
+) -> ArchiveExportOut:
+    access.require_permission(MemorialPermission.EXPORT_ARCHIVE)
+
+    task = generate_memorial_pdf_export.delay(
+        memorial_id=str(memorial.id),
+        requested_by_user_id=str(access.user.id) if access.user else None,
+    )
+    task_id = str(task.id)
+
+    if task.ready():
+        res = task.result or {}
+        return ArchiveExportOut(
+            task_id=task_id,
+            status=res.get("status", "ready"),
+            memorial_id=str(memorial.id),
+            download_url=res.get("download_url"),
+            file_size=res.get("file_size"),
+        )
+
+    return ArchiveExportOut(
+        task_id=task_id,
+        status="queued",
+        memorial_id=str(memorial.id),
+    )
+
+
+def get_export_status(task_id: str) -> ArchiveExportStatusOut:
+    async_res = AsyncResult(task_id, app=celery_app)
+    state = async_res.state
+    if state == "SUCCESS":
+        res = async_res.result or {}
+        return ArchiveExportStatusOut(
+            task_id=task_id,
+            status="ready",
+            download_url=res.get("download_url"),
+            file_size=res.get("file_size"),
+        )
+    if state == "FAILURE":
+        return ArchiveExportStatusOut(
+            task_id=task_id,
+            status="failed",
+            error=str(async_res.result),
+        )
+    return ArchiveExportStatusOut(
+        task_id=task_id,
+        status="processing",
+    )
+
+
+def generate_direct_pdf_export(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    request: Request | None = None,
+) -> bytes:
+    access.require_permission(MemorialPermission.EXPORT_ARCHIVE)
+
+    tributes = list(
+        db.scalars(
+            select(Tribute)
+            .where(
+                Tribute.memorial_id == memorial.id,
+                Tribute.status == TributeStatus.APPROVED.value,
+                Tribute.deleted_at.is_(None),
+            )
+            .order_by(Tribute.created_at.asc())
+        )
+    )
+
+    memorial_url = build_memorial_url(memorial.slug)
+    qr_bytes = generate_qr_code(memorial_url, format="png", box_size=6, border=2)
+
+    pdf_bytes = generate_memorial_pdf(
+        memorial=memorial,
+        story=memorial.story,
+        timeline_events=memorial.timeline_events,
+        contributors=memorial.contributors,
+        tributes=tributes,
+        qr_png_bytes=qr_bytes,
+    )
+
+    audit_record(
+        db,
+        action=AuditAction.MEMORIAL_EXPORTED,
+        entity="memorial_archive_export",
+        entity_id=str(memorial.id),
+        actor=access.user,
+        detail={"memorialId": str(memorial.id), "bytes": len(pdf_bytes), "format": "pdf"},
+        request=request,
+    )
+    return pdf_bytes
+
+
+def get_memorial_qr_bytes(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    format: Literal["png", "svg"] = "png",
+) -> bytes:
+    access.require_permission(MemorialPermission.VIEW)
+    memorial_url = build_memorial_url(memorial.slug)
+    return generate_qr_code(memorial_url, format=format)
+
+
+def get_public_memorial_qr_bytes(
+    db: Session,
+    *,
+    slug: str,
+    format: Literal["png", "svg"] = "png",
+) -> tuple[bytes, str]:
+    memorial, _ = resolve_public_access(db, slug, None)
+    memorial_url = build_memorial_url(memorial.slug)
+    qr_bytes = generate_qr_code(memorial_url, format=format)
+    return qr_bytes, memorial.slug

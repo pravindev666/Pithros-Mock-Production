@@ -549,4 +549,23 @@ export const demoApi = {
     setStored('notifications', notifs);
     return notifs;
   },
+
+  exportPdf: async (memorialId: string) => {
+    return {
+      taskId: `demo-task-${Date.now()}`,
+      status: 'ready',
+      memorialId,
+      downloadUrl: '#',
+      fileSize: 1024 * 1024 * 2,
+    };
+  },
+
+  getExportStatus: async (_memorialId: string, taskId: string) => {
+    return {
+      taskId,
+      status: 'ready',
+      downloadUrl: '#',
+      fileSize: 1024 * 1024 * 2,
+    };
+  },
 };

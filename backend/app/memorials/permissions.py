@@ -52,6 +52,7 @@ ROLE_PERMISSIONS: dict[str, frozenset[MemorialPermission]] = {
         {
             MemorialPermission.VIEW,
             MemorialPermission.MANAGE_MEDIA,
+            MemorialPermission.EXPORT_ARCHIVE,
         }
     ),
     # Submitting a memory to a memorial you belong to is allowed for any member
@@ -84,6 +85,13 @@ class MemorialAccess:
 
     def has(self, permission: MemorialPermission) -> bool:
         return permission in self.permissions
+
+    def require(self, permission: MemorialPermission) -> None:
+        if not self.has(permission):
+            raise ForbiddenError(f"Permission {permission.value} required")
+
+    def require_permission(self, permission: MemorialPermission) -> None:
+        self.require(permission)
 
 
 def resolve_access(db: Session, memorial: Memorial, user: User | None) -> MemorialAccess:

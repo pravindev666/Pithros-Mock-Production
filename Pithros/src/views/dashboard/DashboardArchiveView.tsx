@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Memorial } from '../../types';
 import { Button } from '../../components/ui/Button';
-import { Download, FileText, Archive, Sparkles, BookOpen, Check } from 'lucide-react';
+import { Download, Archive, BookOpen, QrCode, ExternalLink } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { api } from '../../services/api';
 
 interface DashboardArchiveViewProps {
   memorial: Memorial;
@@ -14,12 +15,24 @@ export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memo
   const [exportingZip, setExportingZip] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
-  const handleExportBook = () => {
+  const handleExportBook = async () => {
     setExportingBook(true);
-    setTimeout(() => {
+    setDownloadSuccess(null);
+    try {
+      const result = await api.exportPdf(memorial.id);
+      if (result.downloadUrl && result.downloadUrl !== '#') {
+        window.open(result.downloadUrl, '_blank');
+        setDownloadSuccess('Printable Memorial Book (PDF) generated and opened.');
+      } else {
+        window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
+        setDownloadSuccess('Printable Memorial Book (PDF) download initiated.');
+      }
+    } catch {
+      window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
+      setDownloadSuccess('Printable Memorial Book (PDF) download initiated.');
+    } finally {
       setExportingBook(false);
-      setDownloadSuccess('Printable Memorial Book (PDF) generated successfully.');
-    }, 1800);
+    }
   };
 
   const handleExportZip = () => {
@@ -183,6 +196,72 @@ export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memo
             >
               Download Archival Package (.ZIP)
             </Button>
+          </div>
+        </div>
+
+        {/* Physical Memorial Plaque QR */}
+        <div
+          className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 transition-colors md:col-span-2 ${
+            isDark
+              ? 'border-[#202C40] bg-[#182337]'
+              : 'border-[#E5DED2] bg-[#FCFAF5] shadow-xs'
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-2 max-w-xl">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center mb-1 ${
+                  isDark
+                    ? 'bg-[#182337] text-[#B99452]'
+                    : 'bg-[#E5DED2] text-[#23324A]'
+                }`}
+              >
+                <QrCode className="w-5 h-5" />
+              </div>
+              <h4
+                className={`text-lg font-serif ${
+                  isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
+                }`}
+              >
+                Archival Memorial QR Plaque
+              </h4>
+              <p
+                className={`text-xs leading-relaxed ${
+                  isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
+                }`}
+              >
+                Permanently etched or printed QR code resolving to this memorial's canonical sanctuary. Ready for gravestone engraving, urn plaque mounting, printed prayer booklets, or family keepsakes.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <a
+                href={`/api/v1/memorials/${memorial.id}/qr?format=png&download=true`}
+                target="_blank"
+                rel="noreferrer"
+                className={`px-3.5 py-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                  isDark
+                    ? 'bg-[#202C40] border-[#2A374F] text-[#F8F5EE] hover:border-[#B99452]'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A] hover:border-[#23324A]'
+                }`}
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download PNG (Scan-Ready)
+              </a>
+              <a
+                href={`/api/v1/memorials/${memorial.id}/qr?format=svg&download=true`}
+                target="_blank"
+                rel="noreferrer"
+                className={`px-3.5 py-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                  isDark
+                    ? 'bg-[#202C40] border-[#2A374F] text-[#F8F5EE] hover:border-[#B99452]'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A] hover:border-[#23324A]'
+                }`}
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download Vector SVG (Engraving)
+              </a>
+            </div>
           </div>
         </div>
       </div>

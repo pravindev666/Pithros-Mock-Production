@@ -19,6 +19,7 @@ from app.core.database import transaction
 from app.core.enums import AuditAction, TributeStatus
 from app.core.errors import NotFoundError
 from app.core.pagination import DEFAULT_LIMIT, Cursor, Page, PageParams, paginate
+from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
 from app.tributes.models import Tribute
@@ -62,6 +63,8 @@ def submit_tribute(
         db.flush()
 
     db.refresh(tribute)
+    if is_trusted:
+        invalidate_public_memorial_cache(memorial.slug)
     return tribute
 
 
@@ -113,6 +116,7 @@ def moderate_tribute(
         )
 
     db.refresh(tribute)
+    invalidate_public_memorial_cache(memorial.slug)
     return tribute
 
 
@@ -138,6 +142,8 @@ def delete_tribute(
             detail={"memorialId": str(memorial.id), "status": tribute.status},
             request=request,
         )
+
+    invalidate_public_memorial_cache(memorial.slug)
 
 
 def list_for_moderation(

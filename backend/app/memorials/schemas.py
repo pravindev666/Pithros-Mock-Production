@@ -331,3 +331,22 @@ class PermissionCatalogOut(CamelModel):
     my_permissions: list[str]
     role_permissions: dict[str, list[str]]
     available_permissions: list[str]
+
+
+# ─── Archive Export ────────────────────────────────────────────────────────
+
+
+class ArchiveExportOut(CamelModel):
+    task_id: str
+    status: str
+    memorial_id: str
+    download_url: str | None = None
+    file_size: int | None = None
+
+
+class ArchiveExportStatusOut(CamelModel):
+    task_id: str
+    status: str
+    download_url: str | None = None
+    file_size: int | None = None
+    error: str | None = None

@@ -23,6 +23,7 @@ from app.media.models import MediaItem
 from app.media.schemas import UploadIntentRequest
 from app.media.storage import build_media_key, extension_of, get_storage
 from app.media.validation import rule_for_extension, validate_content, validate_declaration
+from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
 from app.workers.celery_app import enqueue
@@ -149,6 +150,7 @@ def complete_upload(
 
     db.refresh(item)
     enqueue(process_uploaded_media, media_id=str(item.id))
+    invalidate_public_memorial_cache(memorial.slug)
     return item
 
 
@@ -174,6 +176,8 @@ def delete_media(
             detail={"memorialId": str(memorial.id)},
             request=request,
         )
+
+    invalidate_public_memorial_cache(memorial.slug)
 
 
 def update_media(
@@ -220,6 +224,7 @@ def update_media(
         )
 
     db.refresh(item)
+    invalidate_public_memorial_cache(memorial.slug)
     return item
 
 

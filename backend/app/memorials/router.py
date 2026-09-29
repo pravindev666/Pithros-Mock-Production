@@ -22,7 +22,7 @@ from app.core.errors import NotFoundError
 from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit, user_rate_limit
-from app.memorials import repository, service
+from app.memorials import cache, repository, service
 from app.memorials.models import DigitalLegacyLink, Memorial
 from app.memorials.permissions import (
     ROLE_PERMISSIONS,
@@ -36,6 +36,8 @@ from app.memorials.projections import (
     memorial_summary_out,
 )
 from app.memorials.schemas import (
+    ArchiveExportOut,
+    ArchiveExportStatusOut,
     DigitalLegacyLinkIn,
     DigitalLegacyLinkOut,
     DigitalLegacyLinksReplace,
@@ -429,12 +431,17 @@ def get_public_memorial(
     response: Response,
     db: DbSession,
     user: OptionalUser,
-) -> MemorialPublicOut:
-    """Anonymous-safe projection.
+) -> MemorialPublicOut | JSONResponse:
+    """Anonymous-safe projection with Redis read caching.
 
     A private or family memorial returns 404 for anyone who is not a member, so
     the endpoint cannot be used to discover whether a memorial exists.
     """
+    if user is None:
+        cached = cache.get_cached_public_memorial(slug)
+        if cached is not None:
+            return JSONResponse(content=cached, headers={"X-Cache": "HIT"})
+
     memorial = repository.get_by_slug(db, slug)
     if memorial is None:
         raise NotFoundError("Memorial not found")
@@ -448,13 +455,19 @@ def get_public_memorial(
         # Reachable by exact URL, but must never be indexed.
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
 
-    return memorial_public_out(
+    result = memorial_public_out(
         db,
         memorial,
         story=memorial.story,
         timeline=memorial.timeline_events,
         legacy_links=memorial.legacy_links,
     )
+
+    if user is None and memorial.publication_state == PublicationState.PUBLISHED.value:
+        cache.set_cached_public_memorial(slug, result.model_dump(mode="json", by_alias=True))
+
+    response.headers["X-Cache"] = "MISS"
+    return result
 
 
 @public_router.get("/search", response_model=PaginatedSearchOut)
@@ -539,3 +552,118 @@ def search_public_memorials(
         limit=limit,
         offset=offset,
     )
+
+
+@public_router.get(
+    "/memorials/{slug}/qr",
+    summary="Download or stream QR code for a public memorial",
+    response_description="QR code image in PNG or SVG format",
+)
+def get_public_memorial_qr(
+    slug: str,
+    db: DbSession,
+    _: Annotated[None, Depends(rate_limit("public_qr", limit=60, window_seconds=60))],
+    format: Literal["png", "svg"] = Query("png", description="Image format (png or svg)"),
+    download: bool = Query(False, description="Whether to trigger file download attachment"),
+) -> Response:
+    qr_bytes, memorial_slug = service.get_public_memorial_qr_bytes(db, slug=slug, format=format)
+    media_type = "image/svg+xml" if format == "svg" else "image/png"
+    headers: dict[str, str] = {}
+    if download:
+        ext = "svg" if format == "svg" else "png"
+        headers["Content-Disposition"] = f'attachment; filename="{memorial_slug}-qr.{ext}"'
+    return Response(content=qr_bytes, media_type=media_type, headers=headers)
+
+
+# ─── Authenticated: QR & Archive Exports ───────────────────────────────────
+
+
+@router.get(
+    "/export/status/{task_id}",
+    response_model=ArchiveExportStatusOut,
+    summary="Check status of background archive export",
+)
+def get_export_status(
+    task_id: str,
+    user: CurrentUser,
+) -> ArchiveExportStatusOut:
+    return service.get_export_status(task_id)
+
+
+@router.get(
+    "/{memorial_id}/qr",
+    summary="Get memorial QR code for member/steward",
+    response_description="QR code image in PNG or SVG format",
+)
+def get_memorial_qr(
+    memorial_id: uuid.UUID,
+    db: DbSession,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
+    user: CurrentUser,
+    format: Literal["png", "svg"] = Query("png", description="Image format (png or svg)"),
+    download: bool = Query(False, description="Whether to trigger file download attachment"),
+) -> Response:
+    access = resolve_access(db, memorial, user)
+    qr_bytes = service.get_memorial_qr_bytes(db, memorial=memorial, access=access, format=format)
+    media_type = "image/svg+xml" if format == "svg" else "image/png"
+    headers: dict[str, str] = {}
+    if download:
+        ext = "svg" if format == "svg" else "png"
+        headers["Content-Disposition"] = f'attachment; filename="{memorial.slug}-qr.{ext}"'
+    return Response(content=qr_bytes, media_type=media_type, headers=headers)
+
+
+@router.post(
+    "/{memorial_id}/export/pdf",
+    response_model=ArchiveExportOut,
+    summary="Trigger asynchronous archival memorial book PDF export via Celery",
+)
+def export_memorial_pdf(
+    memorial_id: uuid.UUID,
+    db: DbSession,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EXPORT_ARCHIVE))],
+    user: CurrentUser,
+) -> ArchiveExportOut:
+    access = resolve_access(db, memorial, user)
+    return service.trigger_pdf_export(db, memorial=memorial, access=access, request=request)
+
+
+@router.get(
+    "/{memorial_id}/export/status/{task_id}",
+    response_model=ArchiveExportStatusOut,
+    summary="Check status of background archive export for a memorial",
+)
+def get_memorial_export_status(
+    memorial_id: uuid.UUID,
+    task_id: str,
+    db: DbSession,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
+    user: CurrentUser,
+) -> ArchiveExportStatusOut:
+    return service.get_export_status(task_id)
+
+
+@router.get(
+    "/{memorial_id}/export/pdf/download",
+    summary="Directly generate and download archival memorial book PDF",
+    response_description="Binary PDF stream",
+)
+def download_memorial_pdf(
+    memorial_id: uuid.UUID,
+    db: DbSession,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EXPORT_ARCHIVE))],
+    user: CurrentUser,
+) -> Response:
+    access = resolve_access(db, memorial, user)
+    pdf_bytes = service.generate_direct_pdf_export(
+        db, memorial=memorial, access=access, request=request
+    )
+    filename = f"{memorial.slug}-memorial-book.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+

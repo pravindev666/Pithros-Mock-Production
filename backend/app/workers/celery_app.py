@@ -20,6 +20,7 @@ celery_app = Celery(
         "app.workers.tasks.media_tasks",
         "app.workers.tasks.maintenance_tasks",
         "app.verification.tasks",
+        "app.workers.tasks.archive_tasks",
     ],
 )
 
@@ -36,6 +37,7 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
     task_always_eager=settings.celery_task_always_eager,
     task_eager_propagates=settings.celery_task_always_eager,
+    task_store_eager_result=True,
     result_expires=3600,
     beat_schedule={
         "purge-expired-media-intents": {
