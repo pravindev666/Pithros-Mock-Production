@@ -8,7 +8,7 @@ the dependency refuses the request before the body runs.
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -23,7 +23,7 @@ from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit, user_rate_limit
 from app.memorials import repository, service
-from app.memorials.models import Memorial
+from app.memorials.models import DigitalLegacyLink, Memorial
 from app.memorials.permissions import (
     ROLE_PERMISSIONS,
     authorized,
@@ -36,6 +36,10 @@ from app.memorials.projections import (
     memorial_summary_out,
 )
 from app.memorials.schemas import (
+    DigitalLegacyLinkIn,
+    DigitalLegacyLinkOut,
+    DigitalLegacyLinksReplace,
+    DigitalLegacyLinkUpdate,
     MemorialCreate,
     MemorialDetailOut,
     MemorialPublicOut,
@@ -319,6 +323,103 @@ def delete_timeline_event(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# ─── Digital Legacy Links ───────────────────────────────────────────────────
+
+
+def _legacy_link_out(link: DigitalLegacyLink) -> DigitalLegacyLinkOut:
+    return DigitalLegacyLinkOut(
+        id=str(link.id),
+        platform=link.platform,
+        label=link.label,
+        url=link.url,
+        notes=link.notes,
+    )
+
+
+@router.get("/{memorial_id}/legacy-links", response_model=list[DigitalLegacyLinkOut])
+def list_legacy_links(
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
+) -> list[DigitalLegacyLinkOut]:
+    return [_legacy_link_out(link) for link in memorial.legacy_links]
+
+
+@router.post(
+    "/{memorial_id}/legacy-links",
+    response_model=DigitalLegacyLinkOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_legacy_link(
+    payload: DigitalLegacyLinkIn,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EDIT_DETAILS))],
+    user: CurrentUser,
+    db: DbSession,
+) -> DigitalLegacyLinkOut:
+    access = resolve_access(db, memorial, user)
+    link = service.add_legacy_link(
+        db, memorial=memorial, access=access, payload=payload, request=request
+    )
+    return _legacy_link_out(link)
+
+
+@router.put("/{memorial_id}/legacy-links", response_model=list[DigitalLegacyLinkOut])
+def replace_legacy_links(
+    payload: DigitalLegacyLinksReplace,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EDIT_DETAILS))],
+    user: CurrentUser,
+    db: DbSession,
+) -> list[DigitalLegacyLinkOut]:
+    access = resolve_access(db, memorial, user)
+    created = service.replace_legacy_links(
+        db, memorial=memorial, access=access, links=payload.links, request=request
+    )
+    return [_legacy_link_out(link) for link in created]
+
+
+@router.get("/{memorial_id}/legacy-links/{link_id}", response_model=DigitalLegacyLinkOut)
+def get_legacy_link(
+    link_id: uuid.UUID,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
+    db: DbSession,
+) -> DigitalLegacyLinkOut:
+    link = service.get_legacy_link(db, memorial_id=memorial.id, link_id=link_id)
+    return _legacy_link_out(link)
+
+
+@router.patch("/{memorial_id}/legacy-links/{link_id}", response_model=DigitalLegacyLinkOut)
+def update_legacy_link(
+    link_id: uuid.UUID,
+    payload: DigitalLegacyLinkUpdate,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EDIT_DETAILS))],
+    user: CurrentUser,
+    db: DbSession,
+) -> DigitalLegacyLinkOut:
+    access = resolve_access(db, memorial, user)
+    link = service.get_legacy_link(db, memorial_id=memorial.id, link_id=link_id)
+    updated = service.update_legacy_link(
+        db, memorial=memorial, access=access, link=link, payload=payload, request=request
+    )
+    return _legacy_link_out(updated)
+
+
+@router.delete("/{memorial_id}/legacy-links/{link_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_legacy_link(
+    link_id: uuid.UUID,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.EDIT_DETAILS))],
+    user: CurrentUser,
+    db: DbSession,
+) -> Response:
+    access = resolve_access(db, memorial, user)
+    link = service.get_legacy_link(db, memorial_id=memorial.id, link_id=link_id)
+    service.delete_legacy_link(
+        db, memorial=memorial, access=access, link=link, request=request
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 # ─── Public ─────────────────────────────────────────────────────────────────
 
 
@@ -361,6 +462,26 @@ def search_public_memorials(
     db: DbSession,
     _: Annotated[None, Depends(rate_limit("public_search", limit=60, window_seconds=60))],
     q: Annotated[str | None, Query(max_length=120)] = None,
+    city: Annotated[str | None, Query(max_length=120)] = None,
+    year_from: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    year_to: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    birth_year_from: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    birth_year_to: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    death_year_from: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    death_year_to: Annotated[int | None, Query(ge=1000, le=2200)] = None,
+    verification_status: Annotated[str | None, Query(max_length=64)] = None,
+    sort_by: Annotated[
+        Literal[
+            "recent",
+            "name_asc",
+            "name_desc",
+            "birth_date_asc",
+            "birth_date_desc",
+            "death_date_asc",
+            "death_date_desc",
+        ],
+        Query(),
+    ] = "recent",
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedSearchOut:
@@ -369,7 +490,33 @@ def search_public_memorials(
     Family and unlisted memorials never appear in results — they are reachable
     solely by their exact URL.
     """
-    memorials = repository.list_publicly_discoverable(db, query=q, limit=limit, offset=offset)
+    memorials = repository.list_publicly_discoverable(
+        db,
+        query=q,
+        city=city,
+        year_from=year_from,
+        year_to=year_to,
+        birth_year_from=birth_year_from,
+        birth_year_to=birth_year_to,
+        death_year_from=death_year_from,
+        death_year_to=death_year_to,
+        verification_status=verification_status,
+        sort_by=sort_by,
+        limit=limit,
+        offset=offset,
+    )
+    total_count = repository.count_publicly_discoverable(
+        db,
+        query=q,
+        city=city,
+        year_from=year_from,
+        year_to=year_to,
+        birth_year_from=birth_year_from,
+        birth_year_to=birth_year_to,
+        death_year_from=death_year_from,
+        death_year_to=death_year_to,
+        verification_status=verification_status,
+    )
     results = [
         SearchResultOut(
             slug=memorial.slug,
@@ -377,12 +524,18 @@ def search_public_memorials(
             birth_date=memorial.birth_date or "",
             death_date=memorial.death_date or "",
             birth_place=memorial.birth_place or "",
+            resting_place=memorial.resting_place,
             short_epitaph=memorial.short_epitaph or "",
             portrait_url=memorial.portrait_url,
             verification_status=memorial.verification_state,
+            verification_badge_type=memorial.verification_badge_type,
         )
         for memorial in memorials
     ]
     return PaginatedSearchOut(
-        results=results, total_returned=len(results), limit=limit, offset=offset
+        results=results,
+        total_returned=len(results),
+        total_count=total_count,
+        limit=limit,
+        offset=offset,
     )

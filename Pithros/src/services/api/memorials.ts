@@ -7,9 +7,31 @@
  * derives the steward from the verified token.
  */
 
-import type { Memorial, TimelineEvent } from '../../types';
+import type { DigitalLegacyLink, Memorial, TimelineEvent } from '../../types';
 import { http } from './client';
 import { type ApiMemorial, type ApiSearchResult, toMemorial } from './mappers';
+
+export interface SearchFilters {
+  q?: string;
+  city?: string;
+  yearFrom?: number;
+  yearTo?: number;
+  birthYearFrom?: number;
+  birthYearTo?: number;
+  deathYearFrom?: number;
+  deathYearTo?: number;
+  verificationStatus?: string;
+  sortBy?:
+    | 'recent'
+    | 'name_asc'
+    | 'name_desc'
+    | 'birth_date_asc'
+    | 'birth_date_desc'
+    | 'death_date_asc'
+    | 'death_date_desc';
+  limit?: number;
+  offset?: number;
+}
 
 const WRITABLE_FIELDS = [
   'fullName',
@@ -133,12 +155,63 @@ export const memorialsApi = {
     await http.delete<void>(`/memorials/${id}`);
   },
 
-  async search(query?: string): Promise<ApiSearchResult[]> {
+  async search(params?: string | SearchFilters): Promise<ApiSearchResult[]> {
+    const queryParams: Record<string, string | number | null | undefined> = {};
+    if (typeof params === 'string') {
+      if (params) queryParams.q = params;
+    } else if (params) {
+      if (params.q) queryParams.q = params.q;
+      if (params.city) queryParams.city = params.city;
+      if (params.yearFrom !== undefined) queryParams.year_from = params.yearFrom;
+      if (params.yearTo !== undefined) queryParams.year_to = params.yearTo;
+      if (params.birthYearFrom !== undefined) queryParams.birth_year_from = params.birthYearFrom;
+      if (params.birthYearTo !== undefined) queryParams.birth_year_to = params.birthYearTo;
+      if (params.deathYearFrom !== undefined) queryParams.death_year_from = params.deathYearFrom;
+      if (params.deathYearTo !== undefined) queryParams.death_year_to = params.deathYearTo;
+      if (params.verificationStatus) queryParams.verification_status = params.verificationStatus;
+      if (params.sortBy) queryParams.sort_by = params.sortBy;
+      if (params.limit !== undefined) queryParams.limit = params.limit;
+      if (params.offset !== undefined) queryParams.offset = params.offset;
+    }
+
     const response = await http.get<{ results: ApiSearchResult[] }>('/public/search', {
-      query: { q: query },
+      query: queryParams,
       anonymous: true,
     });
     return response.results ?? [];
+  },
+
+  async listLegacyLinks(memorialId: string): Promise<DigitalLegacyLink[]> {
+    return http.get<DigitalLegacyLink[]>(`/memorials/${memorialId}/legacy-links`);
+  },
+
+  async addLegacyLink(
+    memorialId: string,
+    link: Omit<DigitalLegacyLink, 'id'>,
+  ): Promise<DigitalLegacyLink> {
+    return http.post<DigitalLegacyLink>(`/memorials/${memorialId}/legacy-links`, link);
+  },
+
+  async updateLegacyLink(
+    memorialId: string,
+    linkId: string,
+    updates: Partial<Omit<DigitalLegacyLink, 'id'>>,
+  ): Promise<DigitalLegacyLink> {
+    return http.patch<DigitalLegacyLink>(
+      `/memorials/${memorialId}/legacy-links/${linkId}`,
+      updates,
+    );
+  },
+
+  async removeLegacyLink(memorialId: string, linkId: string): Promise<void> {
+    await http.delete<void>(`/memorials/${memorialId}/legacy-links/${linkId}`);
+  },
+
+  async replaceLegacyLinks(
+    memorialId: string,
+    links: Array<Omit<DigitalLegacyLink, 'id'>>,
+  ): Promise<DigitalLegacyLink[]> {
+    return http.put<DigitalLegacyLink[]>(`/memorials/${memorialId}/legacy-links`, { links });
   },
 
   async addTimelineEvent(memorialId: string, event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {

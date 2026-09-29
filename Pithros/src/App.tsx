@@ -503,7 +503,7 @@ export default function App() {
                 <DashboardPrivacyView memorial={activeMemorial} onUpdate={loadMemorials} />
               )}
               {currentRoute === '/dashboard/legacy' && (
-                <DashboardLegacyView memorial={activeMemorial} />
+                <DashboardLegacyView memorial={activeMemorial} onUpdate={loadMemorials} />
               )}
               {currentRoute === '/dashboard/archive' && (
                 <DashboardArchiveView memorial={activeMemorial} />

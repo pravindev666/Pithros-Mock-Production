@@ -33,6 +33,11 @@ firebase-service-account*.json
 # Machine-specific, not project code — keep it out of the repository.
 .commandcode/
 
+# ─── Local databases and caches ─────────────────────────────────────────────
+*.db
+*.db-journal
+dump.rdb
+
 # ─── Editors / OS ──────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

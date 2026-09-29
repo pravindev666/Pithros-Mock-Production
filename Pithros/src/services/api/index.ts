@@ -16,7 +16,7 @@ import { memorialsApi } from './memorials';
 import { mediaApi } from './media';
 import { offeringsApi, tributesApi } from './tributes';
 import type * as demoModule from '../demo/demoApi';
-import type { FamilyMember } from '../../types';
+import type { DigitalLegacyLink, FamilyMember } from '../../types';
 
 type DemoApi = typeof demoModule.demoApi;
 
@@ -57,6 +57,17 @@ export const liveApi = {
 
   // ─── Timeline ───────────────────────────────────────────────────────────
   addTimelineEvent: memorialsApi.addTimelineEvent,
+
+  // ─── Digital Legacy Links ────────────────────────────────────────────────
+  addLegacyLink: memorialsApi.addLegacyLink,
+  async updateLegacyLink(
+    memorialId: string,
+    linkId: string,
+    updates: Partial<Omit<DigitalLegacyLink, 'id'>>,
+  ): Promise<DigitalLegacyLink | null> {
+    return memorialsApi.updateLegacyLink(memorialId, linkId, updates);
+  },
+  removeLegacyLink: memorialsApi.removeLegacyLink,
 
   // ─── Contributors ───────────────────────────────────────────────────────
   async inviteFamilyMember(

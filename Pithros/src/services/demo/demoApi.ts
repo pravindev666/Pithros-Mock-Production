@@ -12,6 +12,7 @@ import {
   BillingInvoice,
   AnniversaryNotificationConfig,
   AuditLogEntry,
+  DigitalLegacyLink,
 } from '../../types';
 import {
   demoMemorials,
@@ -169,6 +170,49 @@ export const demoApi = {
       setStored('memorials', list);
     }
     return newEvent;
+  },
+
+  // Digital Legacy Links
+  async addLegacyLink(
+    memorialId: string,
+    link: Omit<DigitalLegacyLink, 'id'>,
+  ): Promise<DigitalLegacyLink> {
+    const list = await this.getMemorials();
+    const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
+    const newLink: DigitalLegacyLink = {
+      ...link,
+      id: `leg_${Date.now()}`,
+    };
+    if (idx !== -1) {
+      if (!list[idx].legacyLinks) list[idx].legacyLinks = [];
+      list[idx].legacyLinks.push(newLink);
+      setStored('memorials', list);
+    }
+    return newLink;
+  },
+
+  async updateLegacyLink(
+    memorialId: string,
+    linkId: string,
+    updates: Partial<Omit<DigitalLegacyLink, 'id'>>,
+  ): Promise<DigitalLegacyLink | null> {
+    const list = await this.getMemorials();
+    const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
+    if (idx === -1 || !list[idx].legacyLinks) return null;
+    const linkIdx = list[idx].legacyLinks.findIndex((l) => l.id === linkId);
+    if (linkIdx === -1) return null;
+    list[idx].legacyLinks[linkIdx] = { ...list[idx].legacyLinks[linkIdx], ...updates };
+    setStored('memorials', list);
+    return list[idx].legacyLinks[linkIdx];
+  },
+
+  async removeLegacyLink(memorialId: string, linkId: string): Promise<void> {
+    const list = await this.getMemorials();
+    const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
+    if (idx !== -1 && list[idx].legacyLinks) {
+      list[idx].legacyLinks = list[idx].legacyLinks.filter((l) => l.id !== linkId);
+      setStored('memorials', list);
+    }
   },
 
   // Family Members

@@ -22,6 +22,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [verificationFilter, setVerificationFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('recent');
 
   const filtered = memorials.filter((m) => {
     // Only show public memorials in explore
@@ -43,6 +44,12 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
       (verificationFilter === 'family' && m.verificationBadgeType === 'Family Managed');
 
     return matchesSearch && matchesCity && matchesVerif;
+  }).sort((a, b) => {
+    if (sortBy === 'name_asc') return a.fullName.localeCompare(b.fullName);
+    if (sortBy === 'name_desc') return b.fullName.localeCompare(a.fullName);
+    if (sortBy === 'birth_date_asc') return a.birthDate.localeCompare(b.birthDate);
+    if (sortBy === 'death_date_desc') return b.deathDate.localeCompare(a.deathDate);
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
   });
 
   const cities = ['Bengaluru', 'Kochi', 'Mumbai', 'Amritsar', 'Pune', 'Chennai'];
@@ -145,6 +152,22 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className={`px-3 py-1.5 rounded-xl border text-xs focus:outline-none ${
+                  isDark
+                    ? 'bg-[#182337] border-[#202C40] text-[#D9D2C6]'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] text-[#554F48]'
+                }`}
+              >
+                <option value="recent">Sort: Most Recent</option>
+                <option value="name_asc">Sort: Name (A–Z)</option>
+                <option value="name_desc">Sort: Name (Z–A)</option>
+                <option value="birth_date_asc">Sort: Birth Year (Earliest)</option>
+                <option value="death_date_desc">Sort: Passing Year (Latest)</option>
+              </select>
+
               <select
                 value={verificationFilter}
                 onChange={(e) => setVerificationFilter(e.target.value)}

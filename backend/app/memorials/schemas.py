@@ -17,12 +17,20 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.core.enums import ContributorRole, MemorialTheme, PrivacyLevel
+from app.core.enums import (
+    ContributorRole,
+    LegacyPlatform,
+    MemorialTheme,
+    PrivacyLevel,
+)
 from app.core.schemas import CamelModel, StrictModel, to_camel
 
 __all__ = [
     "CamelModel",
+    "DigitalLegacyLinkIn",
     "DigitalLegacyLinkOut",
+    "DigitalLegacyLinkUpdate",
+    "DigitalLegacyLinksReplace",
     "FamilyMemberOut",
     "MediaItemOut",
     "MemorialCreate",
@@ -96,6 +104,24 @@ class MediaItemOut(CamelModel):
     uploaded_by: str | None = None
     is_private: bool = False
     is_public: bool = False
+
+
+class DigitalLegacyLinkIn(StrictModel):
+    platform: LegacyPlatform = LegacyPlatform.WEBSITE
+    label: str = Field(min_length=1, max_length=200)
+    url: str = Field(min_length=1, max_length=2000)
+    notes: str | None = None
+
+
+class DigitalLegacyLinkUpdate(StrictModel):
+    platform: LegacyPlatform | None = None
+    label: str | None = Field(default=None, min_length=1, max_length=200)
+    url: str | None = Field(default=None, min_length=1, max_length=2000)
+    notes: str | None = None
+
+
+class DigitalLegacyLinksReplace(StrictModel):
+    links: list[DigitalLegacyLinkIn] = Field(default_factory=list)
 
 
 class DigitalLegacyLinkOut(CamelModel):
@@ -278,14 +304,17 @@ class SearchResultOut(CamelModel):
     birth_date: str = ""
     death_date: str = ""
     birth_place: str = ""
+    resting_place: str | None = None
     short_epitaph: str = ""
     portrait_url: str | None = None
     verification_status: str
+    verification_badge_type: str | None = None
 
 
 class PaginatedSearchOut(CamelModel):
     results: list[SearchResultOut]
     total_returned: int
+    total_count: int = 0
     limit: int
     offset: int
 

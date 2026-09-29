@@ -33,7 +33,14 @@ from app.memorials.permissions import (
     ensure_can_update,
     resolve_access,
 )
-from app.memorials.schemas import MemorialCreate, MemorialUpdate, StoryIn, TimelineEventIn
+from app.memorials.schemas import (
+    DigitalLegacyLinkIn,
+    DigitalLegacyLinkUpdate,
+    MemorialCreate,
+    MemorialUpdate,
+    StoryIn,
+    TimelineEventIn,
+)
 from app.users.models import User
 
 
@@ -382,12 +389,117 @@ def delete_timeline_event(
         )
 
 
+def get_legacy_link(
+    db: Session, *, memorial_id: uuid.UUID, link_id: uuid.UUID
+) -> DigitalLegacyLink:
+    link = db.scalar(
+        select(DigitalLegacyLink).where(
+            DigitalLegacyLink.id == link_id,
+            DigitalLegacyLink.memorial_id == memorial_id,
+        )
+    )
+    if link is None:
+        raise NotFoundError("Legacy link not found")
+    return link
+
+
+def add_legacy_link(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    payload: DigitalLegacyLinkIn,
+    request: Request | None = None,
+) -> DigitalLegacyLink:
+    platform_val = (
+        payload.platform.value if hasattr(payload.platform, "value") else str(payload.platform)
+    )
+    with transaction(db):
+        link = DigitalLegacyLink(
+            memorial_id=memorial.id,
+            platform=platform_val,
+            label=payload.label,
+            url=payload.url,
+            notes=payload.notes,
+        )
+        db.add(link)
+        db.flush()
+        audit_record(
+            db,
+            action=AuditAction.MEMORIAL_UPDATED,
+            entity="memorial",
+            entity_id=memorial.id,
+            actor=access.user,
+            detail={"legacyLinkAdded": str(link.id)},
+            request=request,
+        )
+    db.refresh(link)
+    return link
+
+
+def update_legacy_link(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    link: DigitalLegacyLink,
+    payload: DigitalLegacyLinkUpdate,
+    request: Request | None = None,
+) -> DigitalLegacyLink:
+    with transaction(db):
+        if payload.platform is not None:
+            link.platform = (
+                payload.platform.value
+                if hasattr(payload.platform, "value")
+                else str(payload.platform)
+            )
+        if payload.label is not None:
+            link.label = payload.label
+        if payload.url is not None:
+            link.url = payload.url
+        if payload.notes is not None:
+            link.notes = payload.notes
+        db.flush()
+        audit_record(
+            db,
+            action=AuditAction.MEMORIAL_UPDATED,
+            entity="memorial",
+            entity_id=memorial.id,
+            actor=access.user,
+            detail={"legacyLinkUpdated": str(link.id)},
+            request=request,
+        )
+    db.refresh(link)
+    return link
+
+
+def delete_legacy_link(
+    db: Session,
+    *,
+    memorial: Memorial,
+    access: MemorialAccess,
+    link: DigitalLegacyLink,
+    request: Request | None = None,
+) -> None:
+    with transaction(db):
+        db.delete(link)
+        audit_record(
+            db,
+            action=AuditAction.MEMORIAL_UPDATED,
+            entity="memorial",
+            entity_id=memorial.id,
+            actor=access.user,
+            detail={"legacyLinkRemoved": str(link.id)},
+            request=request,
+        )
+
+
 def replace_legacy_links(
     db: Session,
     *,
     memorial: Memorial,
     access: MemorialAccess,
-    links: list[dict],
+    links: list[dict] | list[DigitalLegacyLinkIn],
     request: Request | None = None,
 ) -> list[DigitalLegacyLink]:
     with transaction(db):
@@ -396,13 +508,17 @@ def replace_legacy_links(
         db.flush()
 
         created: list[DigitalLegacyLink] = []
-        for link in links:
+        for raw in links:
+            link_data = raw if isinstance(raw, dict) else raw.model_dump()
+            platform_val = link_data["platform"]
+            if hasattr(platform_val, "value"):
+                platform_val = platform_val.value
             item = DigitalLegacyLink(
                 memorial_id=memorial.id,
-                platform=link["platform"],
-                label=link["label"],
-                url=link["url"],
-                notes=link.get("notes"),
+                platform=str(platform_val),
+                label=link_data["label"],
+                url=link_data["url"],
+                notes=link_data.get("notes"),
             )
             db.add(item)
             created.append(item)
