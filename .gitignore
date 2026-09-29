@@ -27,6 +27,7 @@ backend/secrets/
 *.pem
 *.key
 firebase-service-account*.json
+*firebase*.json
 
 # ─── Local tooling ─────────────────────────────────────────────────────────
 # Command Code agent configuration: installed skills and learned preferences.
