@@ -2,16 +2,101 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+
+    <!-- Primary SEO Meta Tags -->
     <title>Pithros — Digital Memorial & Remembrance Platform</title>
     <meta name="description" content="A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services." />
+    <meta name="keywords" content="memorial, remembrance, obituary, tribute, funeral, digital memorial, online memorial, death notice, legacy, family history, Pithros, Indian memorial, Hindu funeral, farewell services" />
+    <meta name="author" content="Pithros" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://pithros.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://pithros.com/" />
     <meta property="og:title" content="Pithros — Digital Memorial & Remembrance Platform" />
     <meta property="og:description" content="A permanent digital place to remember a life. Preserving stories, photographs, voices, and milestones." />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://pithros.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Pithros — Digital Memorial Platform with a golden diya lamp" />
+    <meta property="og:site_name" content="Pithros" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://pithros.com/" />
+    <meta name="twitter:title" content="Pithros — Digital Memorial & Remembrance Platform" />
+    <meta name="twitter:description" content="A permanent digital place to remember a life. Preserving stories, photographs, voices, and milestones." />
+    <meta name="twitter:image" content="https://pithros.com/og-image.jpg" />
+
+    <!-- PWA / Mobile App -->
+    <meta name="theme-color" content="#111820" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Pithros" />
+    <meta name="application-name" content="Pithros" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#111820" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/pithros-icon-192.jpg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pithros-icon-512.jpg" />
+
+    <!-- Geo-targeting — India-first -->
+    <meta name="geo.region" content="IN" />
+    <meta name="geo.placename" content="India" />
+
+    <!-- Structured Data (JSON-LD): WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Pithros",
+      "alternateName": "Pithros Memorial Platform",
+      "url": "https://pithros.com",
+      "description": "A permanent digital place to remember a life. Create beautiful memorials, preserve memories, photographs, and connect with farewell services.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://pithros.com/memorials?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Structured Data (JSON-LD): Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Pithros",
+      "url": "https://pithros.com",
+      "logo": "https://pithros.com/pithros-icon-512.jpg",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "availableLanguage": ["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Gujarati", "Punjabi"]
+      }
+    }
+    </script>
+
+    <!-- Preconnect to critical third-party origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+    <!-- Google Fonts: Noto Sans + Noto Serif Indic stack -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Gujarati:wght@400;500;600&family=Noto+Sans+Gurmukhi:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600&family=Noto+Sans+Malayalam:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;600&family=Noto+Serif+Devanagari:wght@400;600&family=Noto+Serif+Gujarati:wght@400;600&family=Noto+Serif+Gurmukhi:wght@400;600&family=Noto+Serif+Kannada:wght@400;600&family=Noto+Serif+Malayalam:wght@400;600&family=Noto+Serif+Tamil:wght@400;600&family=Noto+Serif+Telugu:wght@400;600&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Theme flash prevention (FOUC) -->
     <script>
       (function() {
         try {
@@ -26,8 +111,15 @@
     </script>
   </head>
   <body class="selection:bg-[#B99452]/25 selection:text-[#23324A] dark:selection:bg-[#B99452]/30 dark:selection:text-[#F8F5EE] antialiased min-h-screen">
+    <!-- App Shell: No-JS fallback for crawlers -->
+    <noscript>
+      <div style="text-align:center;padding:3rem;font-family:sans-serif;color:#D9D2C6;background:#111820;min-height:100vh;">
+        <h1>Pithros — Digital Memorial & Remembrance Platform</h1>
+        <p>A permanent digital place to remember a life. Please enable JavaScript to use Pithros.</p>
+      </div>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

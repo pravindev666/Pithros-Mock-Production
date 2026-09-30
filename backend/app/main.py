@@ -119,6 +119,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
 
 
 def _build_api_router() -> APIRouter:
+    from app.billing.router import router as billing_router
     from app.contributors.router import invitation_router
     from app.contributors.router import me_router as contributors_me_router
     from app.contributors.router import router as contributors_router
@@ -146,6 +147,7 @@ def _build_api_router() -> APIRouter:
     api.include_router(verification_router)
     api.include_router(verification_evidence_router)
     api.include_router(verification_admin_router)
+    api.include_router(billing_router)
     return api
 
 

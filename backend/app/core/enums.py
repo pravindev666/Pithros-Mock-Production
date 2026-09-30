@@ -104,10 +104,13 @@ class VerificationDocumentType(StrEnum):
 
 class MemorialTheme(StrEnum):
     CLASSIC = "classic"
+    IVORY = "ivory"
+    MIDNIGHT = "midnight"
+    HERITAGE = "heritage"
     GARDEN = "garden"
+    MONUMENT = "monument"
     HORIZON = "horizon"
     CANDLELIGHT = "candlelight"
-    HERITAGE = "heritage"
 
 
 class ContributorRole(StrEnum):
@@ -232,6 +235,162 @@ class AuditAction(StrEnum):
     REPORT_RESOLVED = "REPORT_RESOLVED"
     PROVIDER_APPROVED = "PROVIDER_APPROVED"
     PAYMENT_CONFIRMED = "PAYMENT_CONFIRMED"
+    PAYMENT_ATTEMPTED = "PAYMENT_ATTEMPTED"
+    PAYMENT_FAILED = "PAYMENT_FAILED"
     REFUND_APPROVED = "REFUND_APPROVED"
+    SUBSCRIPTION_CREATED = "SUBSCRIPTION_CREATED"
+    SUBSCRIPTION_ACTIVATED = "SUBSCRIPTION_ACTIVATED"
+    SUBSCRIPTION_RENEWED = "SUBSCRIPTION_RENEWED"
+    SUBSCRIPTION_CANCELLED = "SUBSCRIPTION_CANCELLED"
+    SUBSCRIPTION_STATE_CHANGED = "SUBSCRIPTION_STATE_CHANGED"
+    MEMORIAL_SLOT_ASSIGNED = "MEMORIAL_SLOT_ASSIGNED"
+    MEMORIAL_SLOT_RELEASED = "MEMORIAL_SLOT_RELEASED"
+    SPONSORSHIP_CREATED = "SPONSORSHIP_CREATED"
+    SPONSORSHIP_REDEEMED = "SPONSORSHIP_REDEEMED"
     ADMIN_LOGIN = "ADMIN_LOGIN"
     AUTHORIZATION_DENIED = "AUTHORIZATION_DENIED"
+
+
+class PlanCode(StrEnum):
+    MEMORIAL_CARE = "MEMORIAL_CARE"
+    FAMILY_ARCHIVE = "FAMILY_ARCHIVE"
+    ADDITIONAL_MEMORIAL = "ADDITIONAL_MEMORIAL"
+
+
+class BillingInterval(StrEnum):
+    MONTHLY = "monthly"
+    HALF_YEARLY = "half_yearly"
+    ANNUAL = "annual"
+
+
+class SubscriptionStatus(StrEnum):
+    PENDING = "pending"
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    GRACE = "grace"
+    EXPIRED_READ_ONLY = "expired_read_only"
+    CANCELLED = "cancelled"
+    TERMINATED = "terminated"
+    PAUSED = "paused"
+    PAYMENT_PROCESSING = "payment_processing"
+    RETRYING = "retrying"
+
+
+SUBSCRIPTION_TRANSITIONS: dict[SubscriptionStatus, frozenset[SubscriptionStatus]] = {
+    SubscriptionStatus.PENDING: frozenset(
+        {SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED, SubscriptionStatus.TERMINATED}
+    ),
+    SubscriptionStatus.ACTIVE: frozenset(
+        {
+            SubscriptionStatus.PAST_DUE,
+            SubscriptionStatus.CANCELLED,
+            SubscriptionStatus.TERMINATED,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.PAUSED,
+        }
+    ),
+    SubscriptionStatus.PAST_DUE: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.GRACE,
+            SubscriptionStatus.RETRYING,
+            SubscriptionStatus.PAYMENT_PROCESSING,
+            SubscriptionStatus.CANCELLED,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.RETRYING: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PAST_DUE,
+            SubscriptionStatus.GRACE,
+            SubscriptionStatus.PAYMENT_PROCESSING,
+            SubscriptionStatus.CANCELLED,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.PAYMENT_PROCESSING: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PAST_DUE,
+            SubscriptionStatus.GRACE,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.GRACE: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.CANCELLED,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.EXPIRED_READ_ONLY: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.CANCELLED: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            SubscriptionStatus.TERMINATED,
+        }
+    ),
+    SubscriptionStatus.PAUSED: frozenset(
+        {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TERMINATED,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+        }
+    ),
+    SubscriptionStatus.TERMINATED: frozenset(),
+}
+
+
+class MemorialEntitlementStatus(StrEnum):
+    ASSIGNED = "assigned"
+    RELEASED = "released"
+    RESERVED = "reserved"
+
+
+class PaymentStatus(StrEnum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    FLAGGED = "flagged"
+    REFUNDED = "refunded"
+    DISPUTED = "disputed"
+
+
+class InvoiceStatus(StrEnum):
+    DRAFT = "draft"
+    ISSUED = "issued"
+    PAID = "paid"
+    VOID = "void"
+    UNCOLLECTIBLE = "uncollectible"
+
+
+class RefundStatus(StrEnum):
+    PENDING = "pending"
+    PROCESSED = "processed"
+    FAILED = "failed"
+
+
+class WebhookProcessingStatus(StrEnum):
+    RECEIVED = "received"
+    PROCESSED = "processed"
+    FAILED = "failed"
+    IGNORED = "ignored"
+
+
+class SponsorshipStatus(StrEnum):
+    ACTIVE = "active"
+    REDEEMED = "redeemed"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+

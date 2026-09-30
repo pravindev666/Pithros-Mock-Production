@@ -1,24 +1,59 @@
-# Optional bundled reverse proxy (compose profile: proxy).
+# Pithros — Production Caddy Reverse Proxy & Edge Router
 #
-# Only needed when nothing else terminates TLS in front of the stack. Behind
-# Cloudflare Tunnel or Dokploy, leave this profile off.
-
+# Used when Caddy terminates TLS (docker compose --profile proxy up -d).
+# If running behind Cloudflare Tunnel or Dokploy, TLS termination happens upstream.
 {
-	email {$ACME_EMAIL}
+	email {$ACME_EMAIL:admin@pithros.in}
 }
 
-pithros.in, www.pithros.in {
+# ─── Canonical Redirect: www.pithros.in -> pithros.in ─────────────────────────
+www.pithros.in {
+	redir https://pithros.in{uri} permanent
+}
+
+# ─── Main Frontend (PWA + SEO Web App) ────────────────────────────────────────
+pithros.in {
 	encode gzip zstd
-	reverse_proxy frontend:80
+
+	# Global Security & SEO Headers
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(self), geolocation=(), payment=()"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		-Server
+	}
+
+	reverse_proxy frontend:80 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+
+	log {
+		output stdout
+		format json
+	}
 }
 
+# ─── Backend API Gateway & Webhook Ingestion ──────────────────────────────────
 api.pithros.in {
 	encode gzip zstd
 
-	# Webhook endpoints must reach FastAPI byte-for-byte so signatures verify.
+	# API Security Headers
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		-Server
+	}
+
+	# Webhook endpoints (e.g. Razorpay/Stripe) must reach FastAPI byte-for-byte
 	reverse_proxy backend:8000 {
+		header_up Host {host}
 		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
 		flush_interval -1
 	}
 

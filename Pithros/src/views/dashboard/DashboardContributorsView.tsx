@@ -8,11 +8,13 @@ import { useTheme } from '../../context/ThemeContext';
 interface DashboardContributorsViewProps {
   memorial: Memorial;
   onUpdate: () => void;
+  onNavigate?: (route: string) => void;
 }
 
 export const DashboardContributorsView: React.FC<DashboardContributorsViewProps> = ({
   memorial,
   onUpdate,
+  onNavigate,
 }) => {
   const { isDark } = useTheme();
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -124,6 +126,44 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
           Invite Family Member
         </Button>
       </div>
+
+      {/* Contributor Limit Banner */}
+      {memorial.family.length >= 1 && (
+        <div
+          className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+            isDark
+              ? 'border-[#B99452]/40 bg-[#16120E] text-[#F8F5EE]'
+              : 'border-[#23324A]/30 bg-[#FCFAF5] text-[#20242A]'
+          }`}
+        >
+          <div className="space-y-1">
+            <span
+              className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+              }`}
+            >
+              Free Memorial Limit (Owner + 1 Contributor)
+            </span>
+            <p className="text-xs leading-relaxed max-w-xl">
+              Free Memorial includes Owner + 1 Family Contributor. Upgrade to Memorial Care to invite extended relatives, biographers, photo archivists, and guest reviewers (up to 20 collaborators).
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            className="whitespace-nowrap flex-shrink-0"
+            onClick={() => {
+              if (onNavigate) {
+                onNavigate('/checkout?plan=plan_care_annual');
+              } else {
+                window.location.href = '/checkout?plan=plan_care_annual';
+              }
+            }}
+          >
+            Expand Collaboration (₹999/yr)
+          </Button>
+        </div>
+      )}
 
       {/* Pending Contributions Banner */}
       {memorial.tributes?.filter((t) => !t.isApproved).length > 0 && (

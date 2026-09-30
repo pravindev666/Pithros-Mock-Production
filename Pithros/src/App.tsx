@@ -13,6 +13,7 @@ import { AdminShell } from './components/layout/AdminShell';
 // Common Components
 import { DemoSwitcher } from './components/common/DemoSwitcher';
 import { SessionExpiredModal } from './components/common/SessionExpiredModal';
+import { SEOHead } from './components/common/SEOHead';
 import { Button } from './components/ui/Button';
 import { PageTransition } from './lib/motion';
 import { useTheme } from './context/ThemeContext';
@@ -485,13 +486,13 @@ export default function App() {
                 <DashboardEditorView memorial={activeMemorial} onUpdate={loadMemorials} />
               )}
               {currentRoute === '/dashboard/media' && (
-                <DashboardMediaVoiceView memorial={activeMemorial} onUpdate={loadMemorials} />
+                <DashboardMediaVoiceView memorial={activeMemorial} onUpdate={loadMemorials} onNavigate={navigate} />
               )}
               {currentRoute === '/dashboard/contributors' && (
-                <DashboardContributorsView memorial={activeMemorial} onUpdate={loadMemorials} />
+                <DashboardContributorsView memorial={activeMemorial} onUpdate={loadMemorials} onNavigate={navigate} />
               )}
               {currentRoute === '/dashboard/timeline' && (
-                <DashboardTimelineView memorial={activeMemorial} onUpdate={loadMemorials} />
+                <DashboardTimelineView memorial={activeMemorial} onUpdate={loadMemorials} onNavigate={navigate} />
               )}
               {(currentRoute === '/dashboard/tributes' || currentRoute === '/dashboard/offerings') && (
                 <DashboardTributesView memorial={activeMemorial} onUpdate={loadMemorials} />
@@ -506,7 +507,7 @@ export default function App() {
                 <DashboardLegacyView memorial={activeMemorial} onUpdate={loadMemorials} />
               )}
               {currentRoute === '/dashboard/archive' && (
-                <DashboardArchiveView memorial={activeMemorial} />
+                <DashboardArchiveView memorial={activeMemorial} onNavigate={navigate} />
               )}
               {currentRoute === '/dashboard/billing' && (
                 <DashboardBillingView memorial={activeMemorial} onNavigate={navigate} />
@@ -648,12 +649,38 @@ export default function App() {
     );
   };
 
+  // SEO: determine dynamic meta props based on the current route
+  const seoProps = (() => {
+    // Memorial detail pages get dynamic OG tags
+    if (isMemorialDetail && publicMemorial) {
+      const name = publicMemorial.fullName || publicMemorial.preferredName || 'Memorial';
+      const bio = publicMemorial.story?.overview;
+      return {
+        route: currentRoute,
+        title: `${name} — Memorial on Pithros`,
+        description: bio
+          ? bio.substring(0, 160)
+          : `Remembering ${name}. View their memorial, share tributes, and celebrate their life on Pithros.`,
+        ogImage: publicMemorial.portraitUrl || undefined,
+        ogType: 'profile' as const,
+        memorialName: name,
+      };
+    }
+    // Auth/dashboard/admin routes should not be indexed
+    if (isAuthRoute || isDashboardRoute || isPartnerRoute || isAdminRoute) {
+      return { route: currentRoute, noindex: true };
+    }
+    return { route: currentRoute };
+  })();
+
   return (
     <div
       className={`min-h-screen font-sans antialiased selection:bg-[#B99452]/20 selection:text-[#B99452] transition-colors ${
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
+      {/* Dynamic SEO head — injects per-route meta tags, OG cards, JSON-LD */}
+      <SEOHead {...seoProps} />
       {renderShellContent()}
 
       {/* Session Expired Modal */}

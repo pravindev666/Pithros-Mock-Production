@@ -147,20 +147,20 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
               isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
             }`}
           >
-            Memorial Plus Preservation
+            Memorial Care
           </h2>
           <p
             className={`text-xs max-w-lg leading-relaxed ${
               isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
             }`}
           >
-            Permanently assigned to <strong>{memorial.fullName}</strong>. Includes unlimited photos, voice notes, Family Constellation access, and formal Document Reviewed verification.
+            Assigned to <strong>{memorial.fullName}</strong>. Includes 30 photographs (300 MB media), up to 60 minutes of voice memories (100 MB audio) & transcripts, complete archival PDF export, digital legacy, and family collaboration.
           </p>
         </div>
         <div className="flex flex-col sm:items-end gap-2 text-xs">
-          <span className="font-mono text-[11px] opacity-75">Status: Lifetime Paid</span>
+          <span className="font-mono text-[11px] opacity-75">Plan: Memorial Care (Annual)</span>
           <span className="font-mono text-[11px] text-emerald-500 font-semibold">
-            Zero Recurring Charges
+            Status: Active Preservation
           </span>
           <Button
             variant="outline"

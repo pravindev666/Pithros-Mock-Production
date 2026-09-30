@@ -84,6 +84,24 @@ def engine():
     engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def flush_redis_cache():
+    """Ensure Redis cache is clean for every test so stale caches don't cause false positives/negatives."""
+    try:
+        from app.core.redis import get_redis
+        client = get_redis()
+        client.flushall()
+    except Exception:
+        pass
+    yield
+    try:
+        from app.core.redis import get_redis
+        client = get_redis()
+        client.flushall()
+    except Exception:
+        pass
+
+
 @pytest.fixture
 def db_session(engine):
     connection = engine.connect()

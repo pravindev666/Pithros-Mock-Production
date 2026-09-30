@@ -1,0 +1,16 @@
+# Pithros — Digital Memorial & Remembrance Platform
+# https://pithros.com
+
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /partner
+Disallow: /account
+Disallow: /auth
+Disallow: /checkout
+Disallow: /payment
+Disallow: /api
+
+# Sitemap
+Sitemap: https://pithros.com/sitemap.xml

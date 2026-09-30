@@ -1341,12 +1341,14 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 isDark ? 'text-[#D0C2AE]' : 'text-[#5C5346]'
               }`}
             >
-              Every family can create a permanent memorial without paying anything. Optional one-time contributions unlock expanded audio storage and physical plaque craft.
+              Every family can create a permanent memorial without paying anything. Memorial Care preserves their voice, spoken histories, and the family's growing archive with complete care.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {pricingPlans.map((plan) => (
+            {pricingPlans
+              .filter((p) => !['plan_care_monthly', 'plan_care_half_yearly'].includes(p.id))
+              .map((plan) => (
               <div
                 key={plan.id}
                 className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${
@@ -1366,7 +1368,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                         isDark ? 'bg-[#B99452]/20 text-[#B99452]' : 'bg-[#E5DED2] text-[#8C5C0F]'
                       }`}
                     >
-                      Most Chosen by Families
+                      Most Chosen by Families • Best Value
                     </span>
                   )}
                   <h3 className="text-xl font-serif">{plan.name}</h3>
@@ -1374,6 +1376,11 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     <span className="text-3xl font-serif font-bold">{plan.price}</span>
                     <span className="text-xs text-[#9EA3AA]">/ {plan.period}</span>
                   </div>
+                  {plan.id === 'plan_care_annual' && (
+                    <p className={`text-[11px] font-mono mb-2 ${isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'}`}>
+                      ₹83/mo equiv. • Save ₹1,989 vs monthly
+                    </p>
+                  )}
                   <p className={`text-xs mt-2 mb-6 ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
                     {plan.description}
                   </p>
@@ -1388,7 +1395,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-8 pt-4">
+                <div className="mt-8 pt-4 space-y-2">
                   <Button
                     variant={plan.popular ? 'primary' : 'outline'}
                     size="md"
@@ -1403,6 +1410,11 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   >
                     {plan.ctaText}
                   </Button>
+                  {plan.id === 'plan_care_annual' && (
+                    <p className={`text-center text-[10px] font-mono ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                      Also available: ₹649 / 6 mos · ₹249 / mo
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

@@ -104,6 +104,12 @@ BLOCKED_SIGNATURES: tuple[tuple[bytes, str], ...] = (
     (b"\x1f\x8b", "Compressed archives are not accepted."),
     (b"Rar!", "Compressed archives are not accepted."),
     (b"7z\xbc\xaf", "Compressed archives are not accepted."),
+    (b"<?xml", "XML/SVG files are not accepted."),
+    (b"<svg", "SVG files are not accepted."),
+    (b"<!DOCTYPE", "HTML documents are not accepted."),
+    (b"<html", "HTML documents are not accepted."),
+    (b"<HTML", "HTML documents are not accepted."),
+    (b"<script", "Scripts are not accepted."),
 )
 
 

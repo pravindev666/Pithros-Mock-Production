@@ -7,9 +7,10 @@ import { api } from '../../services/api';
 
 interface DashboardArchiveViewProps {
   memorial: Memorial;
+  onNavigate?: (route: string) => void;
 }
 
-export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memorial }) => {
+export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memorial, onNavigate }) => {
   const { isDark } = useTheme();
   const [exportingBook, setExportingBook] = useState(false);
   const [exportingZip, setExportingZip] = useState(false);
@@ -65,12 +66,51 @@ export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memo
           Digital Archive & Exports
         </h2>
         <p
-          className={`text-xs mt-1 ${
+          className={`text-xs mt-1 leading-relaxed ${
             isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
           }`}
         >
-          Your memories belong to your family forever. Export copies at any time without restrictions.
+          Your memories belong to your family forever. Free memorials are permanently viewable online; Memorial Care enables complete offline export of your PDF keepsake book and raw media vault.
         </p>
+      </div>
+
+      {/* Paywall #3: Archival Export Tier Banner */}
+      <div
+        className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+          isDark
+            ? 'border-[#B99452]/40 bg-[#16120E] text-[#F8F5EE]'
+            : 'border-[#23324A]/30 bg-[#FCFAF5] text-[#20242A]'
+        }`}
+      >
+        <div className="space-y-1">
+          <span
+            className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${
+              isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+            }`}
+          >
+            Digital Keepsake & Cold Storage
+          </span>
+          <h4 className="text-sm font-serif font-semibold">
+            Complete Family Archive Ownership
+          </h4>
+          <p className={`text-xs max-w-xl leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+            Offline digital ownership belongs with your family. Memorial Care unlocks archival PDF memory book generation, full-resolution media vault ZIP downloads, and offline preservation metadata.
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          className="whitespace-nowrap flex-shrink-0"
+          onClick={() => {
+            if (onNavigate) {
+              onNavigate('/checkout?plan=plan_care_annual');
+            } else {
+              window.location.href = '/checkout?plan=plan_care_annual';
+            }
+          }}
+        >
+          Unlock Archive Vault (₹999/yr)
+        </Button>
       </div>
 
       {downloadSuccess && (

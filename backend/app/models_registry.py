@@ -4,6 +4,19 @@ Importing this module (and nothing else) is enough to populate Base.metadata.
 """
 
 from app.audit.models import AuditLog
+from app.billing.models import (
+    BillingAccount,
+    Invoice,
+    MemorialEntitlement,
+    Payment,
+    Plan,
+    PlanPrice,
+    Refund,
+    SponsorshipLink,
+    Subscription,
+    SubscriptionEntitlement,
+    WebhookEvent,
+)
 from app.core.idempotency import IdempotencyKey
 from app.media.models import MediaItem
 from app.memorials.models import (
@@ -27,15 +40,25 @@ from app.workers.models import TaskFailure
 
 __all__ = [
     "AuditLog",
+    "BillingAccount",
     "DigitalLegacyLink",
     "IdempotencyKey",
+    "Invoice",
     "MediaItem",
     "Memorial",
     "MemorialContributor",
+    "MemorialEntitlement",
     "MemorialPermissionGrant",
     "MemorialSteward",
     "Offering",
+    "Payment",
+    "Plan",
+    "PlanPrice",
+    "Refund",
+    "SponsorshipLink",
     "Story",
+    "Subscription",
+    "SubscriptionEntitlement",
     "TaskFailure",
     "TimelineEvent",
     "Tribute",
@@ -43,4 +66,6 @@ __all__ = [
     "VerificationDecisionRecord",
     "VerificationEvidence",
     "VerificationSubmission",
+    "WebhookEvent",
 ]
+

@@ -8,11 +8,13 @@ import { useTheme } from '../../context/ThemeContext';
 interface DashboardTimelineViewProps {
   memorial: Memorial;
   onUpdate: () => void;
+  onNavigate?: (route: string) => void;
 }
 
 export const DashboardTimelineView: React.FC<DashboardTimelineViewProps> = ({
   memorial,
   onUpdate,
+  onNavigate,
 }) => {
   const { isDark } = useTheme();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -94,6 +96,43 @@ export const DashboardTimelineView: React.FC<DashboardTimelineViewProps> = ({
           {showAddForm ? 'Close Form' : 'Add Milestone'}
         </Button>
       </div>
+
+      {memorial.timeline.length >= 5 && (
+        <div
+          className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+            isDark
+              ? 'border-[#B99452]/40 bg-[#16120E] text-[#F8F5EE]'
+              : 'border-[#23324A]/30 bg-[#FCFAF5] text-[#20242A]'
+          }`}
+        >
+          <div className="space-y-1">
+            <span
+              className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+              }`}
+            >
+              Free Memorial Limit ({memorial.timeline.length}/5 Milestones)
+            </span>
+            <p className="text-xs leading-relaxed max-w-xl">
+              Free Memorial includes 5 timeline milestones. Preserve a comprehensive life story across decades (up to 100 milestones) with Memorial Care.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            className="whitespace-nowrap flex-shrink-0"
+            onClick={() => {
+              if (onNavigate) {
+                onNavigate('/checkout?plan=plan_care_annual');
+              } else {
+                window.location.href = '/checkout?plan=plan_care_annual';
+              }
+            }}
+          >
+            Extend Timeline (₹999/yr)
+          </Button>
+        </div>
+      )}
 
       {showAddForm && (
         <form

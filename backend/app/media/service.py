@@ -15,10 +15,13 @@ from sqlalchemy.orm import Session
 from starlette.requests import Request
 
 from app.audit.service import record as audit_record
+from app.billing.entitlements import assert_can_upload_media, resolve_memorial_entitlements
 from app.core.config import settings
 from app.core.database import transaction
 from app.core.enums import AuditAction, MediaKind, MediaStatus, PrivacyLevel, StorageTier
-from app.core.errors import NotFoundError, ValidationError
+from app.core.errors import NotFoundError, RateLimitedError, ValidationError
+from app.core.redis import get_redis
+from redis.exceptions import RedisError
 from app.media.models import MediaItem
 from app.media.schemas import UploadIntentRequest
 from app.media.storage import build_media_key, extension_of, get_storage
@@ -51,6 +54,33 @@ def create_upload_intent(
     payload: UploadIntentRequest,
     request: Request | None = None,
 ) -> tuple[MediaItem, str]:
+    # Enforce authoritative commercial tier & storage limits
+    can_upload, gate_reason = assert_can_upload_media(
+        memorial.id, payload.kind, payload.size_bytes or 0, db
+    )
+    if not can_upload:
+        raise ValidationError(
+            gate_reason or "Upload limit reached",
+            details={"entitlementGated": True, "kind": payload.kind.value},
+        )
+
+    # Abuse Prevention: Check daily upload attempt quota
+    ent = resolve_memorial_entitlements(memorial.id, db)
+    max_daily = getattr(ent.limits, "max_daily_upload_attempts", 50)
+    try:
+        r = get_redis()
+        attempt_key = f"pithros:daily_upload_attempts:{memorial.id}"
+        daily_attempts = int(r.incr(attempt_key))
+        if daily_attempts == 1:
+            r.expire(attempt_key, 86400)
+        if daily_attempts > max_daily:
+            raise RateLimitedError(
+                f"Daily upload attempt limit reached ({max_daily} attempts/day). Please try again tomorrow.",
+                details={"retryAfterSeconds": max(int(r.ttl(attempt_key)), 0), "dailyLimit": max_daily},
+            )
+    except RedisError:
+        pass  # Fail open gracefully if Redis is temporarily unreachable
+
     rule = validate_declaration(
         filename=payload.filename,
         declared_mime=payload.content_type,
@@ -134,6 +164,24 @@ def complete_upload(
         raise ValidationError("This file type is not accepted.")
 
     validate_content(head=head, rule=rule, actual_size=stored.size)
+
+    # Server-side re-verification of actual uploaded object size against entitlements
+    # (Never blindly trust client-declared size)
+    can_upload_actual, actual_gate_reason = assert_can_upload_media(
+        memorial.id, MediaKind(item.kind), stored.size, db
+    )
+    if not can_upload_actual:
+        try:
+            storage.delete(tier=tier, key=item.storage_key)
+        except Exception:
+            pass
+        with transaction(db):
+            item.status = MediaStatus.REJECTED.value
+            item.deleted_at = datetime.now(UTC)
+        raise ValidationError(
+            actual_gate_reason or "Uploaded object exceeds allowed storage or tier limits.",
+            details={"entitlementGated": True},
+        )
 
     with transaction(db):
         item.status = MediaStatus.READY.value

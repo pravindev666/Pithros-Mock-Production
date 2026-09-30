@@ -39,8 +39,17 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const { isDark } = useTheme();
   const { pithrosUser } = useAuth();
 
-  // Selected plan state (reads query or defaults to plan_plus)
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('plan_plus');
+  // Selected plan state (reads query or defaults to plan_care_annual)
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qPlan = params.get('plan');
+      if (qPlan && pricingPlans.some((p) => p.id === qPlan)) return qPlan;
+    } catch {
+      // fallback
+    }
+    return 'plan_care_annual';
+  });
   const [selectedMemorialId, setSelectedMemorialId] = useState<string>('');
   const [loadedMemorials, setLoadedMemorials] = useState<Memorial[]>(memorials);
 
@@ -192,7 +201,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
                   }`}
                 >
-                  One-time contribution. No recurring subscription surprises. Dedicated permanent digital storage for your family’s memories.
+                  Simple, transparent preservation plans. Complete voice memories, expanded media archives, and dignified digital care for your family.
                 </p>
               </div>
 
@@ -213,7 +222,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     >
                       Selected Preservation Tier
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {pricingPlans
                         .filter((p) => p.id !== 'plan_free')
                         .map((p) => (
@@ -231,15 +240,37 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                                 : 'border-[#E5DED2] hover:border-[#BFAF9B] text-[#554F48]'
                             }`}
                           >
-                            <div className="text-sm font-medium">{p.name}</div>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-xs font-semibold">{p.name}</span>
+                              {p.id === 'plan_care_annual' && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[#B99452]/20 text-[#B99452] font-bold uppercase">
+                                  ★ Best Value
+                                </span>
+                              )}
+                              {p.id === 'plan_care_half_yearly' && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-bold">
+                                  Save ₹845
+                                </span>
+                              )}
+                              {p.id === 'plan_care_monthly' && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-stone-500/15 text-stone-400 font-bold">
+                                  Flexible
+                                </span>
+                              )}
+                              {p.id === 'plan_archive' && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 font-bold">
+                                  5 Memorials
+                                </span>
+                              )}
+                            </div>
                             <div
-                              className={`text-lg font-serif mt-1 ${
+                              className={`text-lg font-serif mt-1 font-bold ${
                                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
                               }`}
                             >
                               {p.price}
                             </div>
-                            <div className="text-[10px] opacity-75 mt-0.5">One-time contribution</div>
+                            <div className="text-[10px] opacity-75 mt-0.5 truncate">{p.period}</div>
                           </button>
                         ))}
                     </div>

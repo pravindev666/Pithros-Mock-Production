@@ -10,11 +10,13 @@ import { useTheme } from '../../context/ThemeContext';
 interface DashboardMediaVoiceViewProps {
   memorial: Memorial;
   onUpdate: () => void;
+  onNavigate?: (route: string) => void;
 }
 
 export const DashboardMediaVoiceView: React.FC<DashboardMediaVoiceViewProps> = ({
   memorial,
   onUpdate,
+  onNavigate,
 }) => {
   const { isDark } = useTheme();
   const [activeSubTab, setActiveSubTab] = useState<'photos' | 'voice'>('photos');
@@ -145,6 +147,43 @@ export const DashboardMediaVoiceView: React.FC<DashboardMediaVoiceViewProps> = (
       {/* PHOTOS VIEW */}
       {activeSubTab === 'photos' && (
         <div className="space-y-6">
+          {photoMedia.length >= 3 && (
+            <div
+              className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+                isDark
+                  ? 'border-[#B99452]/40 bg-[#16120E] text-[#F8F5EE]'
+                  : 'border-[#23324A]/30 bg-[#FCFAF5] text-[#20242A]'
+              }`}
+            >
+              <div className="space-y-1">
+                <span
+                  className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                    isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+                  }`}
+                >
+                  Your memorial is growing ({photoMedia.length}/3 Photos)
+                </span>
+                <p className="text-xs leading-relaxed max-w-xl">
+                  Free Memorial includes 3 photographs. Memorial Care lets your family preserve up to 30 photographs, along with voice memories, archival downloads, and family preservation features.
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                className="whitespace-nowrap flex-shrink-0"
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate('/checkout?plan=plan_care_annual');
+                  } else {
+                    window.location.href = '/checkout?plan=plan_care_annual';
+                  }
+                }}
+              >
+                Preserve with Memorial Care (₹999/yr)
+              </Button>
+            </div>
+          )}
+
           <MediaUploader
             label="Upload high-resolution photographs to the memorial gallery"
             accept="image/*"
@@ -206,6 +245,45 @@ export const DashboardMediaVoiceView: React.FC<DashboardMediaVoiceViewProps> = (
       {/* VOICE MEMORIES VIEW */}
       {activeSubTab === 'voice' && (
         <div className="space-y-6">
+          {/* Paywall #2: Voice Memories Flagship Feature Banner */}
+          <div
+            className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+              isDark
+                ? 'border-[#B99452]/40 bg-[#16120E] text-[#F8F5EE]'
+                : 'border-[#23324A]/30 bg-[#FCFAF5] text-[#20242A]'
+            }`}
+          >
+            <div className="space-y-1">
+              <span
+                className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                  isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+                }`}
+              >
+                Memorial Care Flagship Feature
+              </span>
+              <h4 className="text-sm font-serif font-semibold">
+                Preserve their voice & oral histories
+              </h4>
+              <p className={`text-xs max-w-xl leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+                A photograph shows someone; a voice recording lets your family hear them. Memorial Care includes up to 60 minutes of voice memories (100 MB audio • 50 MB/file), waveform visualizations, and transcripts.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              className="whitespace-nowrap flex-shrink-0"
+              onClick={() => {
+                if (onNavigate) {
+                  onNavigate('/checkout?plan=plan_care_annual');
+                } else {
+                  window.location.href = '/checkout?plan=plan_care_annual';
+                }
+              }}
+            >
+              Preserve Their Voice (₹999/yr)
+            </Button>
+          </div>
+
           <div className="flex items-center justify-between">
             <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
               Record their laugh, stories, bedtime tales, or memories told in their own words.

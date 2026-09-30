@@ -36,7 +36,12 @@ import { OfferingModal } from '../components/ui/OfferingModal';
 import { VerificationDrawer } from '../components/verification/VerificationDrawer';
 import { AmbientOfferingStream } from '../components/memorial/AmbientOfferingStream';
 import { MemorialBookModal } from '../components/memorial/MemorialBookModal';
-import { Book } from 'lucide-react';
+import { MemoryInviteModal } from '../components/memorial/MemoryInviteModal';
+import { MemoryMosaicModal } from '../components/memorial/MemoryMosaicModal';
+import { CinematicRemembranceModal } from '../components/memorial/CinematicRemembranceModal';
+import { ThemeSelectorModal } from '../components/memorial/ThemeSelectorModal';
+import { getThemeConfig, MemorialThemeId } from '../lib/memorialThemes';
+import { Book, Play, Grid, Palette, MessageSquareHeart } from 'lucide-react';
 import { api } from '../services/api';
 import { MOTION_TIMING, MOTION_EASING } from '../lib/motion';
 import { useTheme } from '../context/ThemeContext';
@@ -63,6 +68,32 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
   const [offeringOpen, setOfferingOpen] = useState(false);
   const [verificationDrawerOpen, setVerificationDrawerOpen] = useState(false);
   const [bookModalOpen, setBookModalOpen] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<MemorialThemeId>(
+    (memorial.theme as MemorialThemeId) || 'classic'
+  );
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
+  const [memoryInviteOpen, setMemoryInviteOpen] = useState(false);
+  const [memoryInviteMode, setMemoryInviteMode] = useState<'invite' | 'submit'>('invite');
+  const [memoryMosaicOpen, setMemoryMosaicOpen] = useState(false);
+  const [slideshowOpen, setSlideshowOpen] = useState(false);
+
+  // Check URL for memory invite trigger (/m/<slug>/remember or ?action=remember or ?invite=true)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const search = window.location.search;
+      if (
+        path.endsWith('/remember') ||
+        search.includes('action=remember') ||
+        search.includes('invite=true')
+      ) {
+        setMemoryInviteMode('submit');
+        setMemoryInviteOpen(true);
+      }
+    }
+  }, []);
+
+  const currentTheme = getThemeConfig(activeThemeId);
 
   // New Tribute state
   const [showTributeForm, setShowTributeForm] = useState(false);
@@ -108,13 +139,13 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
 
   return (
     <div
-      className={`min-h-screen transition-colors ${
+      className={`min-h-screen transition-colors ${currentTheme.fontClass} ${
         isDark
-          ? 'bg-[#111820] text-[#F8F5EE]'
-          : 'bg-[#F3EEE4] text-[#20242A]'
+          ? `${currentTheme.bgDark} ${currentTheme.textDark}`
+          : `${currentTheme.bgLight} ${currentTheme.textLight}`
       }`}
     >
-      {/* Steward Preview Mode Banner (allows switching between Visitor View & Family View) */}
+      {/* Steward Preview Mode Banner (allows switching between Visitor View & Family View, and Theme Appearance) */}
       <div
         className={`w-full py-2.5 px-4 sm:px-6 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
           isDark ? 'bg-[#16120E] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
@@ -132,7 +163,23 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
           </span>
         </div>
 
-        <div className="flex rounded-lg border overflow-hidden text-[11px]">
+        <div className="flex items-center gap-2.5">
+          {/* Appearance / Theme button */}
+          <button
+            type="button"
+            onClick={() => setThemeModalOpen(true)}
+            className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-sans ${
+              isDark
+                ? 'border-[#202C40] bg-[#182337] text-[#D9D2C6] hover:text-[#F8F5EE] hover:border-[#B99452]'
+                : 'border-[#E5DED2] bg-[#FCFAF5] text-[#554F48] hover:text-[#20242A] hover:border-[#23324A]'
+            }`}
+            title="Choose how their memory is presented"
+          >
+            <Palette className="w-3 h-3" style={{ color: currentTheme.previewColor }} />
+            <span>Theme: <strong className="font-semibold">{currentTheme.name}</strong></span>
+          </button>
+
+          <div className="flex rounded-lg border overflow-hidden text-[11px]">
           <button
             type="button"
             onClick={() => setPreviewMode('visitor')}
@@ -163,6 +210,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
           >
             Family View
           </button>
+        </div>
         </div>
       </div>
 
@@ -248,38 +296,81 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
           <AmbientOfferingStream className="mb-7" />
 
           {/* Primary Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {/* 1. Share a Memory (High leverage viral memory submission) */}
             <Button
               variant="primary"
               size="md"
-              onClick={handleWriteTributeClick}
+              onClick={() => {
+                setMemoryInviteMode('submit');
+                setMemoryInviteOpen(true);
+              }}
               icon={PenLine}
             >
-              Write a Tribute
+              Share a Memory
             </Button>
+
+            {/* 2. Enter Remembrance (Cinematic full-screen experience with Ken Burns and audio) */}
             <Button
               variant="secondary"
               size="md"
-              onClick={() => setOfferingOpen(true)}
-              icon={Flame}
+              onClick={() => setSlideshowOpen(true)}
+              icon={Play}
             >
-              Leave an Offering
+              Enter Remembrance
             </Button>
+
+            {/* 3. Memory Mosaic (Life in 9 moments share card) */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setMemoryMosaicOpen(true)}
+              icon={Grid}
+            >
+              Memory Mosaic
+            </Button>
+
+            {/* 4. Memorial Keepsake Pack (Flagship 6-asset print-ready suite) */}
             <Button
               variant="outline"
               size="md"
               onClick={() => setBookModalOpen(true)}
-              icon={Book}
+              icon={BookOpen}
             >
-              Memorial Book
+              Keepsake Pack
             </Button>
+
+            {/* 5. Invite Friends & Family */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setMemoryInviteMode('invite');
+                setMemoryInviteOpen(true);
+              }}
+              icon={Users}
+            >
+              Invite Memories
+            </Button>
+
+            {/* 6. Leave an Offering */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setOfferingOpen(true)}
+              icon={Flame}
+            >
+              Leave Offering
+            </Button>
+
+            {/* 7. Share Memorial */}
             <Button
               variant="outline"
               size="md"
               onClick={() => setShareOpen(true)}
               icon={Share2}
             >
-              Share Memorial
+              Share
             </Button>
             <button
               onClick={() => setReportOpen(true)}
@@ -676,6 +767,42 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
               </h3>
             </div>
 
+            {/* Memory Mosaic Callout */}
+            {photoMedia.length > 0 && (
+              <div
+                className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${
+                  isDark ? 'bg-[#182337]/70 border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      isDark ? 'bg-[#B99452]/20 text-[#B99452]' : 'bg-[#23324A]/10 text-[#23324A]'
+                    }`}
+                  >
+                    <Grid className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className={`font-serif text-sm font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                      A Life in 9 Moments — Memory Mosaic
+                    </p>
+                    <p className={isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}>
+                      Select 3–9 photographs to generate a framed keepsake share card for WhatsApp.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMemoryMosaicOpen(true)}
+                  icon={Grid}
+                  className="flex-shrink-0"
+                >
+                  Create Mosaic
+                </Button>
+              </div>
+            )}
+
             {photoMedia.length === 0 ? (
               <div
                 className={`py-16 text-center text-sm ${
@@ -783,6 +910,43 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                 Archival audio recordings preserved with waveforms and transcripts.
               </p>
             </div>
+
+            {memorial.voiceMemories && memorial.voiceMemories.length > 0 && (
+              <div
+                className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                  isDark ? 'bg-[#182337]/70 border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
+                }`}
+              >
+                <div>
+                  <span
+                    className={`text-[10px] font-mono tracking-wider uppercase font-semibold ${
+                      isDark ? 'text-[#B99452]' : 'text-[#23324A]'
+                    }`}
+                  >
+                    Voices of {memorial.preferredName || memorial.fullName.split(' ')[0]}
+                  </span>
+                  <h4
+                    className={`text-base font-serif mt-0.5 ${
+                      isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
+                    }`}
+                  >
+                    Curated Oral Remembrance Collection
+                  </h4>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                    Spoken memories and words of love preserved with full audio playback and transcripts.
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSlideshowOpen(true)}
+                  icon={Play}
+                  className="flex-shrink-0"
+                >
+                  Play Remembrance
+                </Button>
+              </div>
+            )}
 
             {memorial.voiceMemories && memorial.voiceMemories.length > 0 ? (
               <div className="space-y-4">
@@ -1210,11 +1374,46 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
         badgeType={memorial.verificationBadgeType}
       />
 
-      {/* MEMORIAL BOOK MODAL */}
+      {/* MEMORIAL BOOK MODAL (Keepsake Pack) */}
       <MemorialBookModal
         isOpen={bookModalOpen}
         onClose={() => setBookModalOpen(false)}
         memorial={memorial}
+      />
+
+      {/* MEMORY INVITE MODAL (Viral Frictionless Memory Submission) */}
+      <MemoryInviteModal
+        isOpen={memoryInviteOpen}
+        onClose={() => setMemoryInviteOpen(false)}
+        memorial={memorial}
+        initialMode={memoryInviteMode}
+        onMemorySubmitted={() => onRefreshMemorial?.()}
+      />
+
+      {/* MEMORY MOSAIC MODAL ("A Life in 9 Moments") */}
+      <MemoryMosaicModal
+        isOpen={memoryMosaicOpen}
+        onClose={() => setMemoryMosaicOpen(false)}
+        memorial={memorial}
+      />
+
+      {/* CINEMATIC REMEMBRANCE SLIDESHOW ("Enter Remembrance") */}
+      <CinematicRemembranceModal
+        isOpen={slideshowOpen}
+        onClose={() => setSlideshowOpen(false)}
+        memorial={memorial}
+      />
+
+      {/* MEMORIAL THEME SELECTOR MODAL */}
+      <ThemeSelectorModal
+        isOpen={themeModalOpen}
+        onClose={() => setThemeModalOpen(false)}
+        activeThemeId={activeThemeId}
+        onSelectTheme={(newThemeId) => {
+          setActiveThemeId(newThemeId);
+        }}
+        canUsePremiumThemes={true}
+        onUpgradeClick={() => onNavigate?.('pricing')}
       />
     </div>
   );

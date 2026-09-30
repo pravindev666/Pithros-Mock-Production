@@ -179,6 +179,7 @@ export interface Memorial {
     favoriteQuotes?: string[];
   };
   privacy: PrivacyLevel;
+  theme?: 'classic' | 'ivory' | 'midnight' | 'heritage' | 'garden' | 'monument' | 'horizon' | 'candlelight';
   verificationStatus: VerificationStatus;
   verificationBadgeType?: 'Family Managed' | 'Document Reviewed' | 'Enhanced Verification';
   timeline: TimelineEvent[];
