@@ -208,12 +208,15 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
-                className="w-16 h-16 rounded-full flex items-center justify-center"
+                className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner"
                 style={{
                   backgroundColor: isDark ? 'rgba(255, 184, 48, 0.12)' : 'rgba(178, 122, 30, 0.1)',
                 }}
               >
-                <Check className={`w-8 h-8 ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`} />
+                {(() => {
+                  const ChosenComponent = GESTURE_ITEMS.find((i) => i.type === selectedType)?.component || FlowerSymbol;
+                  return <ChosenComponent size={48} />;
+                })()}
               </motion.div>
 
               <div className="space-y-1.5 max-w-sm mx-auto">
@@ -273,7 +276,7 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
                 >
                   Choose a quiet gesture
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {GESTURE_ITEMS.map((item) => {
                     const SymbolComponent = item.component;
                     const isSelected = selectedType === item.type;
@@ -282,18 +285,21 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
                         type="button"
                         key={item.type}
                         onClick={() => setSelectedType(item.type)}
-                        className={`flex flex-col items-center justify-center p-2.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                        className={`group flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer relative overflow-hidden ${
                           isSelected
                             ? isDark
-                              ? 'border-[#B99452] bg-[#B99452]/10 text-[#B99452] shadow-[0_0_12px_rgba(255,184,48,0.15)]'
-                              : 'border-[#23324A] bg-[#E5DED2] text-[#8C5C0F] shadow-[0_2px_8px_rgba(178,122,30,0.12)]'
+                              ? 'border-[#B99452] bg-[#B99452]/15 text-[#B99452] shadow-[0_0_16px_rgba(255,184,48,0.2)] ring-1 ring-[#B99452]/40'
+                              : 'border-[#23324A] bg-[#EDE6DA] text-[#8C5C0F] shadow-[0_2px_12px_rgba(178,122,30,0.15)] ring-1 ring-[#23324A]/30'
                             : isDark
-                            ? 'border-[#202C40] bg-[#182337]/60 text-[#9EA3AA] hover:border-[#2D3D56] hover:text-[#D9D2C6]'
-                            : 'border-[#E5DED2] bg-[#F3EEE4]/60 text-[#554F48] hover:border-[#23324A]/40 hover:text-[#20242A]'
+                            ? 'border-[#202C40] bg-[#182337]/70 text-[#9EA3AA] hover:border-[#B99452]/40 hover:text-[#D9D2C6] hover:bg-[#1A253A]'
+                            : 'border-[#E5DED2] bg-[#FCFAF5] text-[#554F48] hover:border-[#23324A]/40 hover:text-[#20242A] hover:bg-[#F7F2E8]'
                         }`}
                       >
-                        <SymbolComponent size={22} isDark={isDark} className="mb-1" />
-                        <span className="text-[11px] font-medium leading-tight">{item.label}</span>
+                        <div className="w-11 h-11 flex items-center justify-center mb-1 transition-transform group-hover:scale-110">
+                          <SymbolComponent size={34} />
+                        </div>
+                        <span className="text-xs font-serif font-medium leading-tight">{item.label}</span>
+                        <span className="text-[10px] text-[#9EA3AA] leading-tight mt-0.5">{item.desc}</span>
                       </button>
                     );
                   })}

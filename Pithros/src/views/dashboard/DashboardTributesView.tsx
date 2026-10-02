@@ -182,14 +182,14 @@ export const DashboardTributesView: React.FC<DashboardTributesViewProps> = ({
 
   const gestureTypes = [
     { key: 'all', label: 'All Gestures', icon: null },
-    { key: 'flower', label: 'Flowers', icon: <FlowerSymbol size={16} /> },
-    { key: 'light', label: 'Sanctuary Light', icon: <OfferingLightSymbol size={16} /> },
-    { key: 'dove', label: 'Peace Doves', icon: <DoveSymbol size={16} /> },
-    { key: 'hands', label: 'Prayers', icon: <FoldedHandsSymbol size={16} /> },
-    { key: 'heart', label: 'Love', icon: <HeartSymbol size={16} /> },
-    { key: 'star', label: 'Stars', icon: <StarSymbol size={16} /> },
-    { key: 'wreath', label: 'Wreaths', icon: <WreathSymbol size={16} /> },
-    { key: 'memory', label: 'Stories', icon: <MemorySymbol size={16} /> },
+    { key: 'flower', label: 'Flowers', icon: <FlowerSymbol size={18} /> },
+    { key: 'light', label: 'Sanctuary Light', icon: <OfferingLightSymbol size={18} /> },
+    { key: 'dove', label: 'Peace Doves', icon: <DoveSymbol size={18} /> },
+    { key: 'hands', label: 'Prayers', icon: <FoldedHandsSymbol size={18} /> },
+    { key: 'heart', label: 'Love', icon: <HeartSymbol size={18} /> },
+    { key: 'star', label: 'Stars', icon: <StarSymbol size={18} /> },
+    { key: 'wreath', label: 'Wreaths', icon: <WreathSymbol size={18} /> },
+    { key: 'memory', label: 'Stories', icon: <MemorySymbol size={18} /> },
   ];
 
   return (
@@ -339,9 +339,9 @@ export const DashboardTributesView: React.FC<DashboardTributesViewProps> = ({
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl border border-amber-500/20 bg-amber-500/10 flex-shrink-0">
-                    {renderGestureIcon(item.gesture, 22)}
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl border border-amber-500/20 bg-amber-500/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    {renderGestureIcon(item.gesture, 32)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">

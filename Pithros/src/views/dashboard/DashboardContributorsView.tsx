@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Memorial, FamilyMember, FamilyContributorRole } from '../../types';
 import { Button } from '../../components/ui/Button';
-import { Users, UserPlus, Mail, Shield, Trash2, CheckCircle2, Check, Minus, Info } from 'lucide-react';
-import { api } from '../../services/api';
+import { Users, UserPlus, Mail, Shield, Trash2, CheckCircle2, Check, Minus, Info, Copy } from 'lucide-react';
+import { api, contributorsApi } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
 interface DashboardContributorsViewProps {
@@ -23,6 +23,7 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
   const [relationship, setRelationship] = useState('');
   const [role, setRole] = useState<FamilyContributorRole>('contributor');
   const [invitedSuccess, setInvitedSuccess] = useState(false);
+  const [copiedMemberId, setCopiedMemberId] = useState<string | null>(null);
 
   const roleLabels: Record<FamilyContributorRole, string> = {
     steward: 'Steward',
@@ -37,17 +38,30 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
     e.preventDefault();
     if (!name.trim() || !relationship.trim()) return;
 
-    const newMember: FamilyMember = {
-      id: `fm-${Date.now()}`,
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      alert('Please enter a valid email address so the family invitation can be sent.');
+      return;
+    }
+
+    const newMember: Omit<FamilyMember, 'id' | 'status'> = {
       name: name.trim(),
       relationship: relationship.trim(),
       role: role,
-      invitedEmail: email.trim() || undefined,
+      invitedEmail: email.trim(),
     };
 
-    await api.updateMemorial(memorial.id, {
-      family: [...memorial.family, newMember],
-    });
+    try {
+      await api.inviteFamilyMember(memorial.id, newMember);
+    } catch {
+      // In offline/demo fallback
+      try {
+        await api.updateMemorial(memorial.id, {
+          family: [...memorial.family, { ...newMember, id: `fm-${Date.now()}` }],
+        } as any);
+      } catch {
+        // ignore schema mismatch
+      }
+    }
 
     setInvitedSuccess(true);
     setTimeout(() => {
@@ -62,16 +76,32 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
   };
 
   const handleRemoveMember = async (id: string) => {
-    const updated = memorial.family.filter((f) => f.id !== id);
-    await api.updateMemorial(memorial.id, { family: updated });
+    try {
+      await contributorsApi.revoke(memorial.id, id);
+    } catch {
+      const updated = memorial.family.filter((f) => f.id !== id);
+      try {
+        await api.updateMemorial(memorial.id, { family: updated } as any);
+      } catch {
+        // ignore
+      }
+    }
     onUpdate();
   };
 
   const handleRoleChange = async (memberId: string, newRole: FamilyContributorRole) => {
-    const updated = memorial.family.map((f) =>
-      f.id === memberId ? { ...f, role: newRole } : f
-    );
-    await api.updateMemorial(memorial.id, { family: updated });
+    try {
+      await contributorsApi.updateRole(memorial.id, memberId, newRole);
+    } catch {
+      const updated = memorial.family.map((f) =>
+        f.id === memberId ? { ...f, role: newRole } : f
+      );
+      try {
+        await api.updateMemorial(memorial.id, { family: updated } as any);
+      } catch {
+        // ignore
+      }
+    }
     onUpdate();
   };
 
@@ -189,8 +219,15 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
               </p>
             </div>
           </div>
-          <a
-            href="#/dashboard/tributes"
+          <button
+            type="button"
+            onClick={() => {
+              if (onNavigate) {
+                onNavigate('/dashboard/tributes');
+              } else {
+                window.location.assign('/dashboard/tributes');
+              }
+            }}
             className={`text-xs px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer ${
               isDark
                 ? 'bg-[#B99452] text-[#111820] hover:bg-[#D1B477]'
@@ -198,7 +235,7 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
             }`}
           >
             Review Contributions
-          </a>
+          </button>
         </div>
       )}
 
@@ -297,7 +334,39 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
                 )}
               </div>
 
-              <div className="hidden sm:block sm:col-span-2 text-right">
+              <div className="hidden sm:flex sm:col-span-2 items-center justify-end gap-2 text-right">
+                {member.role !== 'steward' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const inviteUrl = `${window.location.origin}/invite/${memorial.id}?role=${member.role}&memberId=${member.id}`;
+                      navigator.clipboard.writeText(inviteUrl);
+                      setCopiedMemberId(member.id);
+                      setTimeout(() => setCopiedMemberId(null), 2000);
+                    }}
+                    className={`p-1.5 rounded-lg border text-[11px] flex items-center gap-1 transition-colors cursor-pointer ${
+                      copiedMemberId === member.id
+                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                        : isDark
+                        ? 'border-[#202C40] text-[#9EA3AA] hover:text-[#F8F5EE] hover:border-[#B99452]'
+                        : 'border-[#E5DED2] text-[#7D766D] hover:text-[#20242A] hover:border-[#23324A]'
+                    }`}
+                    title="Copy unique invitation link for WhatsApp/Message"
+                  >
+                    {copiedMemberId === member.id ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Link</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
                 {member.role !== 'steward' && (
                   <button
                     onClick={() => handleRemoveMember(member.id)}
@@ -477,10 +546,11 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
                       isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
                     }`}
                   >
-                    Email Address
+                    Email Address *
                   </label>
                   <input
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="relative@example.com"

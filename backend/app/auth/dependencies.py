@@ -42,6 +42,7 @@ def get_optional_user(
     user = resolve_or_provision_user(db, identity)
 
     request.state.user_id = str(user.id)
+    request.state.firebase_identity = identity
     user_id_var.set(str(user.id))
     return user
 
@@ -91,3 +92,17 @@ def require_admin_role(*subroles: AdminSubRole) -> Callable[..., User]:
         return user
 
     return dependency
+
+
+def is_verification_reviewer(user: User) -> bool:
+    """Canonical check for "may review verification evidence".
+
+    Mirrors `require_admin_role(VERIFICATION_REVIEWER)` so a route that needs to
+    branch (steward *or* reviewer) does not drift from the dependency gate.
+    """
+    if user.role != UserRole.ADMIN.value:
+        return False
+    return user.admin_subrole in {
+        AdminSubRole.VERIFICATION_REVIEWER.value,
+        AdminSubRole.SUPER_ADMIN.value,
+    }

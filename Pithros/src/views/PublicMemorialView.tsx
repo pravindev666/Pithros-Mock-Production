@@ -25,7 +25,7 @@ import { Memorial, RemembranceOffering } from '../types';
 import { Button } from '../components/ui/Button';
 import { VerificationBadge, PrivacyBadge } from '../components/ui/Badge';
 import { MemorialHalo } from '../components/visual/MemorialHalo';
-import { StarField, MemorialGlow } from '../components/visual/VisualComponents';
+import { StarField, MemorialGlow, MemorialAtmosphere } from '../components/visual/VisualComponents';
 import { Constellation } from '../components/visual/Constellation';
 import { AudioPlayer } from '../components/ui/AudioPlayer';
 import { Lightbox } from '../components/ui/Lightbox';
@@ -33,6 +33,16 @@ import { ShareModal } from '../components/ui/ShareModal';
 import { ReportModal } from '../components/ui/ReportModal';
 import { DisputeModal } from '../components/ui/DisputeModal';
 import { OfferingModal } from '../components/ui/OfferingModal';
+import {
+  DoveSymbol,
+  FlowerSymbol,
+  FoldedHandsSymbol,
+  OfferingLightSymbol,
+  StarSymbol,
+  HeartSymbol,
+  WreathSymbol,
+  MemorySymbol,
+} from '../components/visual/PithrosVisualSymbols';
 import { VerificationDrawer } from '../components/verification/VerificationDrawer';
 import { AmbientOfferingStream } from '../components/memorial/AmbientOfferingStream';
 import { MemorialBookModal } from '../components/memorial/MemorialBookModal';
@@ -52,6 +62,29 @@ interface PublicMemorialViewProps {
   onNavigate?: (route: string) => void;
 }
 
+const renderOfferingIcon = (type: string, size = 24) => {
+  switch (type) {
+    case 'dove':
+      return <DoveSymbol size={size} />;
+    case 'flower':
+      return <FlowerSymbol size={size} />;
+    case 'hands':
+      return <FoldedHandsSymbol size={size} />;
+    case 'light':
+      return <OfferingLightSymbol size={size} />;
+    case 'star':
+      return <StarSymbol size={size} />;
+    case 'heart':
+      return <HeartSymbol size={size} />;
+    case 'honor':
+    case 'wreath':
+      return <WreathSymbol size={size} />;
+    case 'memory':
+    default:
+      return <MemorySymbol size={size} />;
+  }
+};
+
 export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
   memorial,
   onRefreshMemorial,
@@ -64,6 +97,15 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    type: 'memorial' | 'tribute' | 'media';
+    id: string;
+    title: string;
+  }>({
+    type: 'memorial',
+    id: memorial.id,
+    title: memorial.fullName,
+  });
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [offeringOpen, setOfferingOpen] = useState(false);
   const [verificationDrawerOpen, setVerificationDrawerOpen] = useState(false);
@@ -128,7 +170,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
       setTributeAuthor('');
       setTributeRelation('');
       setTributeMessage('');
-    }, 1800);
+    }, 2800);
     onRefreshMemorial?.();
   };
 
@@ -220,8 +262,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
           isDark ? 'border-[#202C40]' : 'border-[#E5DED2]'
         }`}
       >
-        <StarField count={22} />
-        <MemorialGlow className="top-10 left-1/2 -translate-x-1/2" size="w-[520px] h-[520px]" />
+        <MemorialAtmosphere intensity="solemn" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Portrait with Memorial Halo */}
@@ -292,8 +333,21 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
             Preserved by custodian {memorial.stewardName} • Resting in {memorial.restingPlace || memorial.birthPlace}
           </p>
 
-          {/* Ambient Remembrance Stream (No numbers, quiet gesture stream) */}
-          <AmbientOfferingStream className="mb-7" />
+          {/* Ambient Remembrance Stream (Real placed offerings with fallback) */}
+          <AmbientOfferingStream
+            className="mb-7"
+            events={
+              memorial.offerings && memorial.offerings.length > 0
+                ? memorial.offerings.map((o) => ({
+                    id: o.id,
+                    type: o.type,
+                    message: o.message || `placed a gesture of remembrance`,
+                    author: o.senderName,
+                    timeAgo: o.timestamp,
+                  }))
+                : undefined
+            }
+          />
 
           {/* Primary Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-2.5">
@@ -373,17 +427,24 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
               Share
             </Button>
             <button
-              onClick={() => setReportOpen(true)}
+              onClick={() => {
+                setReportTarget({
+                  type: 'memorial',
+                  id: memorial.id,
+                  title: memorial.fullName,
+                });
+                setReportOpen(true);
+              }}
               className={`p-2.5 rounded-xl border text-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
                 isDark
-                  ? 'border-[#202C40] text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'
-                  : 'border-[#E5DED2] text-[#7D766D] hover:text-[#20242A] hover:bg-[#E5DED2]'
+                  ? 'border-[#202C40] text-[#9EA3AA] hover:text-[#F87171] hover:bg-[#182337]'
+                  : 'border-[#E5DED2] text-[#7D766D] hover:text-[#B91C1C] hover:bg-[#E5DED2]'
               }`}
-              title="Report content concern"
-              aria-label="Report content concern"
+              title="Report content or policy concern to Trust & Safety"
+              aria-label="Report content or policy concern to Trust & Safety"
             >
               <Flag className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Notice</span>
+              <span className="hidden sm:inline">Report</span>
             </button>
             <button
               onClick={() => setDisputeOpen(true)}
@@ -826,12 +887,29 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                         : 'border-[#E5DED2] bg-[#FCFAF5] hover:border-[#23324A]'
                     }`}
                   >
-                    <div className="aspect-[4/3] w-full overflow-hidden">
+                    <div className="aspect-[4/3] w-full overflow-hidden relative">
                       <img
                         src={photo.url}
                         alt={photo.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
                       />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReportTarget({
+                            type: 'media',
+                            id: photo.id,
+                            title: photo.title || `Photograph in ${memorial.fullName}'s Gallery`,
+                          });
+                          setReportOpen(true);
+                        }}
+                        className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer shadow-sm"
+                        title="Report inappropriate image (nudity, explicit content, abuse)"
+                        aria-label="Report photograph"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     <div
                       className={`p-4 border-t ${
@@ -995,15 +1073,82 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                   Reflections & Tributes
                 </h3>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowTributeForm(!showTributeForm)}
-                icon={Plus}
-              >
-                {showTributeForm ? 'Close Form' : 'Write a Tribute'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOfferingOpen(true)}
+                  icon={Flame}
+                >
+                  Leave a Gesture
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowTributeForm(!showTributeForm)}
+                  icon={Plus}
+                >
+                  {showTributeForm ? 'Close Form' : 'Write a Tribute'}
+                </Button>
+              </div>
             </div>
+
+            {/* Offerings Placed in Memory */}
+            {memorial.offerings && memorial.offerings.length > 0 && (
+              <div
+                className="p-5 rounded-2xl border space-y-3.5"
+                style={{
+                  backgroundColor: isDark ? 'rgba(24, 35, 55, 0.4)' : 'rgba(252, 250, 245, 0.8)',
+                  borderColor: isDark ? '#202C40' : '#E5DED2',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-serif font-medium uppercase tracking-wider ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`}>
+                    Offerings Placed in Memory ({memorial.offerings.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOfferingOpen(true)}
+                    className={`text-xs font-medium underline-offset-4 hover:underline cursor-pointer ${
+                      isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'
+                    }`}
+                  >
+                    + Place Gesture
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {memorial.offerings.map((off) => (
+                    <div
+                      key={off.id}
+                      className={`p-3 rounded-xl border flex items-center gap-3 transition-colors ${
+                        isDark ? 'border-[#2D3D56] bg-[#182337]' : 'border-[#E5DED2] bg-[#FFFFFF]'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-xl border border-amber-500/20 bg-amber-500/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        {renderOfferingIcon(off.type, 26)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className={`text-xs font-medium truncate ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                          {off.senderName}
+                        </div>
+                        {off.message ? (
+                          <div className={`text-[11px] italic truncate ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                            "{off.message}"
+                          </div>
+                        ) : (
+                          <div className={`text-[10px] uppercase font-mono tracking-wider ${isDark ? 'text-[#737982]' : 'text-[#9EA3AA]'}`}>
+                            {off.type}
+                          </div>
+                        )}
+                        <div className={`text-[9px] mt-0.5 ${isDark ? 'text-[#737982]' : 'text-[#9EA3AA]'}`}>
+                          {off.timestamp}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Leave a Tribute Form */}
             <AnimatePresence>
@@ -1037,7 +1182,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                       }`}
                     >
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>Thank you. Your tribute has been placed in this remembrance book.</span>
+                      <span>Thank you. Your tribute has been received with care and will appear in the remembrance book once reviewed by the family custodian.</span>
                     </div>
                   ) : (
                     <>
@@ -1117,7 +1262,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                           Cancel
                         </Button>
                         <Button type="submit" variant="primary" size="sm" isLoading={tributeSubmitting}>
-                          Publish Tribute
+                          Submit Tribute for Review
                         </Button>
                       </div>
                     </>
@@ -1170,13 +1315,33 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
                           • {tr.relationship}
                         </span>
                       </div>
-                      <span
-                        className={`text-[11px] ${
-                          isDark ? 'text-[#737982]' : 'text-[#7D766D]'
-                        }`}
-                      >
-                        {tr.date}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[11px] ${
+                            isDark ? 'text-[#737982]' : 'text-[#7D766D]'
+                          }`}
+                        >
+                          {tr.date}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReportTarget({
+                              type: 'tribute',
+                              id: tr.id,
+                              title: `Tribute reflection by ${tr.authorName}`,
+                            });
+                            setReportOpen(true);
+                          }}
+                          className={`p-1 rounded-md opacity-60 hover:opacity-100 transition-opacity cursor-pointer ${
+                            isDark ? 'text-[#9EA3AA] hover:text-[#F87171]' : 'text-[#7D766D] hover:text-[#B91C1C]'
+                          }`}
+                          title="Report inappropriate tribute"
+                          aria-label="Report tribute"
+                        >
+                          <Flag className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                     <p
                       className={`text-sm font-editorial italic leading-relaxed ${
@@ -1335,6 +1500,15 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
         currentIndex={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
         onNavigate={(newIdx) => setLightboxIndex(newIdx)}
+        onReport={(photo) => {
+          setLightboxOpen(false);
+          setReportTarget({
+            type: 'media',
+            id: photo.id,
+            title: photo.title || `Photograph in ${memorial.fullName}'s Gallery`,
+          });
+          setReportOpen(true);
+        }}
       />
 
       {/* SHARE MODAL */}
@@ -1347,7 +1521,9 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
       {/* REPORT MODAL */}
       <ReportModal
         isOpen={reportOpen}
-        targetTitle={memorial.fullName}
+        targetTitle={reportTarget.title}
+        targetType={reportTarget.type}
+        targetId={reportTarget.id}
         onClose={() => setReportOpen(false)}
       />
 

@@ -22,7 +22,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const { isDark } = useTheme();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'share' | 'og_preview' | 'qr_plaque'>('share');
-  const { memorialUrl, qrModules, downloadQRAsSVG } = useQR(memorial.slug);
+  const { memorialUrl, qrSvgUrl, svgContent, downloadQRAsSVG } = useQR(memorial.slug);
 
   if (!isOpen) return null;
 
@@ -318,29 +318,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 {/* Plaque Layout */}
                 <div className="inline-block p-4 rounded-xl bg-white text-stone-900 shadow-sm border border-stone-200 mx-auto">
                   <div className="flex flex-col items-center justify-center">
-                    {/* SVG Rendered QR Matrix */}
-                    <svg
-                      viewBox={`0 0 ${qrModules.length + 4} ${qrModules.length + 4}`}
-                      className="w-36 h-36"
-                    >
-                      <rect width="100%" height="100%" fill="#FFFFFF" />
-                      <g fill="#182337">
-                        {qrModules.map((row, r) =>
-                          row.map((cell, c) =>
-                            cell ? (
-                              <rect
-                                key={`${r}-${c}`}
-                                x={c + 2}
-                                y={r + 2}
-                                width="1"
-                                height="1"
-                                rx="0.1"
-                              />
-                            ) : null
-                          )
-                        )}
-                      </g>
-                    </svg>
+                    {/* Authentic Vector QR Code */}
+                    {svgContent ? (
+                      <div
+                        className="w-36 h-36 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
+                        dangerouslySetInnerHTML={{ __html: svgContent }}
+                      />
+                    ) : (
+                      <img
+                        src={qrSvgUrl}
+                        alt={`QR Code for ${memorial.fullName}`}
+                        className="w-36 h-36 object-contain"
+                      />
+                    )}
 
                     <div className="mt-2 text-center">
                       <p className="text-[10px] uppercase tracking-widest font-mono text-stone-500">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FarewellLead, ServiceProvider } from '../../types';
+import { FarewellLead } from '../../types';
 import { api } from '../../services/api';
+import { providersApi, type PartnerProfile } from '../../services/api/providers';
 import { Button } from '../../components/ui/Button';
 import {
   Users,
@@ -19,11 +20,30 @@ import { useTheme } from '../../context/ThemeContext';
 export const PartnerDashboardView: React.FC = () => {
   const { isDark } = useTheme();
   const [leads, setLeads] = useState<FarewellLead[]>([]);
-  const [activeTab, setActiveTab] = useState<'leads' | 'services' | 'profile'>('leads');
+  const [profile, setProfile] = useState<PartnerProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadLeads();
+    void load();
   }, []);
+
+  const load = async () => {
+    setIsLoading(true);
+    try {
+      const [list, partner] = await Promise.all([
+        api.getFarewellLeads(),
+        providersApi.getProfile(),
+      ]);
+      setLeads(list);
+      setProfile(partner);
+      setLoadError(null);
+    } catch {
+      setLoadError('The partner console could not be loaded right now.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadLeads = async () => {
     const list = await api.getFarewellLeads();
@@ -34,6 +54,19 @@ export const PartnerDashboardView: React.FC = () => {
     await api.updateLeadStatus(leadId, status);
     loadLeads();
   };
+
+  const statusLabel =
+    profile?.status === 'approved'
+      ? 'Accepting Requests'
+      : profile?.status === 'suspended'
+      ? 'Listing Paused'
+      : profile?.status === 'rejected'
+      ? 'Application Declined'
+      : 'Awaiting Approval';
+
+  const openLeadCount = leads.filter(
+    (lead) => lead.status === 'new' || lead.status === 'contacted' || lead.status === 'in_service',
+  ).length;
 
   return (
     <div className="space-y-8">
@@ -61,7 +94,7 @@ export const PartnerDashboardView: React.FC = () => {
             </span>
             <span className={`text-xs ${isDark ? 'text-[#737982]' : 'text-[#C5BBAE]'}`}>•</span>
             <span className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
-              Serene Transitions Concierge
+              {profile?.businessName ?? 'Loading partner profile…'}
             </span>
           </div>
           <h1
@@ -72,7 +105,10 @@ export const PartnerDashboardView: React.FC = () => {
             Provider Operations Desk
           </h1>
           <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
-            Assisting families in Bengaluru with compassionate coordination and repatriation.
+            {profile?.description ||
+              (profile?.city
+                ? `Assisting families in ${profile.city}.`
+                : 'Complete your profile so families know how you can help.')}
           </p>
         </div>
 
@@ -96,7 +132,7 @@ export const PartnerDashboardView: React.FC = () => {
                 isDark ? 'text-[#6EE7B7]' : 'text-[#1B4D3E]'
               }`}
             >
-              Accepting Requests
+              {statusLabel}
             </span>
           </div>
           <div
@@ -111,14 +147,14 @@ export const PartnerDashboardView: React.FC = () => {
                 isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
               }`}
             >
-              Average Response
+              Open Enquiries
             </span>
             <span
               className={`text-xs font-semibold ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
               }`}
             >
-              11 minutes
+              {openLeadCount}
             </span>
           </div>
         </div>
@@ -155,6 +191,19 @@ export const PartnerDashboardView: React.FC = () => {
         </div>
 
         <div className="space-y-3">
+          {isLoading && (
+            <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+              Loading family requests…
+            </p>
+          )}
+          {loadError && (
+            <p className="text-xs text-amber-500">{loadError}</p>
+          )}
+          {!isLoading && !loadError && leads.length === 0 && (
+            <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+              No family requests yet. Enquiries from the Farewell Network appear here.
+            </p>
+          )}
           {leads.map((lead) => (
             <div
               key={lead.id}

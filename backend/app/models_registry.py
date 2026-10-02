@@ -28,7 +28,15 @@ from app.memorials.models import (
     Story,
     TimelineEvent,
 )
+from app.notifications.models import Notification
 from app.offerings.models import Offering
+from app.privacy.models import AccountDeletionRequest, MemorialDispositionEntry
+from app.providers.models import (
+    FarewellLead,
+    Provider,
+    ProviderService,
+    ProviderVerification,
+)
 from app.tributes.models import Tribute
 from app.users.models import User
 from app.verification.models import (
@@ -39,21 +47,28 @@ from app.verification.models import (
 from app.workers.models import TaskFailure
 
 __all__ = [
+    "AccountDeletionRequest",
     "AuditLog",
     "BillingAccount",
     "DigitalLegacyLink",
+    "FarewellLead",
     "IdempotencyKey",
     "Invoice",
     "MediaItem",
     "Memorial",
     "MemorialContributor",
+    "MemorialDispositionEntry",
     "MemorialEntitlement",
     "MemorialPermissionGrant",
     "MemorialSteward",
+    "Notification",
     "Offering",
     "Payment",
     "Plan",
     "PlanPrice",
+    "Provider",
+    "ProviderService",
+    "ProviderVerification",
     "Refund",
     "SponsorshipLink",
     "Story",
@@ -68,4 +83,3 @@ __all__ = [
     "VerificationSubmission",
     "WebhookEvent",
 ]
-

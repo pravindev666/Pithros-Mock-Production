@@ -16,16 +16,16 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
 from app.audit import service as audit_service
 from app.billing.models import Subscription
 from app.core.enums import (
+    SUBSCRIPTION_TRANSITIONS,
     AuditAction,
     AuditResult,
-    SUBSCRIPTION_TRANSITIONS,
     SubscriptionStatus,
 )
 from app.core.errors import ConflictError
@@ -37,7 +37,10 @@ class SubscriptionStateError(ConflictError):
     """Raised when an illegal subscription state transition is requested."""
 
     def __init__(self, current_status: str, target_status: str, message: str | None = None) -> None:
-        detail = message or f"Cannot transition subscription from '{current_status}' to '{target_status}'."
+        detail = (
+            message
+            or f"Cannot transition subscription from '{current_status}' to '{target_status}'."
+        )
         super().__init__(detail)
         self.current_status = current_status
         self.target_status = target_status
@@ -56,6 +59,9 @@ def transition_subscription_state(
     current_status = SubscriptionStatus(subscription.status)
 
     if target_status == current_status:
+        if extend_period_until:
+            subscription.current_period_end = extend_period_until
+            db.flush()
         logger.info(
             "subscription_state_no_op",
             extra={"subscription_id": str(subscription.id), "status": str(current_status)},
@@ -76,10 +82,13 @@ def transition_subscription_state(
         raise SubscriptionStateError(
             current_status.value,
             target_status.value,
-            f"Invalid subscription transition from '{current_status.value}' to '{target_status.value}'.",
+            (
+                f"Invalid subscription transition from '{current_status.value}' "
+                f"to '{target_status.value}'."
+            ),
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     old_status_val = subscription.status
 
     # State-specific transition side-effects

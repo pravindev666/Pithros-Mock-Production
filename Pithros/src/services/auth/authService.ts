@@ -8,6 +8,8 @@ import {
   signOut as firebaseSignOut,
   updatePassword,
   updateProfile,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   User as FirebaseUser,
   RecaptchaVerifier,
   ConfirmationResult,
@@ -153,6 +155,7 @@ class AuthService {
             displayName: data.fullName,
             phoneNumber: data.phone,
             emailVerified: false,
+            role: data.role,
           }
         );
 
@@ -167,6 +170,7 @@ class AuthService {
           displayName: data.fullName,
           phoneNumber: data.phone,
           emailVerified: false,
+          role: data.role,
         });
         return { success: true, data: verification };
       }
@@ -390,6 +394,32 @@ class AuthService {
         success: false,
         error: mapAuthError(error),
       };
+    }
+  }
+
+  /**
+   * Re-authenticate with the current password.
+   *
+   * Required before sensitive self-service actions: Firebase refreshes the token
+   * `auth_time` on a real re-authentication, not on a token refresh, and the
+   * backend only accepts account deletion within a short window of that.
+   */
+  public async reauthenticateWithPassword(password: string): Promise<AuthResponse<void>> {
+    try {
+      if (auth.currentUser && isFirebaseConfigured) {
+        const email = auth.currentUser.email;
+        if (!email) {
+          return { success: false, error: 'This account has no password sign-in method.' };
+        }
+        await reauthenticateWithCredential(
+          auth.currentUser,
+          EmailAuthProvider.credential(email, password),
+        );
+        return { success: true };
+      }
+      return { success: false, error: 'Re-authentication is unavailable in demo mode.' };
+    } catch (error) {
+      return { success: false, error: mapAuthError(error) };
     }
   }
 

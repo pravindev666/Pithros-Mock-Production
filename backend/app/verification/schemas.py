@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field
 
@@ -59,6 +60,9 @@ class VerificationOut(CamelModel):
     decisions: list[VerificationDecisionOut] = Field(default_factory=list)
     # What the submitter may legally do next, so the UI does not have to guess.
     allowed_next_states: list[str] = Field(default_factory=list)
+    # Automated assistant pass (OCR & consistency results, if prepared)
+    automated_result: dict[str, Any] | None = None
+    risk_signals: dict[str, Any] | None = None
 
 
 class VerificationQueueItemOut(CamelModel):
@@ -69,6 +73,8 @@ class VerificationQueueItemOut(CamelModel):
     state: str
     submitted_at: datetime | None = None
     evidence_count: int = 0
+    overall_risk: str | None = None
+    document_confidence: str | None = None
 
 
 class VerificationEvidenceAccessOut(CamelModel):

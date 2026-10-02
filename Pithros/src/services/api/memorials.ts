@@ -43,6 +43,8 @@ const WRITABLE_FIELDS = [
   'shortEpitaph',
   'portraitUrl',
   'coverUrl',
+  'portraitMediaId',
+  'coverMediaId',
   'privacy',
   'theme',
 ] as const;
@@ -238,6 +240,30 @@ export const memorialsApi = {
     };
   },
 
+  async updateTimelineEvent(memorialId: string, eventId: string, event: Partial<Omit<TimelineEvent, 'id'>>): Promise<TimelineEvent> {
+    const updated = await http.patch<{
+      id: string;
+      year?: string;
+      dateStr?: string | null;
+      title: string;
+      description?: string;
+      location?: string | null;
+      mediaUrl?: string | null;
+      category?: string | null;
+    }>(`/memorials/${memorialId}/timeline/${eventId}`, event);
+
+    return {
+      id: updated.id,
+      year: updated.year ?? '',
+      dateStr: updated.dateStr ?? undefined,
+      title: updated.title,
+      description: updated.description ?? '',
+      location: updated.location ?? undefined,
+      mediaUrl: updated.mediaUrl ?? undefined,
+      category: (updated.category ?? undefined) as TimelineEvent['category'],
+    };
+  },
+
   async removeTimelineEvent(memorialId: string, eventId: string): Promise<void> {
     await http.delete<void>(`/memorials/${memorialId}/timeline/${eventId}`);
   },
@@ -260,7 +286,7 @@ export const memorialsApi = {
   },
 
   async getExportStatus(
-    memorialId: string,
+    _memorialId: string,
     taskId: string,
   ): Promise<{
     taskId: string;
@@ -269,7 +295,7 @@ export const memorialsApi = {
     fileSize?: number;
     error?: string;
   }> {
-    return http.get(`/memorials/${memorialId}/export/status/${taskId}`);
+    return http.get(`/memorials/export/status/${taskId}`);
   },
 
   getQrCodeUrl(memorialId: string, format: 'png' | 'svg' = 'png', download: boolean = false): string {

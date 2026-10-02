@@ -173,3 +173,42 @@ class InvoiceRead(BaseModel):
     status: str
     issued_at: datetime = Field(alias="issuedAt")
     paid_at: datetime | None = Field(default=None, alias="paidAt")
+
+
+class AdminGrantEntitlementRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    target_user_id: uuid.UUID | None = Field(default=None, alias="targetUserId")
+    target_user_email: str | None = Field(default=None, alias="targetUserEmail")
+    plan_code: str = Field(alias="planCode")  # MEMORIAL_CARE or FAMILY_ARCHIVE
+    duration_months: int = Field(default=12, ge=1, le=120, alias="durationMonths")
+    reason: str = Field(min_length=3, max_length=500)
+    memorial_id: uuid.UUID | None = Field(default=None, alias="memorialId")
+
+
+class AdminExtendSubscriptionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    additional_months: int = Field(default=12, ge=1, le=120, alias="additionalMonths")
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class AdminRevokeSubscriptionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class AdminEntitlementResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    subscription_id: uuid.UUID = Field(alias="subscriptionId")
+    status: str
+    plan_code: str = Field(alias="planCode")
+    plan_name: str = Field(alias="planName")
+    source: str
+    current_period_start: datetime = Field(alias="currentPeriodStart")
+    current_period_end: datetime = Field(alias="currentPeriodEnd")
+    max_memorials: int = Field(alias="maxMemorials")
+    assigned_memorial_id: uuid.UUID | None = Field(default=None, alias="assignedMemorialId")
+    message: str

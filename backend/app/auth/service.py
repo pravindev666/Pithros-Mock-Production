@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.audit.service import record as audit_record
 from app.auth.firebase import FirebaseIdentity
-from app.core.enums import AuditAction
+from app.core.enums import AuditAction, NotificationType
 from app.core.errors import ForbiddenError
+from app.notifications.service import notify
 from app.users.models import User
 
 logger = logging.getLogger(__name__)
@@ -92,10 +93,29 @@ def _adopt_or_create(db: Session, identity: FirebaseIdentity) -> User:
                 "This email address belongs to a closed account. Please contact support."
             )
 
+    # A row with this email may still exist (a previous account lifecycle). It
+    # cannot be duplicated (`users.email` is unique) and it must never be taken
+    # over from an unverified identity — so refuse with a clear message instead
+    # of colliding at the database. Once the email is verified, the adoption
+    # path above links this Firebase identity to the existing account.
+    if email:
+        collision = _find_by_email(db, email, include_deleted=True)
+        if collision is not None:
+            if collision.deleted_at is not None:
+                raise ForbiddenError(
+                    "This email address belongs to a closed account. Please contact support."
+                )
+            raise ForbiddenError(
+                "An account with this email already exists. Verify this email address, "
+                "then sign in to continue."
+            )
+
     user = User(
         firebase_uid=identity.uid,
         email=email or f"{identity.uid}@firebase.local",
         name=identity.display_name,
+        role=identity.role or "visitor",
+        admin_subrole=identity.admin_subrole,
         avatar=identity.picture,
         phone=identity.phone_number,
         email_verified=identity.email_verified,
@@ -111,6 +131,16 @@ def _adopt_or_create(db: Session, identity: FirebaseIdentity) -> User:
         actor=user,
         actor_label="self-registration",
         detail={"provider": identity.sign_in_provider, "source": "first_login"},
+    )
+    notify(
+        db,
+        user_id=user.id,
+        notification_type=NotificationType.WELCOME,
+        title="Welcome to Pithros",
+        body=(
+            "Your account is ready. Create a memorial whenever you feel ready — "
+            "you can add stories, photographs and family members gradually."
+        ),
     )
     logger.info("user_provisioned", extra={"user_id": str(user.id)})
     return user
@@ -129,6 +159,11 @@ def _sync_profile(user: User, identity: FirebaseIdentity) -> None:
         user.phone_verified = True
     if identity.email_verified and not user.email_verified:
         user.email_verified = True
+    # Role and admin_subrole are deliberately NOT re-synced from token claims here.
+    # Firebase custom claims can lag a server-side demotion: an admin demoted in
+    # Pithros would be silently re-promoted on their next request by a stale claim.
+    # Authority lives in the database. Claims set the role only at provisioning
+    # (a brand-new account), and later changes go through an explicit admin action.
 
 
 def _touch_last_seen(user: User) -> None:

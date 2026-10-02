@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   Shield,
@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import { privacyApi, type DeletionRequest } from '../../services/api/privacy';
 
 interface AccountSecurityViewProps {
   onNavigate: (route: string) => void;
@@ -28,6 +29,7 @@ export const AccountSecurityView: React.FC<AccountSecurityViewProps> = ({ onNavi
     pithrosUser,
     isEmailVerified,
     changePassword,
+    reauthenticate,
     resendVerificationEmail,
     signOut,
   } = useAuth();
@@ -39,6 +41,85 @@ export const AccountSecurityView: React.FC<AccountSecurityViewProps> = ({ onNavi
   const [mfaEnabled, setMfaEnabled] = useState(Boolean(pithrosUser?.mfa_enabled));
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletionRequest, setDeletionRequest] = useState<DeletionRequest | null>(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [dispositions, setDispositions] = useState<
+    Record<string, { disposition: string; successorEmail: string }>
+  >({});
+
+  useEffect(() => {
+    let cancelled = false;
+    privacyApi
+      .getDeletionRequest()
+      .then((request) => {
+        if (!cancelled) setDeletionRequest(request);
+      })
+      .catch(() => {
+        /* no request, or not signed in to the live API */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleRequestDeletion = async () => {
+    if (!pithrosUser?.email) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      const reauth = await reauthenticate(deletePassword);
+      if (!reauth.success) {
+        setDeleteError(reauth.error || 'Re-authentication failed.');
+        return;
+      }
+      const request = await privacyApi.requestDeletion({
+        confirmEmail: pithrosUser.email,
+        reason: deleteReason || undefined,
+      });
+      setDeletionRequest(request);
+      setDeleteConfirmOpen(false);
+      setDeletePassword('');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'The request could not be submitted.');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      const request = await privacyApi.cancelDeletion();
+      setDeletionRequest(request);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'The request could not be cancelled.');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const handleDisposition = async (memorialId: string) => {
+    if (!deletionRequest) return;
+    const choice = dispositions[memorialId] || { disposition: 'orphan', successorEmail: '' };
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      const request = await privacyApi.setDisposition(deletionRequest.id, {
+        memorialId,
+        disposition: choice.disposition,
+        successorEmail: choice.successorEmail || undefined,
+      });
+      setDeletionRequest(request);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'That choice could not be saved.');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -382,42 +463,172 @@ export const AccountSecurityView: React.FC<AccountSecurityViewProps> = ({ onNavi
         </div>
 
         {/* 6. Danger Zone / Delete Account */}
-        <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5">
+        <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="text-sm font-medium text-red-400">Delete Account</h3>
               <p className="text-xs text-stone-400 mt-1">
-                Permanently revoke your stewardship credentials. Published memorials will require transfer to another family steward.
+                Request permanent deletion of your account and personal data. Shared memorials stay
+                with their other stewards; a memorial you alone steward needs a disposition first.
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-red-400 border-red-500/30 hover:bg-red-500/10 w-fit"
-              icon={Trash2}
-              onClick={() => setDeleteConfirmOpen(true)}
-            >
-              Request Deletion
-            </Button>
+            {!deletionRequest && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-400 border-red-500/30 hover:bg-red-500/10 w-fit"
+                icon={Trash2}
+                onClick={() => setDeleteConfirmOpen(true)}
+              >
+                Request Deletion
+              </Button>
+            )}
           </div>
-        </div>
 
-        {deleteConfirmOpen && (
-          <div className="p-4 rounded-xl border border-red-500/30 bg-[#1A0F0F] text-xs space-y-3">
-            <p className="text-red-300 font-medium">Confirm stewardship credential revocation?</p>
-            <p className="text-stone-400">
-              This action cannot be undone. To proceed, please contact support at{' '}
-              <span className="text-stone-200">care@pithros.org</span> with your account ID.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDeleteConfirmOpen(false)}
-            >
-              Dismiss
-            </Button>
-          </div>
-        )}
+          {deleteError && (
+            <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs">
+              {deleteError}
+            </div>
+          )}
+
+          {deletionRequest && (
+            <div className="p-4 rounded-xl border border-red-500/30 bg-[#1A0F0F] text-xs space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-red-300 font-medium">
+                  Deletion status: {deletionRequest.status.replace(/_/g, ' ')}
+                </span>
+                {deletionRequest.scheduledFor && (
+                  <span className="text-stone-400 font-mono text-[11px]">
+                    Scheduled for {new Date(deletionRequest.scheduledFor).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+
+              {deletionRequest.status === 'BLOCKED_BY_DISPOSITION' && (
+                <div className="space-y-3">
+                  <p className="text-stone-400">
+                    You are the only steward of these memorials. Choose what happens to each before
+                    your account can be deleted.
+                  </p>
+                  {deletionRequest.dispositions.map((disposition) => {
+                    const choice = dispositions[disposition.memorialId] || {
+                      disposition: 'orphan',
+                      successorEmail: '',
+                    };
+                    return (
+                      <div
+                        key={disposition.id}
+                        className="p-3 rounded-xl border border-[#3A2020] space-y-2"
+                      >
+                        <div className="text-stone-200 font-medium">{disposition.memorialName}</div>
+                        {disposition.status === 'completed' ? (
+                          <span className="text-emerald-400 text-[11px]">
+                            Recorded: {disposition.disposition}
+                          </span>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <select
+                                value={choice.disposition}
+                                onChange={(e) =>
+                                  setDispositions((prev) => ({
+                                    ...prev,
+                                    [disposition.memorialId]: {
+                                      ...choice,
+                                      disposition: e.target.value,
+                                    },
+                                  }))
+                                }
+                                className="w-full px-3 py-2 rounded-xl border border-[#202C40] bg-[#182337] text-[#F8F5EE] text-xs focus:outline-none"
+                              >
+                                <option value="transfer">Transfer stewardship</option>
+                                <option value="delete">Delete memorial</option>
+                                <option value="orphan">Keep in restricted state</option>
+                              </select>
+                              {choice.disposition === 'transfer' && (
+                                <input
+                                  type="email"
+                                  value={choice.successorEmail}
+                                  onChange={(e) =>
+                                    setDispositions((prev) => ({
+                                      ...prev,
+                                      [disposition.memorialId]: {
+                                        ...choice,
+                                        successorEmail: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder="Successor's email"
+                                  className="w-full px-3 py-2 rounded-xl border border-[#202C40] bg-[#182337] text-[#F8F5EE] text-xs focus:outline-none"
+                                />
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={deleteBusy}
+                              onClick={() => handleDisposition(disposition.memorialId)}
+                            >
+                              Save choice
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={deleteBusy}
+                onClick={handleCancelDeletion}
+              >
+                Cancel deletion request
+              </Button>
+            </div>
+          )}
+
+          {deleteConfirmOpen && !deletionRequest && (
+            <div className="p-4 rounded-xl border border-red-500/30 bg-[#1A0F0F] text-xs space-y-3">
+              <p className="text-red-300 font-medium">Request account deletion</p>
+              <p className="text-stone-400">
+                Re-enter your password to confirm. Future recurring billing is cancelled
+                immediately; your data is erased only after the grace period, which you can cancel
+                any time.
+              </p>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Your password"
+                className="w-full px-3.5 py-2 rounded-xl border border-[#202C40] bg-[#182337] text-[#F8F5EE] text-xs focus:outline-none"
+              />
+              <textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="Reason (optional)"
+                rows={2}
+                className="w-full px-3.5 py-2 rounded-xl border border-[#202C40] bg-[#182337] text-[#F8F5EE] text-xs focus:outline-none"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                  disabled={deleteBusy || deletePassword.length === 0}
+                  onClick={handleRequestDeletion}
+                >
+                  {deleteBusy ? 'Submitting…' : 'Submit deletion request'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

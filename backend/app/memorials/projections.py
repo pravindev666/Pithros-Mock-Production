@@ -152,6 +152,36 @@ def media_out(item: MediaItem, *, include_private: bool) -> MediaItemOut | None:
     )
 
 
+def _media_reference_url(
+    db: Session, memorial: Memorial, field: str, *, public: bool
+) -> str | None:
+    """Resolve a portrait/cover media reference into a deliverable URL.
+
+    Anonymous callers only ever receive a URL for a photograph that has been
+    promoted to the public bucket and marked public. Members get a signed URL
+    for whatever is referenced. A missing or unusable reference falls back to the
+    legacy URL column so seeded memorials keep working.
+    """
+    media_id = getattr(memorial, field)
+    legacy = memorial.portrait_url if field == "portrait_media_id" else memorial.cover_url
+    if not media_id:
+        return legacy
+
+    item = db.get(MediaItem, media_id)
+    if item is None or item.deleted_at is not None or item.status != MediaStatus.READY.value:
+        return legacy
+
+    storage = get_storage()
+    tier = StorageTier(item.storage_tier)
+    if tier == StorageTier.PUBLIC and item.privacy == PrivacyLevel.PUBLIC.value:
+        return storage.public_url(key=item.storage_key) or storage.presigned_get_url(
+            tier=tier, key=item.storage_key
+        )
+    if public:
+        return legacy
+    return storage.presigned_get_url(tier=tier, key=item.storage_key)
+
+
 def _media_list(items: Sequence[MediaItem], *, include_private: bool) -> list[MediaItemOut]:
     projected = (media_out(item, include_private=include_private) for item in items)
     return [out for out in projected if out is not None]
@@ -339,8 +369,8 @@ def memorial_public_out(
         birth_place=memorial.birth_place or "",
         resting_place=memorial.resting_place,
         short_epitaph=memorial.short_epitaph or "",
-        portrait_url=memorial.portrait_url,
-        cover_url=memorial.cover_url,
+        portrait_url=_media_reference_url(db, memorial, "portrait_media_id", public=True),
+        cover_url=_media_reference_url(db, memorial, "cover_media_id", public=True),
         story=_story_out(story),
         privacy=memorial.privacy,
         verification_status=memorial.verification_state,
@@ -388,8 +418,8 @@ def memorial_detail_out(
         birth_place=memorial.birth_place or "",
         resting_place=memorial.resting_place,
         short_epitaph=memorial.short_epitaph or "",
-        portrait_url=memorial.portrait_url,
-        cover_url=memorial.cover_url,
+        portrait_url=_media_reference_url(db, memorial, "portrait_media_id", public=False),
+        cover_url=_media_reference_url(db, memorial, "cover_media_id", public=False),
         story=_story_out(story),
         privacy=memorial.privacy,
         publication_state=memorial.publication_state,
@@ -420,18 +450,26 @@ def memorial_detail_out(
         steward_email=primary.user.email if primary and primary.user else None,
         my_role=access.role,
         my_permissions=sorted(permission.value for permission in access.permissions),
+        duplicate_held=getattr(memorial, "duplicate_held", False),
+        dispute_status=getattr(memorial, "dispute_status", None),
+        merged_into_id=getattr(memorial, "merged_into_id", None),
         created_at=memorial.created_at,
         updated_at=memorial.updated_at,
     )
 
 
-def memorial_summary_out(memorial: Memorial) -> MemorialSummaryOut:
+def memorial_summary_out(memorial: Memorial, db: Session | None = None) -> MemorialSummaryOut:
+    portrait_url = (
+        _media_reference_url(db, memorial, "portrait_media_id", public=False)
+        if db is not None
+        else memorial.portrait_url
+    )
     return MemorialSummaryOut(
         id=memorial.id,
         slug=memorial.slug,
         full_name=memorial.full_name,
         preferred_name=memorial.preferred_name,
-        portrait_url=memorial.portrait_url,
+        portrait_url=portrait_url,
         birth_date=memorial.birth_date or "",
         death_date=memorial.death_date or "",
         privacy=memorial.privacy,

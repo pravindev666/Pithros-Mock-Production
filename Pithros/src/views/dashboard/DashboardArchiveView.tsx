@@ -15,33 +15,84 @@ export const DashboardArchiveView: React.FC<DashboardArchiveViewProps> = ({ memo
   const [exportingBook, setExportingBook] = useState(false);
   const [exportingZip, setExportingZip] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const [exportProgressStatus, setExportProgressStatus] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const handleExportBook = async () => {
     setExportingBook(true);
     setDownloadSuccess(null);
+    setExportError(null);
+    setExportProgressStatus('Requesting archival PDF export from worker...');
+
     try {
       const result = await api.exportPdf(memorial.id);
-      if (result.downloadUrl && result.downloadUrl !== '#') {
-        window.open(result.downloadUrl, '_blank');
-        setDownloadSuccess('Printable Memorial Book (PDF) generated and opened.');
-      } else {
-        window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
-        setDownloadSuccess('Printable Memorial Book (PDF) download initiated.');
+      const taskId = result.taskId;
+
+      if (!taskId) {
+        if (result.downloadUrl && result.downloadUrl !== '#') {
+          window.open(result.downloadUrl, '_blank');
+          setDownloadSuccess('Printable Memorial Book (PDF) generated.');
+        } else {
+          window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
+          setDownloadSuccess('Printable Memorial Book (PDF) download initiated.');
+        }
+        setExportingBook(false);
+        setExportProgressStatus(null);
+        return;
       }
-    } catch {
-      window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
-      setDownloadSuccess('Printable Memorial Book (PDF) download initiated.');
-    } finally {
+
+      setExportProgressStatus('Archival PDF is being compiled by Celery worker...');
+
+      let attempts = 0;
+      const maxAttempts = 30; // 60 seconds
+      const poll = setInterval(async () => {
+        attempts++;
+        try {
+          const status = await api.getExportStatus(memorial.id, taskId);
+          if (status.status === 'completed' || status.status === 'SUCCESS') {
+            clearInterval(poll);
+            setExportingBook(false);
+            setExportProgressStatus(null);
+            const downloadUrl = status.downloadUrl || `/api/v1/memorials/${memorial.id}/export/pdf/download`;
+            window.open(downloadUrl, '_blank');
+            setDownloadSuccess('Printable Memorial Book (PDF) ready and opened.');
+          } else if (status.status === 'failed' || status.status === 'FAILURE') {
+            clearInterval(poll);
+            setExportingBook(false);
+            setExportProgressStatus(null);
+            setExportError((status as { error?: string }).error || 'Archival PDF generation failed. Please try again.');
+          } else {
+            setExportProgressStatus(`Compiling archival memory book... (${attempts * 2}s)`);
+          }
+        } catch {
+          if (attempts > 5) {
+            clearInterval(poll);
+            setExportingBook(false);
+            setExportProgressStatus(null);
+            window.open(`/api/v1/memorials/${memorial.id}/export/pdf/download`, '_blank');
+            setDownloadSuccess('Download link opened.');
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(poll);
+          setExportingBook(false);
+          setExportProgressStatus(null);
+          setExportError('Export task queued. You can also download directly once compiled.');
+        }
+      }, 2000);
+    } catch (err: unknown) {
       setExportingBook(false);
+      setExportProgressStatus(null);
+      const msg = err instanceof Error ? err.message : 'PDF export request failed';
+      setExportError(msg);
     }
   };
 
   const handleExportZip = () => {
-    setExportingZip(true);
-    setTimeout(() => {
-      setExportingZip(false);
-      setDownloadSuccess('Archival Media Vault (.ZIP) prepared with all original files.');
-    }, 2000);
+    alert(
+      'Full media vault ZIP archive bundling is scheduled for V2 storage roll-out. All individual high-resolution photographs and voice recordings are permanently preserved in Cloudflare R2 and accessible in the Media tab.'
+    );
   };
 
   return (

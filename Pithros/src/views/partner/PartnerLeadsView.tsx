@@ -1,109 +1,119 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Users,
   Search,
-  Filter,
   Phone,
   Mail,
-  Calendar,
-  Clock,
   MapPin,
   ChevronRight,
-  MessageSquare,
-  CheckCircle2,
-  AlertCircle,
   X,
-  FileText,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import { providersApi, type PartnerLead } from '../../services/api/providers';
 
+/** The console's own vocabulary; the API's canonical states are mapped to it. */
 interface Lead {
   id: string;
   familyContact: string;
   phone: string;
   email: string;
-  deceasedName: string;
   serviceRequested: string;
+  urgency: string;
   status: 'new' | 'contacted' | 'in_consultation' | 'confirmed' | 'completed';
   dateReceived: string;
   location: string;
-  budgetRange: string;
+  quotedAmount: string;
   notes: string;
+}
+
+const FROM_API: Record<string, Lead['status']> = {
+  submitted: 'new',
+  contacted: 'contacted',
+  quoted: 'in_consultation',
+  in_discussion: 'in_consultation',
+  booked: 'confirmed',
+  completed: 'completed',
+  cancelled: 'completed',
+};
+
+const TO_API: Record<Lead['status'], string> = {
+  new: 'Submitted',
+  contacted: 'Provider Contacted',
+  in_consultation: 'Quote Received',
+  confirmed: 'Booked',
+  completed: 'Completed',
+};
+
+function relativeDate(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '—';
+  const minutes = Math.floor((Date.now() - then) / 60000);
+  if (minutes < 60) return `${Math.max(minutes, 1)} minutes ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function mapLead(lead: PartnerLead): Lead {
+  return {
+    id: lead.id,
+    familyContact: lead.requesterName,
+    phone: lead.phone,
+    email: lead.email ?? '',
+    serviceRequested: lead.serviceCategory,
+    urgency: lead.urgency,
+    status: FROM_API[lead.status.toLowerCase()] ?? 'new',
+    dateReceived: relativeDate(lead.createdAt),
+    location: lead.city,
+    quotedAmount: lead.quotedAmount ?? '',
+    notes: lead.description,
+  };
 }
 
 export const PartnerLeadsView: React.FC = () => {
   const { isDark } = useTheme();
 
-  const [leads, setLeads] = useState<Lead[]>([
-    {
-      id: 'lead-101',
-      familyContact: 'Smt. Radhika Nair',
-      phone: '+91 98451 22910',
-      email: 'radhika.nair@example.com',
-      deceasedName: 'Late K. G. Nair',
-      serviceRequested: 'Traditional Kerala Memorial & Floral Tribute Ceremony',
-      status: 'new',
-      dateReceived: '2 hours ago',
-      location: 'Kochi, Kerala (Within 25km)',
-      budgetRange: '₹35,000 – ₹50,000',
-      notes:
-        'Family requests white marigold garlands, brass oil lamps (Nilavilakku), and morning ceremony coordination for 60 guests.',
-    },
-    {
-      id: 'lead-102',
-      familyContact: 'Vikram & Sunita Krishnan',
-      phone: '+91 98450 11223',
-      email: 'anita.k@example.com',
-      deceasedName: 'Dr. Arun Krishnan',
-      serviceRequested: 'Bio-Degradable Sacred Grove Sapling Planting Memorial',
-      status: 'in_consultation',
-      dateReceived: 'Yesterday',
-      location: 'Bengaluru / Western Ghats Nursery',
-      budgetRange: '₹20,000 – ₹30,000',
-      notes:
-        'Planting 10 native Western Ghats saplings in honor of botanist research work. Coordinated with Bangalore Horticulture trust.',
-    },
-    {
-      id: 'lead-103',
-      familyContact: 'Devashish Roy',
-      phone: '+91 98200 44551',
-      email: 'devashish.roy@example.com',
-      deceasedName: 'Subhasish Roy',
-      serviceRequested: 'Memorial Keepsake Urn & Stone Engraving',
-      status: 'confirmed',
-      dateReceived: 'March 18, 2026',
-      location: 'Mumbai Suburban',
-      budgetRange: '₹45,000',
-      notes: 'Custom granite plaque engraved with poem in Bengali script. Production underway.',
-    },
-    {
-      id: 'lead-104',
-      familyContact: 'Farhan Qureshi',
-      phone: '+91 97110 33882',
-      email: 'farhan.q@example.com',
-      deceasedName: 'Begum Zubaida Qureshi',
-      serviceRequested: 'Dignified Floral Spray & Quiet Chamber Arrangement',
-      status: 'completed',
-      dateReceived: 'March 12, 2026',
-      location: 'Hyderabad Old City',
-      budgetRange: '₹25,000',
-      notes: 'Ceremony completed with dignified feedback from family.',
-    },
-  ]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [newStatus, setNewStatus] = useState<Lead['status']>('new');
-  const [callNote, setCallNote] = useState('');
+
+  const load = async () => {
+    setIsLoading(true);
+    try {
+      const { leads: rows } = await providersApi.listLeads();
+      setLeads(rows.map(mapLead));
+      setLoadError(null);
+    } catch {
+      setLoadError('Family enquiries could not be loaded right now.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
 
   const filteredLeads = leads.filter((lead) => {
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      lead.familyContact.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.deceasedName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.serviceRequested.toLowerCase().includes(searchQuery.toLowerCase());
+      !query ||
+      lead.familyContact.toLowerCase().includes(query) ||
+      lead.serviceRequested.toLowerCase().includes(query) ||
+      lead.location.toLowerCase().includes(query);
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -143,12 +153,22 @@ export const PartnerLeadsView: React.FC = () => {
     }
   };
 
-  const handleUpdateStatus = (leadId: string, status: Lead['status']) => {
-    setLeads((prev) =>
-      prev.map((l) => (l.id === leadId ? { ...l, status } : l))
-    );
-    if (selectedLead && selectedLead.id === leadId) {
-      setSelectedLead((prev) => (prev ? { ...prev, status } : null));
+  const handleUpdateStatus = async (leadId: string, status: Lead['status']) => {
+    setIsUpdating(true);
+    setStatusError(null);
+    try {
+      const updated = await providersApi.updateLeadStatus(leadId, TO_API[status]);
+      const mapped = mapLead(updated);
+      setLeads((prev) => prev.map((lead) => (lead.id === leadId ? mapped : lead)));
+      setSelectedLead((prev) => (prev && prev.id === leadId ? mapped : prev));
+    } catch (error) {
+      setStatusError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'That status change is not allowed from the current state.',
+      );
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -162,7 +182,7 @@ export const PartnerLeadsView: React.FC = () => {
               isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
             }`}
           >
-            Family Inquiries & Bereavement Leads
+            Family Inquiries &amp; Bereavement Leads
           </h1>
           <p
             className={`text-xs sm:text-sm mt-1 ${
@@ -192,7 +212,7 @@ export const PartnerLeadsView: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search by family name, deceased, or service…"
+            placeholder="Search by family name, service, or city…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full pl-9 pr-4 py-2 rounded-xl border text-xs focus:outline-none ${
@@ -204,7 +224,7 @@ export const PartnerLeadsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
-          {['all', 'new', 'in_consultation', 'confirmed', 'completed'].map((status) => (
+          {['all', 'new', 'contacted', 'in_consultation', 'confirmed', 'completed'].map((status) => (
             <button
               key={status}
               type="button"
@@ -232,7 +252,17 @@ export const PartnerLeadsView: React.FC = () => {
         }`}
       >
         <div className="divide-y divide-inherit">
-          {filteredLeads.length === 0 ? (
+          {isLoading ? (
+            <p
+              className={`p-10 text-center text-xs ${
+                isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+              }`}
+            >
+              Loading family enquiries…
+            </p>
+          ) : loadError ? (
+            <p className="p-10 text-center text-xs text-amber-500">{loadError}</p>
+          ) : filteredLeads.length === 0 ? (
             <p
               className={`p-10 text-center text-xs ${
                 isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
@@ -244,7 +274,10 @@ export const PartnerLeadsView: React.FC = () => {
             filteredLeads.map((lead) => (
               <div
                 key={lead.id}
-                onClick={() => setSelectedLead(lead)}
+                onClick={() => {
+                  setSelectedLead(lead);
+                  setStatusError(null);
+                }}
                 className={`p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer transition-colors ${
                   isDark ? 'hover:bg-[#1A150F]' : 'hover:bg-[#F9F4EB]'
                 }`}
@@ -268,20 +301,23 @@ export const PartnerLeadsView: React.FC = () => {
                     </span>
                   </div>
 
-                  <p
-                    className={`text-xs ${
-                      isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
-                    }`}
-                  >
-                    In memory of: <span className="font-serif italic font-medium">{lead.deceasedName}</span>
-                  </p>
+                  {lead.urgency && (
+                    <p
+                      className={`text-xs ${
+                        isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
+                      }`}
+                    >
+                      Urgency:{' '}
+                      <span className="font-serif italic font-medium">{lead.urgency}</span>
+                    </p>
+                  )}
 
                   <p
                     className={`text-[11px] leading-relaxed line-clamp-1 ${
                       isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
                     }`}
                   >
-                    Service: {lead.serviceRequested} • {lead.location}
+                    Service: {lead.serviceRequested} • {lead.location || 'Location not supplied'}
                   </p>
                 </div>
 
@@ -292,14 +328,14 @@ export const PartnerLeadsView: React.FC = () => {
                         isDark ? 'text-[#B99452]' : 'text-[#23324A]'
                       }`}
                     >
-                      {lead.budgetRange}
+                      {lead.quotedAmount || 'No quote yet'}
                     </span>
                     <span
                       className={`text-[10px] block ${
                         isDark ? 'text-[#6E5F4E]' : 'text-[#A09585]'
                       }`}
                     >
-                      Estimated Budget
+                      Quoted Amount
                     </span>
                   </div>
 
@@ -340,7 +376,8 @@ export const PartnerLeadsView: React.FC = () => {
                       isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
                     }`}
                   >
-                    Inquiry for: {selectedLead.deceasedName}
+                    Received {selectedLead.dateReceived}
+                    {selectedLead.urgency ? ` • ${selectedLead.urgency}` : ''}
                   </p>
                 </div>
                 <button
@@ -363,15 +400,17 @@ export const PartnerLeadsView: React.FC = () => {
                     {selectedLead.phone}
                   </a>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-stone-400" />
-                  <a href={`mailto:${selectedLead.email}`} className="hover:underline">
-                    {selectedLead.email}
-                  </a>
-                </div>
+                {selectedLead.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-stone-400" />
+                    <a href={`mailto:${selectedLead.email}`} className="hover:underline">
+                      {selectedLead.email}
+                    </a>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                  <span>{selectedLead.location}</span>
+                  <span>{selectedLead.location || 'Location not supplied'}</span>
                 </div>
               </div>
 
@@ -384,7 +423,7 @@ export const PartnerLeadsView: React.FC = () => {
                     isDark ? 'border-[#202C40] bg-[#16120D] text-[#D9D2C6]' : 'border-[#E5DED2] bg-white text-[#3E3831]'
                   }`}
                 >
-                  {selectedLead.notes}
+                  {selectedLead.notes || selectedLead.serviceRequested}
                 </p>
               </div>
 
@@ -398,8 +437,9 @@ export const PartnerLeadsView: React.FC = () => {
                       <button
                         key={st}
                         type="button"
+                        disabled={isUpdating}
                         onClick={() => handleUpdateStatus(selectedLead.id, st)}
-                        className={`p-2 rounded-xl border text-[11px] capitalize transition-all ${
+                        className={`p-2 rounded-xl border text-[11px] capitalize transition-all disabled:opacity-50 ${
                           selectedLead.status === st
                             ? isDark
                               ? 'border-[#B99452] bg-[#B99452]/15 text-[#B99452]'
@@ -414,6 +454,7 @@ export const PartnerLeadsView: React.FC = () => {
                     )
                   )}
                 </div>
+                {statusError && <p className="text-[11px] text-amber-500">{statusError}</p>}
               </div>
 
               <div className="flex justify-end pt-2">

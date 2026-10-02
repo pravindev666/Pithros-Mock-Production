@@ -33,6 +33,9 @@ class FirebaseIdentity:
     picture: str | None = None
     phone_number: str | None = None
     sign_in_provider: str | None = None
+    role: str | None = None
+    admin_subrole: str | None = None
+    auth_time: int | None = None
 
     @property
     def normalized_email(self) -> str:
@@ -57,6 +60,9 @@ class FirebaseIdentity:
             picture=claims.get("picture"),
             phone_number=claims.get("phone_number"),
             sign_in_provider=firebase_claim.get("sign_in_provider"),
+            role=claims.get("role"),
+            admin_subrole=claims.get("admin_subrole"),
+            auth_time=claims.get("auth_time"),
         )
 
 
@@ -139,3 +145,19 @@ class FirebaseTokenVerifier:
 @lru_cache(maxsize=1)
 def get_firebase_verifier() -> FirebaseTokenVerifier:
     return FirebaseTokenVerifier()
+
+
+def disable_firebase_user(uid: str) -> None:
+    """Disable sign-in for a Firebase user (used by account deletion).
+
+    Raises `UnauthorizedError` when the Admin SDK is not configured, so callers
+    can distinguish "provider unavailable" from a successful disable.
+    """
+    get_firebase_verifier()._ensure_app()
+    firebase_auth.update_user(uid, disabled=True)
+
+
+def revoke_firebase_tokens(uid: str) -> None:
+    """Invalidate a Firebase user's refresh tokens, ending active sessions."""
+    get_firebase_verifier()._ensure_app()
+    firebase_auth.revoke_refresh_tokens(uid)

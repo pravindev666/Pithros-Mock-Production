@@ -98,7 +98,11 @@ def test_replace_legacy_links(client, make_user, make_memorial, auth):
     replace_payload = {
         "links": [
             {"platform": "facebook", "label": "FB Memorial", "url": "https://facebook.com/page"},
-            {"platform": "linkedin", "label": "Career Legacy", "url": "https://linkedin.com/in/person"},
+            {
+                "platform": "linkedin",
+                "label": "Career Legacy",
+                "url": "https://linkedin.com/in/person",
+            },
         ]
     }
     res = client.put(

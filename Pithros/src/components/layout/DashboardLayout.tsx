@@ -44,6 +44,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { pithrosUser } = useAuth();
   const { metadata } = useLocale();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const isContributor = pithrosUser?.role === 'family_contributor';
 
   const menuItems = [
     { label: 'Overview', route: '/dashboard', icon: LayoutDashboard },
@@ -53,13 +54,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     { label: 'Media & Voice', route: '/dashboard/media', icon: Image },
     { label: 'Timeline Milestones', route: '/dashboard/timeline', icon: Calendar },
     { label: 'Tributes & Offerings', route: '/dashboard/tributes', icon: Flame },
-    { label: 'Verification Center', route: '/dashboard/verification', icon: ShieldCheck },
-    { label: 'Privacy & Security', route: '/dashboard/privacy', icon: Lock },
-    { label: 'Digital Legacy & Succession', route: '/dashboard/legacy', icon: ShieldCheck },
+    ...(!isContributor
+      ? [
+          { label: 'Verification Center', route: '/dashboard/verification', icon: ShieldCheck },
+          { label: 'Privacy & Security', route: '/dashboard/privacy', icon: Lock },
+          { label: 'Digital Legacy & Succession', route: '/dashboard/legacy', icon: ShieldCheck },
+        ]
+      : []),
     { label: 'Digital Archive', route: '/dashboard/archive', icon: Archive },
-    { label: 'Plan & Billing', route: '/dashboard/billing', icon: CreditCard },
+    ...(!isContributor
+      ? [
+          { label: 'Plan & Billing', route: '/dashboard/billing', icon: CreditCard },
+          { label: 'Sanctuary Settings', route: '/dashboard/settings', icon: Settings },
+        ]
+      : []),
     { label: 'Remembrance Alerts', route: '/dashboard/notifications', icon: Bell },
-    { label: 'Sanctuary Settings', route: '/dashboard/settings', icon: Settings },
   ];
 
   return (
@@ -304,6 +313,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 style={{ backgroundColor: isDark ? '#B99452' : '#23324A' }}
               />
             </button>
+            {pithrosUser?.role === 'admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                icon={ShieldCheck}
+                onClick={() => onNavigate('/admin')}
+                className="text-amber-500 border-amber-500/30 hover:bg-amber-500/10"
+              >
+                Admin Console
+              </Button>
+            )}
             <Button
               variant="primary"
               size="sm"

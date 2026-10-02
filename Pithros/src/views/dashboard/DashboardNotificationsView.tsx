@@ -1,90 +1,74 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import {
-  Bell,
-  Calendar,
-  Flame,
-  Mail,
-  Smartphone,
-  CheckCircle2,
-  Trash2,
-  Clock,
-  Sparkles,
-} from 'lucide-react';
+import { AlertCircle, Bell, CheckCircle2, Flame, Lock, RefreshCw } from 'lucide-react';
 import { Memorial } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import {
+  notificationsApi,
+  relativeTime,
+  type AppNotification,
+} from '../../services/api/notifications';
 
 interface DashboardNotificationsViewProps {
   memorial: Memorial;
 }
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'tribute' | 'anniversary' | 'contributor' | 'system';
-}
+const iconFor = (type: string) => {
+  if (type === 'tribute_pending') return Flame;
+  if (type.startsWith('account_deletion')) return Lock;
+  if (type.startsWith('verification')) return CheckCircle2;
+  return Bell;
+};
 
-export const DashboardNotificationsView: React.FC<DashboardNotificationsViewProps> = ({
-  memorial,
-}) => {
+export const DashboardNotificationsView: React.FC<DashboardNotificationsViewProps> = () => {
   const { isDark } = useTheme();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 'notif-1',
-      title: 'New Remembrance Offering',
-      message: 'Meenakshi Sundaram left a Peaceful Dove tribute and condolence note.',
-      time: '32 minutes ago',
-      read: false,
-      type: 'tribute',
-    },
-    {
-      id: 'notif-2',
-      title: 'Upcoming Death Anniversary Reminder',
-      message: 'The 2nd remembrance anniversary of Dr. Arun Krishnan is approaching in 14 days.',
-      time: 'Yesterday at 10:00 AM',
-      read: false,
-      type: 'anniversary',
-    },
-    {
-      id: 'notif-3',
-      title: 'Family Contributor Joined',
-      message: 'Vikram Krishnan accepted the steward invitation and uploaded 3 historical photographs.',
-      time: '3 days ago',
-      read: true,
-      type: 'contributor',
-    },
-    {
-      id: 'notif-4',
-      title: 'Verification Certificate Approved',
-      message: 'Pithros Trust Officers approved the death certificate record for Dr. Arun Krishnan.',
-      time: 'March 08, 2026',
-      read: true,
-      type: 'system',
-    },
-  ]);
+  const refresh = useCallback(async () => {
+    setError(null);
+    try {
+      const data = await notificationsApi.list();
+      setNotifications(data.notifications);
+      setUnreadCount(data.unreadCount);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Notifications could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const [emailDigest, setEmailDigest] = useState('daily');
-  const [notifyOnTributes, setNotifyOnTributes] = useState(true);
-  const [notifyOnAnniversaries, setNotifyOnAnniversaries] = useState(true);
-  const [savedSettings, setSavedSettings] = useState(false);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleMarkRead = async (id: string) => {
+    try {
+      await notificationsApi.markRead(id);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'The notification could not be marked read.');
+    }
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedSettings(true);
-    setTimeout(() => setSavedSettings(false), 2500);
+  const handleMarkAll = async () => {
+    setError(null);
+    try {
+      await notificationsApi.markAllRead();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Notifications could not be updated.');
+    }
   };
 
   return (
@@ -97,31 +81,32 @@ export const DashboardNotificationsView: React.FC<DashboardNotificationsViewProp
               isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
             }`}
           >
-            Remembrance Notifications & Alerts
+            Notifications
           </h1>
-          <p
-            className={`text-xs sm:text-sm mt-1 ${
-              isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-            }`}
-          >
-            Manage remembrance anniversaries, family contributions, and condolence dispatches.
+          <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+            Verification decisions, family activity, and stewardship updates — in one place.
           </p>
         </div>
 
-        <Button variant="outline" size="sm" onClick={markAllRead}>
-          Mark All as Read
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} icon={RefreshCw} disabled={refreshing}>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleMarkAll} disabled={unreadCount === 0}>
+            Mark All as Read
+          </Button>
+        </div>
       </div>
 
-      {savedSettings && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs flex items-center gap-2"
+      {error && (
+        <div
+          className={`flex items-center gap-2 p-3 rounded-xl border text-xs ${
+            isDark ? 'bg-[#3A1414] border-[#7F1D1D] text-[#FCA5A5]' : 'bg-[#FEF2F2] border-[#F87171] text-[#991B1B]'
+          }`}
         >
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>Notification frequencies updated successfully.</span>
-        </motion.div>
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
 
       {/* Notifications Inbox */}
@@ -133,178 +118,110 @@ export const DashboardNotificationsView: React.FC<DashboardNotificationsViewProp
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-400" />
-            <h2
-              className={`text-sm font-medium ${
-                isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-              }`}
-            >
-              Recent Sanctuary Activity
+            <h2 className={`text-sm font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+              Your Activity
             </h2>
           </div>
-          <span className="text-[11px] font-mono opacity-60">
-            {notifications.filter((n) => !n.read).length} unread
-          </span>
+          <span className="text-[11px] font-mono opacity-60">{unreadCount} unread</span>
         </div>
 
         <div className="space-y-2.5">
-          {notifications.length === 0 ? (
-            <p
-              className={`text-xs py-8 text-center ${
-                isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-              }`}
-            >
-              No new notifications.
+          {loading ? (
+            <p className={`text-xs py-8 text-center ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Loading notifications…
+            </p>
+          ) : notifications.length === 0 ? (
+            <p className={`text-xs py-8 text-center ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Nothing new yet. Verification decisions, tributes, and family activity will appear
+              here.
             </p>
           ) : (
-            notifications.map((item) => (
-              <div
-                key={item.id}
-                className={`p-3.5 rounded-xl border text-xs flex items-start justify-between gap-3 transition-colors ${
-                  !item.read
-                    ? isDark
-                      ? 'border-[#B99452]/30 bg-[#1A150F]'
-                      : 'border-[#23324A]/30 bg-[#FBF6ED]'
-                    : isDark
-                    ? 'border-[#202C40] bg-[#16120D]'
-                    : 'border-[#E5DED2] bg-white'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`p-2 rounded-lg mt-0.5 flex-shrink-0 ${
-                      item.type === 'anniversary'
-                        ? 'bg-amber-500/10 text-amber-400'
-                        : item.type === 'tribute'
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-blue-500/10 text-blue-400'
-                    }`}
-                  >
-                    {item.type === 'anniversary' ? (
-                      <Calendar className="w-4 h-4" />
-                    ) : item.type === 'tribute' ? (
-                      <Flame className="w-4 h-4" />
-                    ) : (
-                      <Bell className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-medium ${
-                        isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-                      }`}
-                    >
-                      {item.title}
-                    </h3>
-                    <p
-                      className={`text-[11px] mt-0.5 leading-relaxed ${
-                        isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-                      }`}
-                    >
-                      {item.message}
-                    </p>
-                    <span
-                      className={`text-[10px] mt-1 block font-mono ${
-                        isDark ? 'text-[#6E5F4E]' : 'text-[#A09585]'
-                      }`}
-                    >
-                      {item.time}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => deleteNotification(item.id)}
-                  className="text-stone-400 hover:text-red-400 p-1 rounded transition-colors"
-                  title="Dismiss notification"
+            notifications.map((item) => {
+              const Icon = iconFor(item.type);
+              const isUnread = item.readAt === null;
+              return (
+                <div
+                  key={item.id}
+                  className={`p-3.5 rounded-xl border text-xs flex items-start justify-between gap-3 transition-colors ${
+                    isUnread
+                      ? isDark
+                        ? 'border-[#B99452]/30 bg-[#1A150F]'
+                        : 'border-[#23324A]/30 bg-[#FBF6ED]'
+                      : isDark
+                        ? 'border-[#202C40] bg-[#16120D]'
+                        : 'border-[#E5DED2] bg-white'
+                  }`}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`p-2 rounded-lg mt-0.5 flex-shrink-0 ${
+                        item.type.startsWith('verification')
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : item.type === 'tribute_pending'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'bg-blue-500/10 text-blue-400'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className={`font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                        {item.title}
+                      </h3>
+                      <p
+                        className={`text-[11px] mt-0.5 leading-relaxed ${
+                          isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+                        }`}
+                      >
+                        {item.body}
+                      </p>
+                      <span
+                        className={`text-[10px] mt-1 block font-mono ${
+                          isDark ? 'text-[#6E5F4E]' : 'text-[#A09585]'
+                        }`}
+                      >
+                        {relativeTime(item.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isUnread && (
+                    <button
+                      type="button"
+                      onClick={() => handleMarkRead(item.id)}
+                      className={`text-[10px] font-mono px-2 py-1 rounded-lg border transition-colors whitespace-nowrap ${
+                        isDark
+                          ? 'border-[#B99452]/30 text-[#B99452] hover:bg-[#B99452]/10'
+                          : 'border-[#23324A]/30 text-[#23324A] hover:bg-[#23324A]/10'
+                      }`}
+                    >
+                      Mark read
+                    </button>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* Notification Preferences */}
-      <form
-        onSubmit={handleSaveSettings}
-        className={`p-5 rounded-2xl border space-y-5 ${
+      {/* Delivery — honest status */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`p-5 rounded-2xl border space-y-2 ${
           isDark ? 'border-[#202C40] bg-[#182337]' : 'border-[#E5DED2] bg-[#FCFAF5]'
         }`}
       >
-        <h2
-          className={`text-sm font-medium ${
-            isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-          }`}
-        >
-          Delivery Channels & Frequency
+        <h2 className={`text-sm font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+          Delivery
         </h2>
-
-        <div className="space-y-4">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifyOnAnniversaries}
-              onChange={(e) => setNotifyOnAnniversaries(e.target.checked)}
-              className="w-4 h-4 rounded text-amber-500 border-stone-600 focus:ring-amber-500"
-            />
-            <span
-              className={`text-xs ${
-                isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
-              }`}
-            >
-              Send annual death anniversary & birth centenary reminders (14 days and 2 days prior)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifyOnTributes}
-              onChange={(e) => setNotifyOnTributes(e.target.checked)}
-              className="w-4 h-4 rounded text-amber-500 border-stone-600 focus:ring-amber-500"
-            />
-            <span
-              className={`text-xs ${
-                isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
-              }`}
-            >
-              Notify steward when a new condolence note or tribute is submitted
-            </span>
-          </label>
-
-          <div className="pt-2">
-            <label
-              className={`block text-xs font-medium mb-1.5 ${
-                isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
-              }`}
-            >
-              Email Summary Frequency
-            </label>
-            <select
-              value={emailDigest}
-              onChange={(e) => setEmailDigest(e.target.value)}
-              className={`px-3 py-2 rounded-xl border text-xs focus:outline-none ${
-                isDark
-                  ? 'border-[#202C40] bg-[#16120D] text-[#F8F5EE]'
-                  : 'border-[#E5DED2] bg-white text-[#20242A]'
-              }`}
-            >
-              <option value="instant">Instant notifications (as events occur)</option>
-              <option value="daily">Daily evening digest</option>
-              <option value="weekly">Weekly remembrance digest</option>
-              <option value="milestones_only">Important milestones & anniversaries only</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex justify-end pt-2">
-          <Button type="submit" variant="primary" size="sm">
-            Save Notification Preferences
-          </Button>
-        </div>
-      </form>
+        <p className={`text-xs leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+          Notifications appear here in your dashboard. Email and SMS delivery are not available
+          yet — when they arrive, these same events will also reach your inbox. The record always
+          stays here.
+        </p>
+      </motion.div>
     </div>
   );
 };

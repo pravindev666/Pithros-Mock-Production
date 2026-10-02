@@ -18,7 +18,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import CurrentUser, require_admin_role
+from app.auth.dependencies import CurrentUser, is_verification_reviewer, require_admin_role
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.enums import AdminSubRole, MemorialPermission, VerificationDecision
@@ -145,11 +145,11 @@ def get_evidence_url(
         raise NotFoundError("Memorial not found")
 
     access = resolve_access(db, memorial, user)
-    is_reviewer = user.role == "admin" and user.admin_subrole in {
-        AdminSubRole.VERIFICATION_REVIEWER.value,
-        AdminSubRole.SUPER_ADMIN.value,
-    }
-    if not access.has(MemorialPermission.SUBMIT_VERIFICATION) and not is_reviewer:
+    # A steward may read the document they submitted; a reviewer may read any.
+    # The reviewer branch uses the same semantics as `require_admin_role`, so it
+    # cannot drift from the route gate that guards the review surface.
+    is_submitter = access.has(MemorialPermission.SUBMIT_VERIFICATION)
+    if not is_submitter and not is_verification_reviewer(user):
         raise ForbiddenError("You do not have permission to view this document.")
 
     url = service.evidence_url(db, evidence=evidence, actor=user, request=request)
@@ -177,6 +177,18 @@ def verification_queue(
     _ = reviewer
     states = [VerificationState(value) for value in state] if state else None
     return service.queue(db, states=states, limit=limit, offset=offset)
+
+
+@admin_router.get("/{submission_id}", response_model=VerificationOut)
+def get_submission_details(
+    submission_id: uuid.UUID,
+    reviewer: ReviewerUser,
+    db: DbSession,
+) -> VerificationOut:
+    """Detailed view of a submission for the reviewer queue, including AI risk signals."""
+    _ = reviewer
+    submission = service.get_by_id(db, submission_id)
+    return service.to_out(db, submission)
 
 
 @admin_router.post("/{submission_id}/approve", response_model=VerificationOut)

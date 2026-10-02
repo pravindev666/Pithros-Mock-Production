@@ -35,14 +35,29 @@ class MediaItem(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         CheckConstraint(f"privacy IN ({_allowed(PrivacyLevel)})", name="privacy_valid"),
         CheckConstraint(f"storage_tier IN ({_allowed(StorageTier)})", name="storage_tier_valid"),
         CheckConstraint("size_bytes >= 0", name="size_non_negative"),
+        # A media row belongs to exactly one owner: a memorial or a Farewell
+        # Network provider. Never both, never neither.
+        CheckConstraint(
+            "(memorial_id IS NOT NULL AND provider_id IS NULL) "
+            "OR (memorial_id IS NULL AND provider_id IS NOT NULL)",
+            name="exactly_one_owner",
+        ),
         Index("ix_memorial_media_memorial_status", "memorial_id", "status"),
+        Index("ix_memorial_media_provider_status", "provider_id", "status"),
     )
 
-    memorial_id: Mapped[uuid.UUID] = mapped_column(
+    memorial_id: Mapped[uuid.UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("memorials.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
+    )
+
+    # Farewell Network gallery/verification objects. Nullable for memorial media.
+    provider_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("providers.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     kind: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -78,7 +93,11 @@ class MediaItem(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    memorial: Mapped[Memorial] = relationship()
+    # Three FK paths now link memorials and memorial_media (ownership plus the
+    # portrait/cover references), so the join column must be stated explicitly.
+    # Provider media is queried by `provider_id` directly; no relationship is
+    # declared here to avoid an import cycle with the provider module.
+    memorial: Mapped[Memorial | None] = relationship(foreign_keys="MediaItem.memorial_id")
     uploaded_by: Mapped[User | None] = relationship()
 
     @property

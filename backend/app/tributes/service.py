@@ -16,12 +16,13 @@ from starlette.requests import Request
 
 from app.audit.service import record as audit_record
 from app.core.database import transaction
-from app.core.enums import AuditAction, TributeStatus
+from app.core.enums import AuditAction, NotificationType, TributeStatus
 from app.core.errors import NotFoundError
 from app.core.pagination import DEFAULT_LIMIT, Cursor, Page, PageParams, paginate
 from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
+from app.notifications.service import notify_memorial_stewards
 from app.tributes.models import Tribute
 from app.tributes.schemas import TributeModerationRequest, TributeSubmissionRequest
 
@@ -61,6 +62,19 @@ def submit_tribute(
         )
         db.add(tribute)
         db.flush()
+
+        if not is_trusted:
+            notify_memorial_stewards(
+                db,
+                memorial=memorial,
+                notification_type=NotificationType.TRIBUTE_PENDING,
+                title="New tribute awaiting review",
+                body=(
+                    f"{tribute.author_name} left a remembrance for {memorial.full_name}. "
+                    "Approve it to make it visible on the public memorial."
+                ),
+                payload={"tributeId": str(tribute.id), "memorialSlug": memorial.slug},
+            )
 
     db.refresh(tribute)
     if is_trusted:

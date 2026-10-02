@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -28,7 +28,6 @@ import {
   Layers,
 } from 'lucide-react';
 import { ServiceProvider, ProviderServiceItem, ProviderReview } from '../types';
-import { demoProviders } from '../data/mockData';
 import { Button } from '../components/ui/Button';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -67,6 +66,48 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
     }
   }, [routeSlug]);
 
+  // Live directory. Only admin-approved providers are ever returned.
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+  const [providersError, setProvidersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await api.getProviders();
+        if (!cancelled) setProviders(list);
+      } catch {
+        if (!cancelled) {
+          setProvidersError('The Farewell Network could not be loaded right now.');
+        }
+      } finally {
+        if (!cancelled) setIsLoadingProviders(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // The directory list carries summaries; a profile needs the full detail payload
+  // (services, gallery, description). Fetch it for whichever provider is open.
+  const detailedSlugs = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const slug = routeSlug ?? selectedProviderSlug;
+    if (!slug || detailedSlugs.current.has(slug)) return;
+    let cancelled = false;
+    (async () => {
+      const detail = await api.getProviderBySlug(slug);
+      if (cancelled || !detail) return;
+      detailedSlugs.current.add(slug);
+      setProviders((previous) => [...previous.filter((p) => p.slug !== slug), detail]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeSlug, selectedProviderSlug]);
+
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -93,6 +134,8 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
   const [quoteContactName, setQuoteContactName] = useState('');
   const [quotePhone, setQuotePhone] = useState('');
   const [quoteContactPref, setQuoteContactPref] = useState<'WhatsApp' | 'Phone' | 'Email'>('WhatsApp');
+  const [quotePhoneError, setQuotePhoneError] = useState<string | null>(null);
+  const [quoteSubmitError, setQuoteSubmitError] = useState<string | null>(null);
   const [isQuoteSubmitting, setIsQuoteSubmitting] = useState(false);
   const [quoteSuccessRef, setQuoteSuccessRef] = useState<string | null>(null);
 
@@ -110,12 +153,12 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
   // Currently viewed provider if in profile mode
   const activeProvider = useMemo(() => {
     if (!selectedProviderSlug) return null;
-    return demoProviders.find((p) => p.slug === selectedProviderSlug) || demoProviders[0];
-  }, [selectedProviderSlug]);
+    return providers.find((provider) => provider.slug === selectedProviderSlug) ?? null;
+  }, [selectedProviderSlug, providers]);
 
   // Filtered & Sorted Providers
   const filteredProviders = useMemo(() => {
-    let list = demoProviders.filter((p) => {
+    let list = providers.filter((p) => {
       const matchesSearch =
         !searchQuery.trim() ||
         p.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,7 +193,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
     });
 
     return list;
-  }, [searchQuery, selectedCity, selectedCategory, selectedSort, filterRating, filterResponseTime]);
+  }, [providers, searchQuery, selectedCity, selectedCategory, selectedSort, filterRating, filterResponseTime]);
 
   const handleOpenProviderProfile = (slug: string) => {
     setSelectedProviderSlug(slug);
@@ -165,8 +208,12 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
   };
 
   const handleOpenQuoteModal = (provider?: ServiceProvider, serviceName?: string) => {
-    setQuoteTargetProvider(provider || activeProvider || demoProviders[0]);
+    const target = provider ?? activeProvider ?? providers[0] ?? null;
+    if (!target) return;
+    setQuoteTargetProvider(target);
     setQuoteTargetService(serviceName || 'General Farewell Coordination');
+    setQuotePhoneError(null);
+    setQuoteSubmitError(null);
     setQuoteSuccessRef(null);
     setIsQuoteModalOpen(true);
   };
@@ -174,6 +221,18 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
   const handleQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quoteContactName.trim() || !quotePhone.trim()) return;
+
+    const cleanPhone = quotePhone.trim().replace(/[\s\-()]/g, '');
+    if (!/^\+?[0-9]{7,15}$/.test(cleanPhone)) {
+      setQuotePhoneError('Please enter a valid phone number with 7 to 15 digits.');
+      return;
+    }
+    if (!quoteTargetProvider) {
+      setQuoteSubmitError('Choose a provider before sending an enquiry.');
+      return;
+    }
+    setQuotePhoneError(null);
+    setQuoteSubmitError(null);
 
     setIsQuoteSubmitting(true);
     try {
@@ -183,11 +242,14 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
         city: quoteCity,
         serviceNeeded: quoteTargetService || 'General Consultation',
         notes: `Urgency: ${quoteUrgency}. Date: ${quoteDate}. Pref: ${quoteContactPref}. Note: ${quoteDescription}`,
-        providerId: quoteTargetProvider?.id,
+        providerId: quoteTargetProvider.id,
       });
       setQuoteSuccessRef(newLead.id.slice(-6).toUpperCase());
     } catch {
-      setQuoteSuccessRef('FW-' + Math.floor(100000 + Math.random() * 900000));
+      // A failed enquiry must say so — never invent a reference number.
+      setQuoteSubmitError(
+        'Your enquiry could not be sent. Please try again in a moment.',
+      );
     } finally {
       setIsQuoteSubmitting(false);
     }
@@ -313,7 +375,9 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                 </span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <Clock className="w-4 h-4 text-[#B99452]" />
-                  <span className="text-sm font-semibold">{activeProvider.responseTime}</span>
+                  <span className="text-sm font-semibold">
+                    {activeProvider.responseTime || 'Response time not stated'}
+                  </span>
                 </div>
               </div>
 
@@ -1071,7 +1135,31 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
         </div>
 
         {/* Provider Cards Grid (Image-First, Swiggy/Zomato consumer discovery pattern) */}
-        {filteredProviders.length === 0 ? (
+        {isLoadingProviders ? (
+          <div
+            className={`py-16 text-center rounded-2xl border ${
+              isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
+            }`}
+          >
+            <p className="text-base font-serif">Loading verified providers…</p>
+          </div>
+        ) : providersError ? (
+          <div
+            className={`py-16 text-center rounded-2xl border space-y-3 ${
+              isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
+            }`}
+          >
+            <p className="text-base font-serif">{providersError}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="mx-auto"
+            >
+              Try again
+            </Button>
+          </div>
+        ) : filteredProviders.length === 0 ? (
           <div
             className={`py-16 text-center rounded-2xl border space-y-3 ${
               isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
@@ -1140,7 +1228,11 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                       </div>
                       <div className="flex items-center gap-1 font-medium text-[#D1B477]">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{provider.responseTime} {t('card_response_time', 'response')}</span>
+                        <span>
+                          {provider.responseTime
+                            ? `${provider.responseTime} ${t('card_response_time', 'response')}`
+                            : provider.city}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1223,6 +1315,50 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
             ))}
           </div>
         )}
+
+        {/* Partner Onboarding Banner */}
+        <div
+          className={`mt-16 p-8 sm:p-10 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-6 transition-colors ${
+            isDark
+              ? 'bg-gradient-to-br from-[#182337] to-[#111820] border-[#202C40]'
+              : 'bg-gradient-to-br from-[#FCFAF5] to-[#EAE4D7] border-[#E5DED2]'
+          }`}
+        >
+          <div className="space-y-2 text-center md:text-left">
+            <span
+              className={`text-xs uppercase tracking-widest font-semibold ${
+                isDark ? 'text-[#6EE7B7]' : 'text-[#2D7A5F]'
+              }`}
+            >
+              Are you a Bereavement Service Provider?
+            </span>
+            <h3 className="text-xl sm:text-2xl font-serif font-bold">
+              Join the Pithros Farewell Partner Network
+            </h3>
+            <p className={`text-xs sm:text-sm max-w-xl ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Offer compassionate, accredited bereavement care, transit coordination, or memorial keepsakes. Receive verified family leads and manage requests directly through the Partner Platform.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto flex-shrink-0">
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full sm:w-auto"
+              onClick={() => onNavigate('/signup?role=partner')}
+            >
+              Register as Care Partner
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              className="w-full sm:w-auto"
+              onClick={() => onNavigate('/partner')}
+            >
+              Partner Portal Sign In
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Shared Request Quote Modal */}
@@ -1259,7 +1395,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                 </div>
               </div>
               <p className={`text-xs ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
-                Typical response time: {quoteTargetProvider?.responseTime || '&lt; 20 minutes'}. They will reach out via your preferred method ({quoteContactPref}).
+                Typical response time: {quoteTargetProvider?.responseTime || '< 20 minutes'}. They will reach out via your preferred method ({quoteContactPref}).
               </p>
               <div className="pt-3">
                 <Button
@@ -1384,13 +1520,23 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                     type="tel"
                     required
                     value={quotePhone}
-                    onChange={(e) => setQuotePhone(e.target.value)}
+                    onChange={(e) => {
+                      setQuotePhone(e.target.value);
+                      if (quotePhoneError) setQuotePhoneError(null);
+                    }}
                     placeholder="+91 98450 00000"
                     style={{ fontFamily: metadata.uiFontFamily }}
                     className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none ${
-                      isDark ? 'bg-[#111820] border-[#202C40]' : 'bg-[#F3EEE4] border-[#E5DED2]'
+                      quotePhoneError
+                        ? 'border-amber-500 focus:border-amber-500'
+                        : isDark
+                        ? 'bg-[#111820] border-[#202C40]'
+                        : 'bg-[#F3EEE4] border-[#E5DED2]'
                     }`}
                   />
+                  {quotePhoneError && (
+                    <p className="text-[11px] text-amber-500 mt-1">{quotePhoneError}</p>
+                  )}
                 </div>
               </div>
 
@@ -1412,6 +1558,10 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                   ))}
                 </div>
               </div>
+
+              {quoteSubmitError && (
+                <p className="text-xs text-amber-500 text-center">{quoteSubmitError}</p>
+              )}
 
               <div className="pt-3 border-t border-[#E5DED2] dark:border-[#202C40] flex items-center justify-end gap-3">
                 <button

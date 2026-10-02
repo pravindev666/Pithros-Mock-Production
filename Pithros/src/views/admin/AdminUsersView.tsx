@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Users,
@@ -18,16 +18,18 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../components/ui/Toast';
 import { Button } from '../../components/ui/Button';
+import { http } from '../../services/api/client';
 
 interface UserRecord {
   id: string;
   name: string;
   email: string;
-  role: 'family_steward' | 'family_contributor' | 'partner' | 'admin';
+  role: 'family_steward' | 'family_contributor' | 'partner' | 'admin' | 'visitor' | string;
   adminSubrole?: string;
   emailVerified: boolean;
   mfaEnabled: boolean;
   status: 'active' | 'suspended';
+  memorialCount?: number;
   createdDate: string;
   lastActive: string;
 }
@@ -99,6 +101,18 @@ export const AdminUsersView: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    http.get<UserRecord[]>('/admin/users')
+      .then((realUsers) => {
+        if (realUsers && realUsers.length > 0) {
+          setUsers(realUsers);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load real users from backend:', err);
+      });
+  }, []);
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =

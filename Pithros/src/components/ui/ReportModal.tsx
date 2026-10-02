@@ -24,9 +24,20 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   onClose,
 }) => {
   const { isDark } = useTheme();
-  const [reason, setReason] = useState<
-    'Incorrect information' | 'Impersonation' | 'Harassment' | 'Privacy concern' | 'Fraudulent content' | 'Other'
-  >('Incorrect information');
+  const reasons = [
+    'Inappropriate / Nudity / Explicit content',
+    'Violence or Graphic content',
+    'Harassment or Defamation',
+    'Impersonation',
+    'Privacy concern',
+    'Incorrect information',
+    'Fraudulent content',
+    'Other',
+  ] as const;
+
+  type ReportReason = typeof reasons[number];
+
+  const [reason, setReason] = useState<ReportReason>('Inappropriate / Nudity / Explicit content');
   const [details, setDetails] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -54,15 +65,6 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       onClose();
     }, 2000);
   };
-
-  const reasons = [
-    'Incorrect information',
-    'Impersonation',
-    'Harassment',
-    'Privacy concern',
-    'Fraudulent content',
-    'Other',
-  ] as const;
 
   const targetLabel = {
     memorial: 'Memorial Profile',

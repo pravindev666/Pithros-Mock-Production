@@ -26,6 +26,7 @@ from app.core.enums import (
     AuditAction,
     MediaKind,
     MediaStatus,
+    NotificationType,
     StorageTier,
     VerificationDecision,
     VerificationState,
@@ -33,8 +34,10 @@ from app.core.enums import (
 from app.core.errors import ConflictError, NotFoundError, ValidationError
 from app.media.models import MediaItem
 from app.media.storage import get_storage
+from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
+from app.notifications.service import notify, notify_reviewers
 from app.users.models import User
 from app.verification.models import (
     VerificationDecisionRecord,
@@ -239,7 +242,18 @@ def submit(
             request=request,
         )
 
+        notify_reviewers(
+            db,
+            title=f"Verification submitted for {memorial.full_name}",
+            body=(
+                "A family submitted evidence of passing for review. "
+                "Open the verification queue to inspect it."
+            ),
+            payload={"submissionId": str(submission.id), "memorialId": str(memorial.id)},
+        )
+
     db.refresh(submission)
+    invalidate_public_memorial_cache(memorial.slug)
 
     from app.verification.tasks import queue_verification_preparation
 
@@ -268,6 +282,8 @@ def _advance(
         _sync_memorial(memorial, target)
 
     db.commit()
+    if memorial is not None:
+        invalidate_public_memorial_cache(memorial.slug)
     return submission
 
 
@@ -284,6 +300,60 @@ def mark_ready_for_review(db: Session, submission_id: uuid.UUID) -> Verification
     rather than dressed up as analysis.
     """
     return _advance(db, submission_id, VerificationState.VERIFICATION_REVIEW)
+
+
+def _notify_decision(
+    db: Session,
+    *,
+    submission: VerificationSubmission,
+    memorial: Memorial,
+    decision: VerificationDecision,
+    reason: str | None,
+) -> None:
+    """Tell the submitter what happened, in the product's own voice."""
+    recipient_id = submission.submitted_by_id
+    if recipient_id is None:
+        primary = memorial.primary_steward
+        recipient_id = primary.user_id if primary else None
+    if recipient_id is None:
+        return
+
+    if decision == VerificationDecision.APPROVED:
+        notification_type = NotificationType.VERIFICATION_APPROVED
+        title = "Verification approved"
+        body = (
+            f"The verification for {memorial.full_name} was approved. "
+            'The memorial now carries the "Document Reviewed" badge.'
+        )
+    elif decision == VerificationDecision.REJECTED:
+        notification_type = NotificationType.VERIFICATION_REJECTED
+        title = "Verification not approved"
+        body = (
+            f"The verification for {memorial.full_name} was not approved."
+            + (f" Reason: {reason}" if reason else "")
+            + " You can appeal from the verification page on your dashboard."
+        )
+    else:
+        notification_type = NotificationType.VERIFICATION_NEEDS_INFO
+        title = "More information needed"
+        body = (
+            f"The reviewer needs more information for {memorial.full_name}."
+            + (f" Reason: {reason}" if reason else "")
+            + " Upload the additional document from your dashboard verification page."
+        )
+
+    notify(
+        db,
+        user_id=recipient_id,
+        notification_type=notification_type,
+        title=title,
+        body=body,
+        payload={
+            "submissionId": str(submission.id),
+            "memorialSlug": memorial.slug,
+            "decision": decision.value,
+        },
+    )
 
 
 def decide(
@@ -340,7 +410,16 @@ def decide(
             request=request,
         )
 
+        _notify_decision(
+            db,
+            submission=submission,
+            memorial=memorial,
+            decision=decision,
+            reason=reason,
+        )
+
     db.refresh(submission)
+    invalidate_public_memorial_cache(memorial.slug)
     return submission
 
 
@@ -383,7 +462,21 @@ def appeal(
             request=request,
         )
 
+        if memorial is not None:
+            notify_reviewers(
+                db,
+                notification_type=NotificationType.VERIFICATION_APPEALED,
+                title=f"Verification appeal received for {memorial.full_name}",
+                body="A rejected submission was appealed. Please take another look.",
+                payload={
+                    "submissionId": str(submission.id),
+                    "memorialId": str(submission.memorial_id),
+                },
+            )
+
     db.refresh(submission)
+    if memorial is not None:
+        invalidate_public_memorial_cache(memorial.slug)
     return submission
 
 
@@ -423,6 +516,12 @@ def queue(
             state=submission.state,
             submitted_at=submission.submitted_at,
             evidence_count=len(submission.evidence),
+            overall_risk=submission.risk_signals.get("overall_risk")
+            if submission.risk_signals
+            else None,
+            document_confidence=submission.risk_signals.get("document_type_confidence")
+            if submission.risk_signals
+            else None,
         )
         for submission, memorial in rows
     ]
@@ -483,6 +582,8 @@ def to_out(db: Session, submission: VerificationSubmission) -> VerificationOut:
         submitted_at=submission.submitted_at,
         reviewed_at=submission.reviewed_at,
         decision_reason=submission.decision_reason,
+        automated_result=submission.automated_result,
+        risk_signals=submission.risk_signals,
         evidence=[
             VerificationEvidenceOut(
                 id=str(item.id),

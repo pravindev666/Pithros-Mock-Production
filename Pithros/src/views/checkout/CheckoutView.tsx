@@ -21,8 +21,12 @@ import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { pricingPlans } from '../../data/mockData';
+import { DEMO_MODE } from '../../lib/config';
 import { paymentService } from '../../services/payment/paymentService';
-import { PaymentRecord, BillingInvoice, Memorial } from '../../types';
+import { openCashfreeCheckout, type CashfreeMode } from '../../services/payment/cashfreeSdk';
+import { billingApi, type CreateOrderResult } from '../../services/api/billing';
+import { ConflictError } from '../../services/api/client';
+import { PaymentRecord, Memorial } from '../../types';
 import { api } from '../../services/api';
 
 interface CheckoutViewProps {
@@ -37,25 +41,41 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   memorials = [],
 }) => {
   const { isDark } = useTheme();
-  const { pithrosUser } = useAuth();
+  const { pithrosUser, setReturnUrl } = useAuth();
 
-  // Selected plan state (reads query or defaults to plan_care_annual)
-  const [selectedPlanId, setSelectedPlanId] = useState<string>(() => {
+  // Helper to extract plan ID from route query parameters or location
+  const getPlanFromRoute = (route: string) => {
     try {
-      const params = new URLSearchParams(window.location.search);
+      const [, qStr] = route.split('?');
+      const search = qStr ? `?${qStr}` : window.location.search;
+      const params = new URLSearchParams(search);
       const qPlan = params.get('plan');
       if (qPlan && pricingPlans.some((p) => p.id === qPlan)) return qPlan;
     } catch {
       // fallback
     }
-    return 'plan_care_annual';
+    return null;
+  };
+
+  // Selected plan state (reads query or defaults to plan_care_annual)
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(() => {
+    return getPlanFromRoute(currentRoute) || 'plan_care_annual';
   });
   const [selectedMemorialId, setSelectedMemorialId] = useState<string>('');
   const [loadedMemorials, setLoadedMemorials] = useState<Memorial[]>(memorials);
 
-  // Active payment process state
-  const [activePayment, setActivePayment] = useState<PaymentRecord | null>(null);
-  const [activeInvoice, setActiveInvoice] = useState<BillingInvoice | null>(null);
+  // Sync selectedPlanId whenever currentRoute query changes (e.g. user chooses another tier)
+  useEffect(() => {
+    const routePlan = getPlanFromRoute(currentRoute);
+    if (routePlan && routePlan !== selectedPlanId) {
+      setSelectedPlanId(routePlan);
+    }
+  }, [currentRoute]);
+
+  // Checkout state. Live mode holds the server order; demo mode holds the local record.
+  const [checkoutOrder, setCheckoutOrder] = useState<CreateOrderResult | null>(null);
+  const [demoPayment, setDemoPayment] = useState<PaymentRecord | null>(null);
+  const [receipt, setReceipt] = useState<{ invoiceNumber: string; receiptUrl?: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -76,13 +96,28 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
     }
   }, [memorials]);
 
-  // Determine current checkout sub-route step
-  const step = currentRoute.replace('/checkout', '').replace('/', '') || 'index';
+  // Determine current checkout sub-route step (cleanly strip query strings so /checkout?plan=... resolves to 'index')
+  const [pathname] = currentRoute.split('?');
+  const rawStep = pathname.replace('/checkout', '').replace(/^\/+/, '');
+  const step = rawStep || 'index';
 
   const plan = pricingPlans.find((p) => p.id === selectedPlanId) || pricingPlans[1];
   const activeMemorial =
     loadedMemorials.find((m) => m.id === selectedMemorialId) || loadedMemorials[0];
-  const activeGateway = paymentService.getActiveGateway();
+  const activeGateway = DEMO_MODE
+    ? paymentService.getActiveGateway()
+    : { name: 'cashfree' as const, displayName: 'Cashfree Payments (UPI, Cards & NetBanking)' };
+
+  const gatewayOrderId = DEMO_MODE
+    ? demoPayment?.gatewayOrderId
+    : checkoutOrder?.gatewayOrderId || checkoutOrder?.internalOrderId;
+  const formattedAmount = DEMO_MODE
+    ? demoPayment?.formattedAmount
+    : checkoutOrder
+      ? `₹${(checkoutOrder.amountMinor / 100).toLocaleString('en-IN')}`
+      : undefined;
+  const planName = DEMO_MODE ? demoPayment?.planName : checkoutOrder?.planName;
+  const memorialName = DEMO_MODE ? demoPayment?.memorialName : activeMemorial?.fullName;
 
   // Price calculations
   const rawPrice = parseInt(plan.price.replace(/[^0-9]/g, ''), 10) || 0;
@@ -90,62 +125,165 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const subtotal = Math.round(rawPrice / (1 + taxRate));
   const taxAmount = rawPrice - subtotal;
 
-  // 1. Start Payment: create internal order and navigate to /checkout/payment
+  // 1. Start Payment: create the server-authoritative order and open the gateway step.
   const handleProceedToPayment = async () => {
+    if (!pithrosUser) {
+      setReturnUrl(window.location.pathname + window.location.search);
+      onNavigate('/signin');
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
     try {
-      const { payment } = await paymentService.createPaymentSession({
-        planId: plan.id,
-        memorialId: activeMemorial?.id || 'mem_default',
-        memorialName: activeMemorial?.fullName || 'Beloved Memorial',
-        user: pithrosUser,
-      });
-      setActivePayment(payment);
+      const isValidUuid = (val?: string) =>
+        val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
+      const memorialId = isValidUuid(activeMemorial?.id) ? activeMemorial?.id : undefined;
+
+      if (DEMO_MODE) {
+        const { payment } = await paymentService.createPaymentSession({
+          planId: plan.id,
+          memorialId: memorialId || 'mem_default',
+          memorialName: activeMemorial?.fullName || 'Beloved Memorial',
+          user: pithrosUser,
+        });
+        setDemoPayment(payment);
+      } else {
+        const order = await billingApi.createOrder({ planPriceId: plan.id, memorialId });
+        if (!order.paymentSessionId) {
+          throw new Error('The payment gateway did not return a checkout session.');
+        }
+        setCheckoutOrder(order);
+      }
       onNavigate('/checkout/payment');
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Unable to initiate payment session. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to initiate payment session. Please try again.';
+      setErrorMessage(msg);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // 2. Gateway Handshake & Verification: simulates payment completion and sends to server verification
-  const handleCompleteGatewayPayment = async (simulateOutcome: 'success' | 'failed' | 'pending' = 'success') => {
-    if (!activePayment) return;
+  // 2. Live mode: let the server confirm the payment. The Cashfree sheet reports that the
+  //    flow finished ("check status") — only `/billing/verify`, which re-queries Cashfree,
+  //    may declare the order paid and release entitlements.
+  const confirmWithServer = async (order: CreateOrderResult) => {
+    onNavigate('/checkout/processing');
+    try {
+      const result = await billingApi.verifyPayment({ internalOrderId: order.internalOrderId });
+      if (!result.success) {
+        onNavigate('/checkout/pending');
+        return;
+      }
+      // Record the real invoice number. The receipt view is not yet API-backed, so the
+      // success CTA sends the steward to the billing dashboard rather than a demo record.
+      setReceipt({ invoiceNumber: result.invoiceNumber || '' });
+      onNavigate('/checkout/success');
+    } catch (err: unknown) {
+      // Not confirmed yet (browser closed, webhook still in flight): the signed webhook
+      // finishes activation, so we say "being confirmed", never "failed".
+      if (err instanceof ConflictError) {
+        onNavigate('/checkout/pending');
+        return;
+      }
+      setErrorMessage(err instanceof Error ? err.message : 'Payment verification failed');
+      onNavigate('/checkout/failed');
+    }
+  };
+
+  const handleOpenGateway = async () => {
+    if (!checkoutOrder?.paymentSessionId) {
+      setErrorMessage('This payment session has expired. Please start again.');
+      return;
+    }
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const mode: CashfreeMode =
+        checkoutOrder.environment === 'production' ? 'production' : 'sandbox';
+      const result = await openCashfreeCheckout(checkoutOrder.paymentSessionId, {
+        mode,
+        redirectTarget: '_modal',
+      });
+      if (result.error) {
+        if (result.error.code === 'payment_aborted') {
+          onNavigate('/checkout/cancelled');
+          return;
+        }
+        setErrorMessage(result.error.message || 'The payment could not be completed.');
+        onNavigate('/checkout/failed');
+        return;
+      }
+      await confirmWithServer(checkoutOrder);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'The payment sheet could not be opened.');
+      onNavigate('/checkout/failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Demo mode only: drive the local record so the UI can be exercised without a gateway.
+  const handleSimulateOutcome = async (simulateOutcome: 'success' | 'failed' | 'pending' = 'success') => {
+    let paymentToProcess = demoPayment;
+    if (!paymentToProcess) {
+      try {
+        const { payment } = await paymentService.createPaymentSession({
+          planId: plan.id,
+          memorialId: activeMemorial?.id || 'mem_default',
+          memorialName: activeMemorial?.fullName || 'Beloved Memorial',
+          user: pithrosUser,
+        });
+        paymentToProcess = payment;
+        setDemoPayment(payment);
+      } catch (e) {
+        console.error('Failed to create fallback payment session', e);
+      }
+    }
+
+    if (!paymentToProcess) return;
+
+    if (simulateOutcome === 'pending') {
+      onNavigate('/checkout/pending');
+      return;
+    }
+
+    if (simulateOutcome === 'failed') {
+      await paymentService.failPayment(paymentToProcess.id, 'Transaction declined by bank authorization');
+      onNavigate('/checkout/failed');
+      return;
+    }
 
     onNavigate('/checkout/processing');
     setIsProcessing(true);
 
     try {
-      if (simulateOutcome === 'failed') {
-        await paymentService.failPayment(activePayment.id, 'Transaction declined by bank authorization');
-        onNavigate('/checkout/failed');
-        return;
+      const gatewayPaymentId = `${paymentToProcess.gateway}_pay_${Date.now().toString().slice(-6)}`;
+      const gatewaySignature = `${paymentToProcess.gateway}_sig_${Math.random().toString(36).substring(2, 16)}`;
+
+      try {
+        await billingApi.verifyPayment({
+          internalOrderId: paymentToProcess.gatewayOrderId || paymentToProcess.id,
+          gatewayPaymentId,
+          paymentMethodType: selectedPaymentMethod.toUpperCase(),
+        });
+      } catch (backendVerifyErr) {
+        console.info('Backend verification dispatch note:', backendVerifyErr);
       }
 
-      if (simulateOutcome === 'pending') {
-        onNavigate('/checkout/pending');
-        return;
-      }
-
-      // Simulate genuine client return with gateway payment ID and signature
-      const gatewayPaymentId = `${activeGateway.name}_pay_${Date.now().toString().slice(-6)}`;
-      const gatewaySignature = `${activeGateway.name}_sig_${Math.random().toString(36).substring(2, 16)}`;
-
-      // Authoritative Server Verification Step
       const { payment, invoice } = await paymentService.verifyPayment({
-        internalPaymentId: activePayment.id,
-        gatewayOrderId: activePayment.gatewayOrderId,
+        internalPaymentId: paymentToProcess.id,
+        gatewayOrderId: paymentToProcess.gatewayOrderId,
         gatewayPaymentId,
         gatewaySignature,
       });
 
-      setActivePayment(payment);
-      setActiveInvoice(invoice);
+      setDemoPayment(payment);
+      setReceipt({ invoiceNumber: invoice.invoiceNumber, receiptUrl: invoice.receiptUrl });
       onNavigate('/checkout/success');
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Payment verification failed');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Payment verification failed';
+      setErrorMessage(msg);
       onNavigate('/checkout/failed');
     } finally {
       setIsProcessing(false);
@@ -154,8 +292,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
   // 3. User cancels checkout
   const handleCancelPayment = async () => {
-    if (activePayment) {
-      await paymentService.cancelPayment(activePayment.id, 'Steward cancelled in payment step');
+    if (DEMO_MODE && demoPayment) {
+      await paymentService.cancelPayment(demoPayment.id, 'Steward cancelled in payment step');
     }
     onNavigate('/checkout/cancelled');
   };
@@ -461,6 +599,44 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       </div>
                     )}
 
+                    {!pithrosUser && (
+                      <div className={`p-4 rounded-2xl border text-xs space-y-2.5 ${
+                        isDark ? 'bg-[#182337] border-[#B99452]/40 text-[#D9D2C6]' : 'bg-[#FCFAF5] border-[#23324A]/30 text-[#20242A]'
+                      }`}>
+                        <div className="flex items-center gap-2 font-medium">
+                          <Lock className="w-4 h-4 text-[#B99452]" />
+                          <span>Account required to activate plan</span>
+                        </div>
+                        <p className={`text-[11px] leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                          Sign in or create your family custodian account so your plan and tax receipt are safely saved to your memorial.
+                        </p>
+                        <div className="flex gap-2 pt-1">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setReturnUrl(window.location.pathname + window.location.search);
+                              onNavigate('/signin');
+                            }}
+                          >
+                            Sign In
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setReturnUrl(window.location.pathname + window.location.search);
+                              onNavigate('/signup');
+                            }}
+                          >
+                            Sign Up
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* CTA Button */}
                     <Button
                       variant="primary"
@@ -469,7 +645,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       onClick={handleProceedToPayment}
                       isLoading={isProcessing}
                     >
-                      Proceed to Secure Payment
+                      {pithrosUser ? 'Proceed to Secure Payment' : 'Sign In to Proceed'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
 
@@ -527,7 +703,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                         isDark ? 'text-[#B99452]' : 'text-[#23324A]'
                       }`}
                     >
-                      {activePayment?.formattedAmount || plan.price}
+                      {formattedAmount || plan.price}
                     </span>
                   </div>
                 </div>
@@ -541,13 +717,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   <div className="flex justify-between">
                     <span>Order Ref:</span>
                     <span className="text-emerald-500 font-bold truncate max-w-[180px]">
-                      {activePayment?.gatewayOrderId || 'order_active'}
+                      {gatewayOrderId || 'order_pending'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Memorial:</span>
                     <span className="truncate max-w-[180px]">
-                      {activePayment?.memorialName || activeMemorial?.fullName}
+                      {memorialName || activeMemorial?.fullName}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -556,45 +732,73 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   </div>
                 </div>
 
-                {/* Real Payment Simulation Triggers */}
-                <div className="space-y-3">
-                  <p
-                    className={`text-xs text-center mb-2 ${
-                      isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
-                    }`}
-                  >
-                    Select an action to test genuine payment reconciliation flows:
-                  </p>
-
-                  <Button
-                    variant="primary"
-                    size="md"
-                    className="w-full"
-                    onClick={() => handleCompleteGatewayPayment('success')}
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Confirm Payment (Success Handshake)
-                  </Button>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCompleteGatewayPayment('pending')}
+                {/* Live: open the real gateway sheet. Demo: local reconciliation triggers. */}
+                {DEMO_MODE ? (
+                  <div className="space-y-3">
+                    <p
+                      className={`text-xs text-center mb-2 ${
+                        isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
+                      }`}
                     >
-                      <Clock className="w-3.5 h-3.5 mr-1.5" />
-                      Simulate Pending
-                    </Button>
+                      Demo mode: these actions drive the local record only.
+                    </p>
+
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCompleteGatewayPayment('failed')}
+                      variant="primary"
+                      size="md"
+                      className="w-full"
+                      onClick={() => handleSimulateOutcome('success')}
                     >
-                      <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
-                      Simulate Failure
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Confirm Payment (Demo)
                     </Button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSimulateOutcome('pending')}
+                      >
+                        <Clock className="w-3.5 h-3.5 mr-1.5" />
+                        Simulate Pending
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSimulateOutcome('failed')}
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
+                        Simulate Failure
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {errorMessage && (
+                      <div className="p-3 rounded-xl bg-red-950/40 border border-red-800 text-red-300 text-xs">
+                        {errorMessage}
+                      </div>
+                    )}
+                    <Button
+                      variant="primary"
+                      size="md"
+                      className="w-full"
+                      onClick={handleOpenGateway}
+                      isLoading={isProcessing}
+                    >
+                      <Lock className="w-4 h-4 mr-2" />
+                      Pay {formattedAmount || plan.price} Securely
+                    </Button>
+                    <p
+                      className={`text-[11px] text-center leading-relaxed ${
+                        isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
+                      }`}
+                    >
+                      You will complete payment on Cashfree's secure checkout. Your plan activates
+                      only once the payment is confirmed.
+                    </p>
+                  </div>
+                )}
 
                 {/* Cancel link */}
                 <div className="mt-6 pt-4 border-t text-center">
@@ -702,15 +906,15 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 >
                   <div className="flex justify-between">
                     <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Invoice Number:</span>
-                    <span className="font-mono font-medium">{activeInvoice?.invoiceNumber || 'PTH-2026-0812'}</span>
+                    <span className="font-mono font-medium">{receipt?.invoiceNumber || '—'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Plan Enrolled:</span>
-                    <span className="font-medium">{activePayment?.planName || plan.name}</span>
+                    <span className="font-medium">{planName || plan.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Contribution:</span>
-                    <span className="font-serif font-bold">{activePayment?.formattedAmount || plan.price}</span>
+                    <span className="font-serif font-bold">{formattedAmount || plan.price}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Protected Memorial:</span>
@@ -742,10 +946,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       variant="outline"
                       size="md"
                       onClick={() =>
-                        onNavigate(
-                          activeInvoice?.receiptUrl ||
-                            `/payment/receipt/${activeInvoice?.invoiceNumber || 'PTH-2026-0812'}`
-                        )
+                        onNavigate(receipt?.receiptUrl || '/dashboard/billing')
                       }
                     >
                       <Receipt className="w-4 h-4 mr-1.5" />

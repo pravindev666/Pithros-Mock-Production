@@ -113,6 +113,13 @@ class MemorialTheme(StrEnum):
     CANDLELIGHT = "candlelight"
 
 
+# Themes a free memorial may use. The rest are part of a paid plan, which is what
+# `assert_can_use_premium_theme` enforces on the theme-update path.
+FREE_THEMES: frozenset[MemorialTheme] = frozenset(
+    {MemorialTheme.CLASSIC, MemorialTheme.IVORY, MemorialTheme.HERITAGE}
+)
+
+
 class ContributorRole(StrEnum):
     STEWARD = "steward"
     BIOGRAPHER = "biographer"
@@ -220,6 +227,10 @@ class AuditAction(StrEnum):
     MEMORIAL_ARCHIVED = "MEMORIAL_ARCHIVED"
     MEMORIAL_EXPORTED = "MEMORIAL_EXPORTED"
     MEMORIAL_DELETED = "MEMORIAL_DELETED"
+    MEMORIAL_COLLISION_DETECTED = "MEMORIAL_COLLISION_DETECTED"
+    MEMORIAL_MERGED = "MEMORIAL_MERGED"
+    DISPUTE_CLAIM_SUBMITTED = "DISPUTE_CLAIM_SUBMITTED"
+    DISPUTE_STATUS_UPDATED = "DISPUTE_STATUS_UPDATED"
     STEWARD_TRANSFERRED = "STEWARD_TRANSFERRED"
     CONTRIBUTOR_INVITED = "CONTRIBUTOR_INVITED"
     CONTRIBUTOR_REVOKED = "CONTRIBUTOR_REVOKED"
@@ -233,11 +244,19 @@ class AuditAction(StrEnum):
     VERIFICATION_REJECTED = "VERIFICATION_REJECTED"
     SENSITIVE_DOCUMENT_ACCESSED = "SENSITIVE_DOCUMENT_ACCESSED"
     REPORT_RESOLVED = "REPORT_RESOLVED"
+    PROVIDER_SUBMITTED = "PROVIDER_SUBMITTED"
     PROVIDER_APPROVED = "PROVIDER_APPROVED"
+    PROVIDER_REJECTED = "PROVIDER_REJECTED"
+    PROVIDER_SUSPENDED = "PROVIDER_SUSPENDED"
+    PROVIDER_UPDATED = "PROVIDER_UPDATED"
+    PROVIDER_MEDIA_CHANGED = "PROVIDER_MEDIA_CHANGED"
+    LEAD_SUBMITTED = "LEAD_SUBMITTED"
+    LEAD_STATUS_CHANGED = "LEAD_STATUS_CHANGED"
     PAYMENT_CONFIRMED = "PAYMENT_CONFIRMED"
     PAYMENT_ATTEMPTED = "PAYMENT_ATTEMPTED"
     PAYMENT_FAILED = "PAYMENT_FAILED"
     REFUND_APPROVED = "REFUND_APPROVED"
+    REFUND_REQUESTED = "REFUND_REQUESTED"
     SUBSCRIPTION_CREATED = "SUBSCRIPTION_CREATED"
     SUBSCRIPTION_ACTIVATED = "SUBSCRIPTION_ACTIVATED"
     SUBSCRIPTION_RENEWED = "SUBSCRIPTION_RENEWED"
@@ -247,8 +266,19 @@ class AuditAction(StrEnum):
     MEMORIAL_SLOT_RELEASED = "MEMORIAL_SLOT_RELEASED"
     SPONSORSHIP_CREATED = "SPONSORSHIP_CREATED"
     SPONSORSHIP_REDEEMED = "SPONSORSHIP_REDEEMED"
+    ADMIN_ENTITLEMENT_GRANTED = "ADMIN_ENTITLEMENT_GRANTED"
+    ADMIN_ENTITLEMENT_EXTENDED = "ADMIN_ENTITLEMENT_EXTENDED"
+    ADMIN_ENTITLEMENT_REVOKED = "ADMIN_ENTITLEMENT_REVOKED"
     ADMIN_LOGIN = "ADMIN_LOGIN"
     AUTHORIZATION_DENIED = "AUTHORIZATION_DENIED"
+    USER_DELETION_REQUESTED = "USER_DELETION_REQUESTED"
+    USER_DELETION_VERIFIED = "USER_DELETION_VERIFIED"
+    USER_DELETION_CANCELLED = "USER_DELETION_CANCELLED"
+    USER_DELETION_EXECUTED = "USER_DELETION_EXECUTED"
+    MEMORIAL_TRANSFERRED = "MEMORIAL_TRANSFERRED"
+    DATA_EXPORT_GENERATED = "DATA_EXPORT_GENERATED"
+    CONSENT_WITHDRAWN = "CONSENT_WITHDRAWN"
+    LEGAL_HOLD_APPLIED = "LEGAL_HOLD_APPLIED"
 
 
 class PlanCode(StrEnum):
@@ -394,3 +424,111 @@ class SponsorshipStatus(StrEnum):
     EXPIRED = "expired"
     REVOKED = "revoked"
 
+
+class NotificationType(StrEnum):
+    """In-app notification kinds.
+
+    Email delivery does not exist yet (no provider is configured), so every
+    notification here is an in-app record. The catalogue spans the full
+    lifecycle so later stages can start emitting without a schema migration.
+    """
+
+    WELCOME = "welcome"
+    VERIFICATION_SUBMITTED = "verification_submitted"
+    VERIFICATION_APPEALED = "verification_appealed"
+    VERIFICATION_APPROVED = "verification_approved"
+    VERIFICATION_REJECTED = "verification_rejected"
+    VERIFICATION_NEEDS_INFO = "verification_needs_info"
+    TRIBUTE_PENDING = "tribute_pending"
+    PAYMENT_SUCCEEDED = "payment_succeeded"
+    PAYMENT_FAILED = "payment_failed"
+    ENTITLEMENT_GRANTED = "entitlement_granted"
+    ENTITLEMENT_REVOKED = "entitlement_revoked"
+    PROVIDER_LEAD_RECEIVED = "provider_lead_received"
+    LEAD_STATUS_UPDATED = "lead_status_updated"
+    PROVIDER_APPROVED = "provider_approved"
+    PROVIDER_SUSPENDED = "provider_suspended"
+    ACCOUNT_DELETION_REQUESTED = "account_deletion_requested"
+    ACCOUNT_DELETION_COMPLETED = "account_deletion_completed"
+    ACCOUNT_DELETION_CANCELLED = "account_deletion_cancelled"
+
+
+class ProviderStatus(StrEnum):
+    """Operational state of a Farewell Network partner.
+
+    Separate from `VerificationState` on purpose, mirroring memorials: a provider
+    can be approved and later suspended without its credential review changing.
+    Only `approved` providers are ever publicly discoverable.
+    """
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    SUSPENDED = "suspended"
+    REJECTED = "rejected"
+
+
+class LeadStatus(StrEnum):
+    """Canonical lifecycle of a family enquiry.
+
+    The two frontends speak different vocabularies (the partner console says
+    "Provider Contacted", the family view says "contacted"). Both map onto this
+    single set, so the stored truth is one value.
+    """
+
+    SUBMITTED = "submitted"
+    CONTACTED = "contacted"
+    QUOTED = "quoted"
+    IN_DISCUSSION = "in_discussion"
+    BOOKED = "booked"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+# Legal transitions. Anything else is a 409 rather than a silent write, so a lead
+# cannot jump straight to BOOKED without the partner having made contact.
+LEAD_TRANSITIONS: dict[LeadStatus, frozenset[LeadStatus]] = {
+    LeadStatus.SUBMITTED: frozenset({LeadStatus.CONTACTED, LeadStatus.CANCELLED}),
+    LeadStatus.CONTACTED: frozenset(
+        {LeadStatus.QUOTED, LeadStatus.BOOKED, LeadStatus.COMPLETED, LeadStatus.CANCELLED}
+    ),
+    LeadStatus.QUOTED: frozenset(
+        {LeadStatus.IN_DISCUSSION, LeadStatus.BOOKED, LeadStatus.CANCELLED}
+    ),
+    LeadStatus.IN_DISCUSSION: frozenset({LeadStatus.BOOKED, LeadStatus.CANCELLED}),
+    LeadStatus.BOOKED: frozenset({LeadStatus.COMPLETED, LeadStatus.CANCELLED}),
+    LeadStatus.COMPLETED: frozenset(),
+    LeadStatus.CANCELLED: frozenset(),
+}
+
+
+class DeletionStatus(StrEnum):
+    """Data-lifecycle state machine (PRD §32), separate from payment state.
+
+    A deletion request never borrows a billing status and a payment failure never
+    advances this machine. `BLOCKED_BY_DISPOSITION` is the honest resting state
+    for a sole-steward account until the memorial's fate is decided, rather than a
+    failure — the person's request is valid, the disposition is not yet chosen.
+    """
+
+    REQUESTED = "REQUESTED"
+    VERIFIED = "VERIFIED"
+    SCHEDULED = "SCHEDULED"
+    EXECUTING = "EXECUTING"
+    COMPLETED = "COMPLETED"
+    BLOCKED_BY_DISPOSITION = "BLOCKED_BY_DISPOSITION"
+    LEGAL_HOLD = "LEGAL_HOLD"
+    REJECTED_WITH_REASON = "REJECTED_WITH_REASON"
+    CANCELLED = "CANCELLED"
+
+
+class MemorialDisposition(StrEnum):
+    """What happens to a memorial whose only steward is deleting their account."""
+
+    TRANSFER = "transfer"
+    DELETE = "delete"
+    ORPHAN = "orphan"
+
+
+class DispositionStatus(StrEnum):
+    PENDING = "pending"
+    COMPLETED = "completed"

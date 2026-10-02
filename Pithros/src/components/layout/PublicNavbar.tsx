@@ -3,7 +3,7 @@ import { PithrosLogo } from '../visual/PithrosLogo';
 import { Button } from '../ui/Button';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { LanguageSelector } from '../common/LanguageSelector';
-import { PlusCircle, Search, Menu, X, User as UserIcon, LogOut, Shield, Settings } from 'lucide-react';
+import { PlusCircle, Search, Menu, X, User as UserIcon, LogOut, Shield, Settings, Building2, LogIn } from 'lucide-react';
 import { UserRole } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +26,17 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
   const { t, metadata } = useLocale();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  // Lock background scroll when mobile drawer is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [mobileMenuOpen]);
 
   const isAuthenticated = authState === 'authenticated' && Boolean(pithrosUser);
 
@@ -128,16 +139,41 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
                       : 'border-[#E5DED2] bg-[#FCFAF5] text-[#20242A]'
                   }`}
                 >
-                  <button
-                    onClick={() => {
-                      onNavigate('/dashboard');
-                      setProfileDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-500/10 flex items-center gap-2"
-                  >
-                    <UserIcon className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Steward Workspace</span>
-                  </button>
+                  {pithrosUser?.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        onNavigate('/admin');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-500/10 flex items-center gap-2 font-medium text-amber-500"
+                    >
+                      <Shield className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Admin Console</span>
+                    </button>
+                  )}
+                  {pithrosUser?.role === 'partner' ? (
+                    <button
+                      onClick={() => {
+                        onNavigate('/partner/dashboard');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-emerald-500/10 flex items-center gap-2 font-medium text-emerald-400"
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Partner Platform</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        onNavigate('/dashboard');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-500/10 flex items-center gap-2"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Steward Workspace</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       onNavigate('/account/profile');
@@ -223,66 +259,194 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div
-          className={`sm:hidden border-b px-4 pt-3 pb-6 space-y-3 transition-colors ${
+          className={`sm:hidden border-b px-4 pt-3 pb-6 space-y-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain transition-colors ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
           }`}
         >
-          {navLinks.map((link) => (
-            <button
-              key={link.route}
-              onClick={() => {
-                onNavigate(link.route);
-                setMobileMenuOpen(false);
-              }}
-              className={`block w-full text-left py-2 text-sm font-medium transition-colors ${
-                currentRoute === link.route
-                  ? isDark
-                    ? 'text-[#B99452]'
-                    : 'text-[#23324A]'
-                  : isDark
-                  ? 'text-[#D9D2C6] hover:text-[#F8F5EE]'
-                  : 'text-[#554F48] hover:text-[#20242A]'
-              }`}
-            >
-              {link.label}
-            </button>
-          ))}
+          {/* Main Navigation Links */}
+          <div className="space-y-1">
+            {navLinks.map((link) => {
+              const isActive = currentRoute === link.route;
+              return (
+                <button
+                  key={link.route}
+                  onClick={() => {
+                    onNavigate(link.route);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-between w-full text-left py-2.5 px-3 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                    isActive
+                      ? isDark
+                        ? 'bg-[#202C40] text-[#B99452] font-semibold'
+                        : 'bg-[#E5DED2]/60 text-[#23324A] font-semibold'
+                      : isDark
+                      ? 'text-[#D9D2C6] hover:text-[#F8F5EE] hover:bg-[#202C40]/40'
+                      : 'text-[#554F48] hover:text-[#20242A] hover:bg-[#E5DED2]/40'
+                  }`}
+                >
+                  <span>{link.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          <div className="py-2 space-y-2">
+          {/* Preferences Section: Language & Theme */}
+          <div
+            className={`pt-3 border-t space-y-2.5 ${
+              isDark ? 'border-[#202C40]' : 'border-[#E5DED2]'
+            }`}
+          >
             <LanguageSelector variant="drawer" />
             <ThemeToggle variant="drawer" />
           </div>
 
+          {/* User Account & Actions Zone */}
           <div
-            className={`pt-3 border-t flex flex-col gap-2.5 ${
+            className={`pt-3 border-t space-y-2.5 ${
               isDark ? 'border-[#202C40]' : 'border-[#E5DED2]'
             }`}
           >
-            <Button
-              variant="primary"
-              size="md"
-              className="w-full"
-              onClick={() => {
-                onNavigate('/create-memorial');
-                setMobileMenuOpen(false);
-              }}
-              icon={PlusCircle}
-            >
-              Create Memorial
-            </Button>
-            <Button
-              variant="outline"
-              size="md"
-              className="w-full"
-              onClick={() => {
-                onNavigate('/dashboard');
-                setMobileMenuOpen(false);
-              }}
-            >
-              Family Steward Workspace
-            </Button>
+            {isAuthenticated ? (
+              <div className="space-y-2.5">
+                {/* User Status Card */}
+                <div
+                  className={`p-3 rounded-2xl border flex items-center justify-between ${
+                    isDark ? 'bg-[#111820] border-[#202C40]' : 'bg-white border-[#E5DED2]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 font-bold flex items-center justify-center text-xs">
+                      {pithrosUser?.name ? pithrosUser.name.charAt(0) : 'S'}
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold">{pithrosUser?.name || 'Steward'}</div>
+                      <div className="text-[10px] opacity-70 capitalize font-mono">
+                        {pithrosUser?.role === 'admin'
+                          ? 'Super Admin'
+                          : pithrosUser?.role === 'partner'
+                          ? 'Care Partner'
+                          : 'Family Steward'}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setMobileMenuOpen(false);
+                      await signOut();
+                      onNavigate('/signin');
+                    }}
+                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 flex items-center gap-1 text-[11px] cursor-pointer"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+
+                {/* Role-Specific Workspaces */}
+                {pithrosUser?.role === 'admin' && (
+                  <Button
+                    variant="outline"
+                    size="md"
+                    className="w-full text-amber-500 border-amber-500/40"
+                    onClick={() => {
+                      onNavigate('/admin');
+                      setMobileMenuOpen(false);
+                    }}
+                    icon={Shield}
+                  >
+                    Admin Console
+                  </Button>
+                )}
+                {pithrosUser?.role === 'partner' ? (
+                  <Button
+                    variant="outline"
+                    size="md"
+                    className="w-full text-emerald-400 border-emerald-500/40"
+                    onClick={() => {
+                      onNavigate('/partner/dashboard');
+                      setMobileMenuOpen(false);
+                    }}
+                    icon={Building2}
+                  >
+                    Partner Platform
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="md"
+                    className="w-full"
+                    onClick={() => {
+                      onNavigate('/dashboard');
+                      setMobileMenuOpen(false);
+                    }}
+                    icon={UserIcon}
+                  >
+                    Steward Workspace
+                  </Button>
+                )}
+
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => {
+                    onNavigate('/create-memorial');
+                    setMobileMenuOpen(false);
+                  }}
+                  icon={PlusCircle}
+                >
+                  Create Memorial
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => {
+                    onNavigate('/create-memorial');
+                    setMobileMenuOpen(false);
+                  }}
+                  icon={PlusCircle}
+                >
+                  Create Memorial
+                </Button>
+
+                {/* Highly Visible, Dedicated Sign In Button */}
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="w-full"
+                  onClick={() => {
+                    onNavigate('/signin');
+                    setMobileMenuOpen(false);
+                  }}
+                  icon={LogIn}
+                >
+                  Sign In to Account
+                </Button>
+
+                <div className="text-center pt-1">
+                  <button
+                    onClick={() => {
+                      onNavigate('/signup');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`text-xs underline transition-colors cursor-pointer ${
+                      isDark
+                        ? 'text-[#D9D2C6] hover:text-[#B99452]'
+                        : 'text-[#554F48] hover:text-[#23324A]'
+                    }`}
+                  >
+                    New family? Create account free
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

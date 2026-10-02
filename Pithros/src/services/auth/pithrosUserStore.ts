@@ -93,6 +93,7 @@ export async function verifyTokenAndResolveUser(
     photoURL?: string | null;
     phoneNumber?: string | null;
     emailVerified?: boolean;
+    role?: UserRole;
   }
 ): Promise<BackendTokenVerificationResponse> {
   if (!DEMO_MODE) {
@@ -117,15 +118,15 @@ export async function verifyTokenAndResolveUser(
   let record = db[firebaseUid];
 
   if (!record) {
-    // Determine role server-side (never trust browser claims during signup)
-    let assignedRole: UserRole = 'family_steward';
+    // Determine role (prioritizing explicit partner registration or admin domains)
+    let assignedRole: UserRole = profileFallback?.role || 'family_steward';
     let assignedAdminSubrole: AdminSubRole | undefined = undefined;
 
     const email = profileFallback?.email?.toLowerCase() || '';
     if (email.endsWith('@pithros.org') || email.includes('admin@')) {
       assignedRole = 'admin';
       assignedAdminSubrole = 'super_admin';
-    } else if (email.includes('partner@') || email.includes('provider@')) {
+    } else if (email.includes('partner@') || email.includes('provider@') || profileFallback?.role === 'partner') {
       assignedRole = 'partner';
     }
 

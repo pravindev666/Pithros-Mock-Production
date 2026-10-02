@@ -68,11 +68,16 @@ def process_uploaded_media(self: Any, media_id: str) -> dict[str, str]:
             with Image.open(BytesIO(raw)) as image:
                 item.width, item.height = image.size
 
-                # Strip dangerous EXIF metadata (GPS, camera serials, timestamps) for privacy & security
+                # Strip dangerous EXIF metadata (GPS, camera serials, timestamps)
+                # for privacy & security
                 clean_buffer = BytesIO()
                 clean_mode = "RGB" if image.mode not in ("RGB", "L") else image.mode
                 clean_image = image.convert(clean_mode) if image.mode != clean_mode else image
-                save_fmt = "JPEG" if item.mime_type in ("image/jpeg", "image/jpg") else (image.format or "JPEG")
+                save_fmt = (
+                    "JPEG"
+                    if item.mime_type in ("image/jpeg", "image/jpg")
+                    else (image.format or "JPEG")
+                )
                 clean_image.save(clean_buffer, format=save_fmt, quality=92, optimize=True)
 
                 # Overwrite raw storage object with EXIF-sanitized bytes

@@ -37,7 +37,7 @@ import {
   Pause,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { StarField, MemorialGlow } from '../components/visual/VisualComponents';
+import { StarField, MemorialGlow, HeroAtmosphere, LandingAtmosphere } from '../components/visual/VisualComponents';
 import { TimelinePath } from '../components/visual/TimelinePath';
 import {
   DoveSymbol,
@@ -263,25 +263,21 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
   return (
     <div
-      className={`min-h-screen font-sans selection:bg-[#B99452]/20 selection:text-[#B99452] transition-colors relative overflow-hidden ${
+      className={`min-h-screen font-sans selection:bg-[#B99452]/20 selection:text-[#B99452] transition-colors relative overflow-x-clip ${
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      {/* Background StarField */}
-      <StarField count={24} />
+      {/* Pithros Global Sanctuary Sky Continuous Background Engine */}
+      <LandingAtmosphere />
 
       {/* ─────────────────────────────────────────────────────────────
-          1. HERO SECTION (Part B: Exact copy, no fake deceased props)
+          1. HERO SECTION (Sanctuary Sky Ambient Atmosphere)
           ───────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 pt-20 pb-24">
-        {/* Ambient Memorial Glow Centered Behind Headline (Soft radial falloff, zero rectangular edges) */}
-        <MemorialGlow
-          className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          size="w-[750px] h-[480px] max-w-[92vw]"
-          intensity="soft"
-        />
+      <section className="relative min-h-[75vh] md:min-h-[82vh] flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 md:pt-20 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
+        {/* Pithros Sanctuary Sky Atmosphere Engine */}
+        <HeroAtmosphere intensity="soft" />
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-8">
+        <div className="relative z-10 max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Emotional Header */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -384,10 +380,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
           ───────────────────────────────────────────────────────────── */}
       <section
         id="story-together"
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-16">
+        <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
@@ -507,10 +503,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
           3. A LIFE IS MORE THAN DATES (TimelinePath SVG & Milestones)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-16">
+        <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
           <div className="text-center max-w-xl mx-auto space-y-3">
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
@@ -641,11 +637,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           4. BRING THE FAMILY INTO THE STORY
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-16">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
+        <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="text-center max-w-2xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -667,25 +669,28 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               A daughter remembers bedtime stories. A brother remembers childhood adventures. A colleague remembers mentorship. Pithros lets each family member contribute their part with clear, respectful permissions.
             </p>
-          </div>
+          </motion.div>
 
           {/* Multi-contributor Visual Interactive Matrix */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Roles Selector list (4 cols) */}
             <div className="md:col-span-4 space-y-2">
               {familyRoles.map((role) => (
-                <button
+                <motion.button
                   key={role.id}
                   type="button"
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: MOTION_EASING.easeOut }}
                   onClick={() => setActiveFamilyTab(role.id as any)}
-                  className={`w-full p-3.5 rounded-xl border text-left transition-all ${
+                  className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                     activeFamilyTab === role.id
                       ? isDark
-                        ? 'border-[#B99452] bg-[#1A140E] text-[#F8F5EE]'
-                        : 'border-[#23324A] bg-[#E5DED2] text-[#20242A]'
+                        ? 'border-[#B99452] bg-[#1A140E] text-[#F8F5EE] shadow-md shadow-black/20'
+                        : 'border-[#23324A] bg-[#E5DED2] text-[#20242A] shadow-sm'
                       : isDark
-                      ? 'border-[#202C40] text-[#9EA3AA] hover:border-[#3D3328]'
-                      : 'border-[#E5DED2] text-[#554F48] hover:border-[#BFAF9B]'
+                      ? 'border-[#202C40] text-[#9EA3AA] hover:border-[#B99452]/40 hover:bg-[#182337]'
+                      : 'border-[#E5DED2] text-[#554F48] hover:border-[#23324A]/30 hover:bg-[#FCFAF5]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -693,7 +698,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     <span className="text-[10px] font-mono opacity-70">{role.tag}</span>
                   </div>
                   <div className="text-[11px] opacity-75 mt-0.5">{role.who}</div>
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -781,11 +786,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           5. LEAVE A GESTURE OF REMEMBRANCE (8 SVG gestures, NOT likes, no counts)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-12 text-center">
-          <div className="max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -807,7 +818,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               These are not likes. There are no counters, no popularity rankings, and no algorithms. A gesture is simply a quiet symbol left in honor of someone who mattered.
             </p>
-          </div>
+          </motion.div>
 
           {/* Ambient Ribbon ephemeral toast container */}
           <div className="h-10 flex items-center justify-center">
@@ -832,51 +843,90 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </AnimatePresence>
           </div>
 
-          {/* 8 Gestures Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {gestureItems.map((g) => {
+          {/* 8 Gestures Grid with Museum Vectors and Framer Motion Micro-Interactions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+          >
+            {gestureItems.map((g, idx) => {
               const SymbolComponent = g.component;
               const isSelected = selectedOffering === g.id;
 
               return (
-                <button
+                <motion.button
                   key={g.id}
                   type="button"
                   onClick={() => handlePlaceGesture(g.id, g.name)}
-                  className={`p-5 rounded-2xl border text-center transition-all flex flex-col items-center justify-between group ${
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: MOTION_TIMING.standard,
+                    delay: idx * 0.05,
+                    ease: MOTION_EASING.easeOut,
+                  }}
+                  whileHover={{ y: -6, scale: 1.025 }}
+                  whileTap={{ scale: 0.96 }}
+                  className={`p-5 rounded-2xl border text-center transition-all flex flex-col items-center justify-between group cursor-pointer relative overflow-hidden ${
                     isSelected
                       ? isDark
-                        ? 'border-[#B99452] bg-[#1F1810] shadow-xl shadow-amber-950/40'
-                        : 'border-[#23324A] bg-[#E5DED2] shadow-lg shadow-amber-900/10'
+                        ? 'border-[#B99452] bg-[#1F1810] shadow-xl shadow-amber-950/40 ring-1 ring-[#B99452]/50'
+                        : 'border-[#23324A] bg-[#EDE6DA] shadow-lg shadow-[#23324A]/10 ring-1 ring-[#23324A]/30'
                       : isDark
-                      ? 'border-[#202C40] bg-[#182337] hover:border-[#3D3328]'
-                      : 'border-[#E5DED2] bg-[#FCFAF5] hover:border-[#BFAF9B]'
+                      ? 'border-[#202C40] bg-[#182337] hover:border-[#B99452]/50 hover:bg-[#1C283F]'
+                      : 'border-[#E5DED2] bg-[#FCFAF5] hover:border-[#23324A]/40 hover:bg-[#F9F5EC]'
                   }`}
                 >
-                  <div className="w-12 h-12 flex items-center justify-center transition-transform group-hover:scale-110">
-                    <SymbolComponent size={36} />
+                  {/* Subtle Ambient Radial Aura behind symbol */}
+                  <div className="relative w-16 h-16 flex items-center justify-center my-1">
+                    <div
+                      className={`absolute inset-0 rounded-full blur-md transition-opacity duration-300 pointer-events-none ${
+                        isSelected
+                          ? isDark
+                            ? 'bg-[#B99452]/30 opacity-100 scale-110'
+                            : 'bg-[#23324A]/15 opacity-100 scale-110'
+                          : 'opacity-0 group-hover:opacity-100 group-hover:bg-[#B99452]/15'
+                      }`}
+                    />
+                    <div className="relative transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
+                      <SymbolComponent size={48} />
+                    </div>
                   </div>
-                  <div className="mt-3 space-y-0.5">
+
+                  <div className="mt-2 space-y-0.5">
                     <div className="text-sm font-serif font-medium">{g.name}</div>
                     <div className="text-[10px] text-[#9EA3AA]">{g.meaning}</div>
                   </div>
-                  <span
-                    className={`mt-3 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full transition-colors ${
-                      isSelected
-                        ? isDark
-                          ? 'bg-[#B99452] text-black font-semibold'
-                          : 'bg-[#23324A] text-white font-semibold'
-                        : isDark
-                        ? 'bg-[#1C1610] text-[#9EA3AA]'
-                        : 'bg-[#E5DED2] text-[#7D766D]'
-                    }`}
-                  >
-                    {isSelected ? 'Placed' : 'Place Gesture'}
-                  </span>
-                </button>
+
+                  {isSelected ? (
+                    <span
+                      className={`mt-3 inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm font-semibold transition-all ${
+                        isDark
+                          ? 'bg-[#B99452] text-[#111820]'
+                          : 'bg-[#23324A] text-[#F8F5EE]'
+                      }`}
+                    >
+                      <Check className="w-2.5 h-2.5" />
+                      Placed
+                    </span>
+                  ) : (
+                    <span
+                      className={`mt-3 inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border border-transparent transition-all ${
+                        isDark
+                          ? 'bg-[#1C1610] text-[#9EA3AA] group-hover:text-[#F8F5EE] group-hover:border-[#B99452]/40'
+                          : 'bg-[#E5DED2] text-[#7D766D] group-hover:text-[#20242A] group-hover:border-[#23324A]/30'
+                      }`}
+                    >
+                      Place Gesture
+                    </span>
+                  )}
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -884,11 +934,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           6. YOU DECIDE WHO SEES IT (Privacy Architecture)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-12">
-          <div className="text-center max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="text-center max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -912,28 +968,30 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               You decide who can view, contribute, or listen. Change privacy settings at any time with a single tap.
             </p>
-          </div>
+          </motion.div>
 
           {/* Privacy Preview Tabs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {privacyTiers.map((t) => (
-              <button
+              <motion.button
                 key={t.id}
                 type="button"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActivePrivacyTab(t.id as any)}
-                className={`p-3.5 rounded-xl border text-center transition-all ${
+                className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
                   activePrivacyTab === t.id
                     ? isDark
-                      ? 'border-[#B99452] bg-[#1A140E] text-[#B99452]'
-                      : 'border-[#23324A] bg-[#E5DED2] text-[#8C5C0F]'
+                      ? 'border-[#B99452] bg-[#1A140E] text-[#B99452] shadow-sm'
+                      : 'border-[#23324A] bg-[#E5DED2] text-[#8C5C0F] shadow-sm'
                     : isDark
-                    ? 'border-[#202C40] text-[#9EA3AA]'
-                    : 'border-[#E5DED2] text-[#554F48]'
+                    ? 'border-[#202C40] text-[#9EA3AA] hover:border-[#B99452]/40'
+                    : 'border-[#E5DED2] text-[#554F48] hover:border-[#23324A]/30'
                 }`}
               >
                 <div className="font-serif text-sm font-medium">{t.label}</div>
                 <div className="text-[10px] opacity-75 mt-0.5">{t.audience}</div>
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -977,11 +1035,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           7. BUILT FOR TRUST (Verification Badges & Drawer Trigger)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-12 text-center">
-          <div className="max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1003,7 +1067,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               We protect families from impersonation, fraudulent claims, and unwanted alterations. Click any verification badge below to review our honest trust standards.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -1023,17 +1087,20 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 desc: 'Multi-party consensus with institutional or family lineage confirmation.',
               },
             ].map((badge, i) => (
-              <button
+              <motion.button
                 key={i}
                 type="button"
+                whileHover={{ y: -5, scale: 1.015 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2, ease: MOTION_EASING.easeOut }}
                 onClick={() => {
                   setVerificationDrawerType(badge.type);
                   setVerificationDrawerOpen(true);
                 }}
-                className={`p-6 rounded-2xl border text-left transition-all hover:scale-[1.02] ${
+                className={`p-6 rounded-2xl border text-left transition-all cursor-pointer ${
                   isDark
-                    ? 'bg-[#182337] border-[#202C40] hover:border-[#B99452]'
-                    : 'bg-[#FCFAF5] border-[#E5DED2] hover:border-[#23324A]'
+                    ? 'bg-[#182337] border-[#202C40] hover:border-[#B99452] hover:shadow-lg hover:shadow-black/20'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] hover:border-[#23324A] hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-3">
@@ -1047,7 +1114,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   <span>Learn what this means</span>
                   <ArrowRight className="w-3 h-3" />
                 </div>
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -1057,11 +1124,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           8. TURN THE STORY INTO A KEEPSAKE (Memorial Book)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-10 text-center">
-          <div className="max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1083,14 +1156,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               Pithros formats the biography, timeline milestones, archival photos, family kinship, and tributes into an editorial keepsake volume ready for home printing or high-quality bookbinding.
             </p>
-          </div>
+          </motion.div>
 
-          <div
-            className={`p-8 sm:p-12 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-8 ${
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, delay: 0.1, ease: MOTION_EASING.easeOut }}
+            className={`p-8 sm:p-12 rounded-3xl border flex flex-col lg:flex-row items-center justify-between gap-8 text-left ${
               isDark ? 'bg-[#14100C] border-[#2E241A]' : 'bg-[#FCFAF5] border-[#E5DED2]'
             }`}
           >
-            <div className="text-left space-y-3 max-w-md">
+            <div className="space-y-3 max-w-md">
               <div className="flex items-center gap-2 text-xs font-mono text-[#B99452]">
                 <BookOpen className="w-4 h-4" />
                 <span>Commemorative Memorial Book</span>
@@ -1103,13 +1180,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full lg:w-auto flex-shrink-0">
               <Button
                 variant="primary"
                 size="md"
                 onClick={() => setMemorialBookOpen(true)}
                 icon={BookOpen}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto whitespace-nowrap px-5 py-3 font-medium shadow-sm"
               >
                 Preview Memorial Book
               </Button>
@@ -1118,12 +1195,12 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 size="md"
                 onClick={() => setMemorialBookOpen(true)}
                 icon={Printer}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto whitespace-nowrap px-5 py-3 font-medium shadow-sm"
               >
                 Print / Save as PDF
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1131,11 +1208,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           9. KEEP THE LIFE ARCHIVE (Unified Archive)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-12 text-center">
-          <div className="max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1157,9 +1240,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               Not isolated feature cards, but a single unified family archive designed to endure for decades.
             </p>
-          </div>
+          </motion.div>
 
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
             className={`p-8 rounded-3xl border grid grid-cols-2 sm:grid-cols-4 gap-6 text-left ${
               isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
             }`}
@@ -1174,15 +1261,20 @@ export const LandingView: React.FC<LandingViewProps> = ({
               { label: 'Keepsake Book', sub: 'Printable editorial PDF' },
               { label: 'Offline Export', sub: 'ZIP backup of all media' },
             ].map((item, i) => (
-              <div key={i} className="space-y-1">
+              <motion.div
+                key={i}
+                whileHover={{ x: 3 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-1 cursor-default"
+              >
                 <div className="flex items-center gap-1.5 font-serif text-sm font-medium">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#B99452]" />
                   <span>{item.label}</span>
                 </div>
                 <div className="text-[11px] text-[#9EA3AA] pl-5">{item.sub}</div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1190,11 +1282,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           10. PRACTICAL FAREWELL SUPPORT (Calm & Positioned Later)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-10">
-          <div className="text-center max-w-xl mx-auto space-y-3">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="text-center max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1216,7 +1314,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               During difficult days, practical arrangements can feel overwhelming. We connect families with verified, vetted providers who assist with dignity.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -1233,17 +1331,24 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 desc: 'Transparent quotes, verified partner credentials, and zero hidden markups.',
               },
             ].map((s, i) => (
-              <div
+              <motion.div
                 key={i}
-                className={`p-6 rounded-2xl border space-y-2 ${
-                  isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: i * 0.1, ease: MOTION_EASING.easeOut }}
+                whileHover={{ y: -4 }}
+                className={`p-6 rounded-2xl border space-y-2 transition-colors ${
+                  isDark
+                    ? 'bg-[#182337] border-[#202C40] hover:border-[#B99452]/50'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] hover:border-[#23324A]/40'
                 }`}
               >
                 <h4 className="font-serif text-sm font-semibold">{s.title}</h4>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
                   {s.desc}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -1264,10 +1369,16 @@ export const LandingView: React.FC<LandingViewProps> = ({
           11. NOT ANOTHER SOCIAL NETWORK (Product Philosophy)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-10 sm:py-14 md:py-18 lg:py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-3xl mx-auto text-center space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+          className="max-w-3xl mx-auto text-center space-y-5 sm:space-y-6"
+        >
           <span
             className={`text-[10px] uppercase font-mono tracking-widest ${
               isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1299,29 +1410,37 @@ export const LandingView: React.FC<LandingViewProps> = ({
               'No third-party advertisements',
               'No data brokerage or tracking',
             ].map((p, i) => (
-              <div
+              <motion.div
                 key={i}
-                className={`p-3 rounded-xl border flex items-center gap-2 ${
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ duration: 0.15 }}
+                className={`p-3 rounded-xl border flex items-center gap-2 cursor-default ${
                   isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
                 }`}
               >
                 <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
                 <span>{p}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
           12. HONEST PRICING (Free to begin, clear plans)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center max-w-xl mx-auto space-y-3">
+        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="text-center max-w-xl mx-auto space-y-3"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1343,14 +1462,19 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               Every family can create a permanent memorial without paying anything. Memorial Care preserves their voice, spoken histories, and the family's growing archive with complete care.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {pricingPlans
               .filter((p) => !['plan_care_monthly', 'plan_care_half_yearly'].includes(p.id))
-              .map((plan) => (
-              <div
+              .map((plan, idx) => (
+              <motion.div
                 key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1, ease: MOTION_EASING.easeOut }}
+                whileHover={{ y: -6 }}
                 className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${
                   plan.popular
                     ? isDark
@@ -1416,7 +1540,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -1426,11 +1550,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
           13. FREQUENTLY ASKED QUESTIONS
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
+        className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-3xl mx-auto space-y-10">
-          <div className="text-center space-y-2">
+        <div className="max-w-3xl mx-auto space-y-8 sm:space-y-10">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+            className="text-center space-y-2"
+          >
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -1445,7 +1575,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               Questions Families Often Ask
             </h2>
-          </div>
+          </motion.div>
 
           <div className="space-y-3">
             {faqs.map((faq, i) => {
@@ -1460,27 +1590,34 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveFaq(isOpen ? null : i)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-serif text-sm font-medium"
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-serif text-sm font-medium cursor-pointer"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-[#B99452] transition-transform ${
+                      className={`w-4 h-4 text-[#B99452] transition-transform duration-200 ${
                         isOpen ? 'rotate-180' : ''
                       }`}
                     />
                   </button>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className={`px-5 pb-5 text-xs leading-relaxed ${
-                        isDark ? 'text-[#D0C2AE]' : 'text-[#5C5346]'
-                      }`}
-                    >
-                      {faq.a}
-                    </motion.div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: MOTION_EASING.easeOut }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className={`px-5 pb-5 text-xs leading-relaxed ${
+                            isDark ? 'text-[#D0C2AE]' : 'text-[#5C5346]'
+                          }`}
+                        >
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -1492,10 +1629,16 @@ export const LandingView: React.FC<LandingViewProps> = ({
           14. FINAL EMOTIONAL CALL TO ACTION (Part B exact prompt specs)
           ───────────────────────────────────────────────────────────── */}
       <section
-        className="py-28 px-4 sm:px-6 lg:px-8 border-t transition-colors text-center relative"
+        className="py-16 sm:py-20 md:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 border-t transition-colors text-center relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-2xl mx-auto space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
+          className="max-w-2xl mx-auto space-y-5 sm:space-y-6"
+        >
           <h2
             className={`text-3xl sm:text-5xl font-serif leading-tight ${
               isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
@@ -1524,7 +1667,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Create a Memorial
             </Button>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Modals & Slide-overs */}

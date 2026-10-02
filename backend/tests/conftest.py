@@ -11,6 +11,7 @@ authorization matrix to run in CI with no Firebase credentials.
 
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 
@@ -49,6 +50,8 @@ from app.main import app as fastapi_app  # noqa: E402
 from app.memorials.models import Memorial, MemorialContributor, MemorialSteward  # noqa: E402
 from app.users.models import User  # noqa: E402
 
+logger = logging.getLogger(__name__)
+
 
 class FakeTokenVerifier:
     """Maps opaque test tokens to Firebase identities."""
@@ -56,7 +59,9 @@ class FakeTokenVerifier:
     def __init__(self) -> None:
         self.tokens: dict[str, FirebaseIdentity] = {}
 
-    def issue(self, user: User) -> str:
+    def issue(self, user: User, *, auth_time: int | None = None) -> str:
+        import time
+
         token = f"test-token-{user.firebase_uid}"
         self.tokens[token] = FirebaseIdentity(
             uid=user.firebase_uid,
@@ -64,6 +69,7 @@ class FakeTokenVerifier:
             email_verified=True,
             name=user.name,
             sign_in_provider="password",
+            auth_time=auth_time if auth_time is not None else int(time.time()),
         )
         return token
 
@@ -86,20 +92,23 @@ def engine():
 
 @pytest.fixture(autouse=True)
 def flush_redis_cache():
-    """Ensure Redis cache is clean for every test so stale caches don't cause false positives/negatives."""
+    """Ensure Redis cache is clean for every test so stale caches don't cause
+    false positives/negatives."""
     try:
         from app.core.redis import get_redis
+
         client = get_redis()
         client.flushall()
     except Exception:
-        pass
+        logger.debug("redis_flush_failed", exc_info=True)
     yield
     try:
         from app.core.redis import get_redis
+
         client = get_redis()
         client.flushall()
     except Exception:
-        pass
+        logger.debug("redis_flush_failed", exc_info=True)
 
 
 @pytest.fixture
@@ -167,7 +176,14 @@ def make_memorial(db_session):
         privacy: str = PrivacyLevel.PRIVATE.value,
         publication_state: str = PublicationState.PUBLISHED.value,
         full_name: str = "Test Memorial",
+        premium: bool = True,
     ) -> Memorial:
+        """A memorial owned by `steward`.
+
+        Paid benefits are ON by default, because the features under test (export,
+        legacy links, extra contributors, long timelines) are paid ones. Pass
+        `premium=False` for the free-tier path — and assert the refusals there.
+        """
         unique = uuid.uuid4().hex[:8]
         memorial = Memorial(
             slug=slug or f"memorial-{unique}",
@@ -186,6 +202,29 @@ def make_memorial(db_session):
         )
         db_session.commit()
         db_session.refresh(memorial)
+
+        if premium:
+            # Put the memorial on a paid plan through the product's own flow, so the
+            # fixture cannot drift from how a real upgrade assigns a slot.
+            from app.billing.catalog import seed_pricing_catalog
+            from app.billing.schemas import CreateOrderRequest, VerifyPaymentRequest
+            from app.billing.service import create_order, verify_and_activate_payment
+
+            seed_pricing_catalog(db_session)
+            order = create_order(
+                steward,
+                CreateOrderRequest(
+                    planPriceId="memorial_care_annual_v1", memorialId=memorial.id
+                ),
+                db_session,
+            )
+            verify_and_activate_payment(
+                steward,
+                VerifyPaymentRequest(internalOrderId=order.internal_order_id),
+                db_session,
+            )
+            db_session.refresh(memorial)
+
         return memorial
 
     return _make
@@ -213,6 +252,128 @@ def add_contributor(db_session):
         return contributor
 
     return _add
+
+
+@pytest.fixture
+def gateway_sim(monkeypatch):
+    """Offline Cashfree simulator: the real client code, real signing, no network.
+
+    A created order is PAID by default (the happy path), and a test can make it
+    pending or tamper with the amount to prove the server refuses. Credentials are
+    present so the "not configured" refusal does not mask a real failure.
+    """
+    import json as _json
+
+    import httpx as _httpx
+
+    from app.billing import cashfree as cashfree_module
+    from app.core.config import settings
+
+    class Simulator:
+        def __init__(self) -> None:
+            self.orders: dict[str, dict] = {}
+            self.payments: dict[str, list[dict]] = {}
+            self.refunds: list[dict] = []
+            self.calls: list[str] = []
+
+        def set_unpaid(self, order_id: str) -> None:
+            self.orders[order_id]["order_status"] = "ACTIVE"
+            self.payments[order_id] = []
+
+        def set_amount(self, order_id: str, amount_major: float) -> None:
+            self.orders[order_id]["order_amount"] = amount_major
+            for payment in self.payments.get(order_id, []):
+                payment["payment_amount"] = amount_major
+
+        def handle(self, request: _httpx.Request) -> _httpx.Response:
+            path = request.url.path
+            self.calls.append(f"{request.method} {path}")
+            body: dict = {}
+            if request.content:
+                try:
+                    body = _json.loads(request.content)
+                except ValueError:
+                    body = {}
+
+            if request.method == "POST" and path.endswith("/orders"):
+                order_id = str(body.get("order_id"))
+                amount = float(body.get("order_amount") or 0)
+                self.orders[order_id] = {
+                    "order_id": order_id,
+                    "order_status": "PAID",
+                    "order_amount": amount,
+                    "order_currency": body.get("order_currency", "INR"),
+                }
+                self.payments[order_id] = [
+                    {
+                        "cf_payment_id": f"cf_{order_id}",
+                        "payment_status": "SUCCESS",
+                        "payment_amount": amount,
+                        "payment_group": "upi",
+                    }
+                ]
+                return _httpx.Response(
+                    200,
+                    json={
+                        **self.orders[order_id],
+                        "payment_session_id": f"sess_sim_{order_id}",
+                    },
+                )
+
+            if request.method == "POST" and path.endswith("/refunds"):
+                order_id = path.split("/orders/")[1].split("/")[0]
+                refund = {
+                    "refund_id": body.get("refund_id"),
+                    "refund_amount": body.get("refund_amount"),
+                    "refund_status": "SUCCESS",
+                }
+                self.refunds.append({"order_id": order_id, **refund})
+                return _httpx.Response(200, json=refund)
+
+            if request.method == "GET" and path.endswith("/payments"):
+                order_id = path.split("/orders/")[1].split("/")[0]
+                return _httpx.Response(200, json=self.payments.get(order_id, []))
+
+            if request.method == "GET" and "/orders/" in path:
+                order_id = path.split("/orders/")[1].split("/")[0]
+                order = self.orders.get(order_id)
+                if order is None:
+                    return _httpx.Response(404, json={"message": "order not found"})
+                return _httpx.Response(200, json=order)
+
+            return _httpx.Response(404, json={"message": "unsupported"})
+
+    fields = {
+        "cashfree_app_id": "cf_test_app",
+        "cashfree_secret_key": "cf_test_secret",
+        "cashfree_webhook_secret": "cf_test_webhook_secret",
+        "cashfree_base_url": "https://gateway.test",
+    }
+    originals = {name: getattr(settings, name) for name in fields}
+
+    def _assign(name: str, value: str) -> None:
+        try:
+            setattr(settings, name, value)
+        except Exception:  # frozen model
+            object.__setattr__(settings, name, value)
+
+    for name, value in fields.items():
+        _assign(name, value)
+
+    simulator = Simulator()
+    cashfree_module.set_transport_for_testing(_httpx.MockTransport(simulator.handle))
+    try:
+        yield simulator
+    finally:
+        cashfree_module.set_transport_for_testing(None)
+        for name, value in originals.items():
+            _assign(name, value)
+
+
+@pytest.fixture(autouse=True)
+def _gateway_available(gateway_sim):
+    """Every test runs with a working gateway, so nothing activates by accident."""
+    return gateway_sim
 
 
 @pytest.fixture

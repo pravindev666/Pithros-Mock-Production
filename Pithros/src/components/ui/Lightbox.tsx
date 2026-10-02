@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { MediaItem } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { MOTION_TIMING, MOTION_EASING, modalBackdropVariants } from '../../lib/motion';
@@ -11,6 +11,7 @@ interface LightboxProps {
   currentIndex: number;
   onClose: () => void;
   onNavigate: (index: number) => void;
+  onReport?: (image: MediaItem) => void;
 }
 
 export const Lightbox: React.FC<LightboxProps> = ({
@@ -19,6 +20,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
   currentIndex,
   onClose,
   onNavigate,
+  onReport,
 }) => {
   const { isDark } = useTheme();
 
@@ -72,17 +74,35 @@ export const Lightbox: React.FC<LightboxProps> = ({
             >
               {currentIndex + 1} of {images.length}
             </span>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-full transition-colors cursor-pointer ${
-                isDark
-                  ? 'bg-[#182337] text-[#F8F5EE] hover:bg-[#202C40]'
-                  : 'bg-[#20242A]/80 text-[#F8F5EE] hover:bg-[#20242A]'
-              }`}
-              aria-label="Close image viewer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onReport && (
+                <button
+                  type="button"
+                  onClick={() => onReport(currentItem)}
+                  className={`px-3 py-1 rounded-full text-xs flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                    isDark
+                      ? 'bg-[#182337] border-[#202C40] text-[#9EA3AA] hover:text-[#F87171] hover:border-[#EF4444]/40'
+                      : 'bg-[#20242A]/80 border-[#2D3D56] text-[#E5DED2] hover:text-[#FCA5A5] hover:border-[#F87171]/40'
+                  }`}
+                  title="Report inappropriate photograph (nudity, explicit, or policy violation)"
+                  aria-label="Report photograph"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-medium">Report Photo</span>
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-full transition-colors cursor-pointer ${
+                  isDark
+                    ? 'bg-[#182337] text-[#F8F5EE] hover:bg-[#202C40]'
+                    : 'bg-[#20242A]/80 text-[#F8F5EE] hover:bg-[#20242A]'
+                }`}
+                aria-label="Close image viewer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Image Container with Nav buttons */}

@@ -32,6 +32,7 @@ export interface SignUpCredentials {
   password: string;
   phone?: string;
   agreeTerms: boolean;
+  role?: UserRole;
 }
 
 export interface AuthResponse<T = unknown> {

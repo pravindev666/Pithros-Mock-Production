@@ -24,3 +24,6 @@ secrets/
 # Development object storage. The filesystem storage adapter writes uploads here
 # when STORAGE_BACKEND=local; production uses Cloudflare R2 and never touches it.
 var/
+
+# E2E runtime state (generated credentials, server logs)
+tests/e2e/.runtime/

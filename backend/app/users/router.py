@@ -7,13 +7,15 @@ Pithros account.
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import CurrentUser
+from app.auth.dependencies import CurrentUser, require_role
 from app.core.database import get_db, transaction
+from app.core.enums import UserRole
 from app.core.rate_limit import user_rate_limit
 from app.users.models import User
 from app.users.schemas import UserOut, UserUpdate
@@ -64,3 +66,36 @@ def update_me(
         db.flush()
     db.refresh(user)
     return serialize_user(user)
+
+
+@router.get("/admin/users", summary="List users for admin")
+def list_admin_users(
+    admin_user: Annotated[User, Depends(require_role(UserRole.ADMIN))],
+    db: DbSession,
+    query: str | None = None,
+) -> list[dict[str, Any]]:
+    stmt = select(User).where(User.deleted_at.is_(None)).order_by(User.created_at.desc())
+    if query:
+        stmt = stmt.where((User.email.ilike(f"%{query}%")) | (User.name.ilike(f"%{query}%")))
+    users = db.execute(stmt).scalars().all()
+    out = []
+    for u in users:
+        steward_count = len(u.stewardships)
+        out.append(
+            {
+                "id": str(u.id),
+                "name": u.name,
+                "email": u.email,
+                "role": u.role,
+                "adminSubrole": u.admin_subrole,
+                "emailVerified": u.email_verified,
+                "mfaEnabled": u.mfa_enabled,
+                "status": u.status,
+                "memorialCount": steward_count,
+                "createdDate": u.created_at.strftime("%b %d, %Y") if u.created_at else "",
+                "lastActive": u.last_seen_at.strftime("%b %d, %Y")
+                if u.last_seen_at
+                else "Active recently",
+            }
+        )
+    return out

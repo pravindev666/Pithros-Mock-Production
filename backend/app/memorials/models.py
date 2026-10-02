@@ -102,7 +102,35 @@ class Memorial(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixi
 
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
+    duplicate_held: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    dispute_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    merged_into_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("memorials.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    portrait_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(
+            "memorial_media.id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="fk_memorials_portrait_media_id_memorial_media",
+        ),
+        nullable=True,
+    )
+    cover_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(
+            "memorial_media.id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="fk_memorials_cover_media_id_memorial_media",
+        ),
+        nullable=True,
+    )
     stewards: Mapped[list[MemorialSteward]] = relationship(
         back_populates="memorial",
         cascade="all, delete-orphan",

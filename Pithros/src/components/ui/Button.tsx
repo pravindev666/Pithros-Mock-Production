@@ -30,12 +30,12 @@ export const Button: React.FC<ButtonProps> = ({
   const { metadata } = useLocale();
 
   const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-xl transition-all select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#23324A] dark:focus-visible:ring-[#B99452]';
+    'inline-flex items-center justify-center font-medium rounded-xl transition-all select-none cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#23324A] dark:focus-visible:ring-[#B99452]';
 
   const sizeClasses = {
-    sm: 'text-xs px-3.5 py-1.5 gap-1.5 h-8',
-    md: 'text-sm px-5 py-2.5 gap-2 h-10',
-    lg: 'text-base px-6 py-3 gap-2.5 h-12',
+    sm: 'text-xs px-3.5 py-2 gap-1.5 min-h-[34px] h-auto',
+    md: 'text-sm px-5 py-2.5 gap-2 min-h-[42px] h-auto',
+    lg: 'text-base px-6 py-3.5 gap-2.5 min-h-[48px] h-auto',
   };
 
   const getVariantClasses = () => {

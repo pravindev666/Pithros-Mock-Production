@@ -13,8 +13,12 @@ interface SignUpViewProps {
 
 export const SignUpView: React.FC<SignUpViewProps> = ({ onNavigate }) => {
   const { isDark } = useTheme();
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { signUpWithEmail, signInWithGoogle, returnUrl, setReturnUrl } = useAuth();
 
+  const isPartnerParam = typeof window !== 'undefined' && window.location.search.includes('role=partner');
+  const [accountType, setAccountType] = useState<'family_steward' | 'partner'>(
+    isPartnerParam ? 'partner' : 'family_steward'
+  );
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -56,13 +60,21 @@ export const SignUpView: React.FC<SignUpViewProps> = ({ onNavigate }) => {
       password,
       phone: phone.trim() || undefined,
       agreeTerms,
+      role: accountType === 'partner' ? 'partner' : 'family_steward',
     });
 
     setIsLoading(false);
 
     if (res.success) {
-      // After sign-up: redirect to verify-email
-      onNavigate('/verify-email');
+      if (accountType === 'partner') {
+        onNavigate('/partner/dashboard');
+      } else if (returnUrl) {
+        const dest = returnUrl;
+        setReturnUrl(null);
+        onNavigate(dest);
+      } else {
+        onNavigate('/verify-email');
+      }
     } else {
       setErrorMessage(res.error || 'Unable to create your account. Please try again.');
     }
@@ -74,7 +86,15 @@ export const SignUpView: React.FC<SignUpViewProps> = ({ onNavigate }) => {
     const res = await signInWithGoogle();
     setIsLoading(false);
     if (res.success) {
-      onNavigate('/dashboard');
+      if (accountType === 'partner') {
+        onNavigate('/partner/dashboard');
+      } else if (returnUrl) {
+        const dest = returnUrl;
+        setReturnUrl(null);
+        onNavigate(dest);
+      } else {
+        onNavigate('/dashboard');
+      }
     } else {
       setErrorMessage(res.error || 'Google sign-up could not be completed.');
     }
@@ -123,8 +143,50 @@ export const SignUpView: React.FC<SignUpViewProps> = ({ onNavigate }) => {
                   isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
                 }`}
               >
-                Begin creating a place to preserve the stories and memories that matter.
+                {accountType === 'partner'
+                  ? 'Join our accredited network of bereavement and memorial service professionals.'
+                  : 'Begin creating a place to preserve the stories and memories that matter.'}
               </p>
+            </div>
+
+            {/* Account Purpose Selector */}
+            <div
+              className="mb-5 p-1 rounded-2xl border flex gap-1 text-xs"
+              style={{
+                borderColor: isDark ? '#202C40' : '#E5DED2',
+                backgroundColor: isDark ? '#111820' : '#F3EEE4',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setAccountType('family_steward')}
+                className={`flex-1 py-2 px-3 rounded-xl font-medium transition-all text-center cursor-pointer ${
+                  accountType === 'family_steward'
+                    ? isDark
+                      ? 'bg-[#182337] text-[#B99452] shadow-xs border border-[#202C40]'
+                      : 'bg-white text-[#23324A] shadow-xs border border-[#E5DED2]'
+                    : isDark
+                    ? 'text-[#9EA3AA] hover:text-[#F8F5EE]'
+                    : 'text-[#7D766D] hover:text-[#20242A]'
+                }`}
+              >
+                Family Steward
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccountType('partner')}
+                className={`flex-1 py-2 px-3 rounded-xl font-medium transition-all text-center cursor-pointer ${
+                  accountType === 'partner'
+                    ? isDark
+                      ? 'bg-[#182337] text-[#6EE7B7] shadow-xs border border-[#202C40]'
+                      : 'bg-white text-[#245C45] shadow-xs border border-[#E5DED2]'
+                    : isDark
+                    ? 'text-[#9EA3AA] hover:text-[#F8F5EE]'
+                    : 'text-[#7D766D] hover:text-[#20242A]'
+                }`}
+              >
+                Farewell Partner
+              </button>
             </div>
 
             {/* Error Notification */}
@@ -377,7 +439,11 @@ export const SignUpView: React.FC<SignUpViewProps> = ({ onNavigate }) => {
                   className="w-full py-2.5 text-sm font-medium shadow-lg"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Creating account…' : 'Create Account'}
+                  {isLoading
+                    ? 'Creating account…'
+                    : accountType === 'partner'
+                    ? 'Register as Care Partner'
+                    : 'Create Account'}
                 </Button>
               </div>
             </form>

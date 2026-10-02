@@ -133,7 +133,9 @@ export const mediaApi = {
   async update(
     memorialId: string,
     mediaId: string,
-    updates: Partial<Pick<MediaItem, 'title' | 'caption' | 'year'>>,
+    updates: Partial<Pick<MediaItem, 'title' | 'caption' | 'year'>> & {
+      privacy?: 'private' | 'public';
+    },
   ): Promise<void> {
     await http.patch(`/memorials/${memorialId}/media/${mediaId}`, updates);
   },

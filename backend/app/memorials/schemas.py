@@ -27,14 +27,18 @@ from app.core.schemas import CamelModel, StrictModel, to_camel
 
 __all__ = [
     "CamelModel",
+    "CandidateMatchSummary",
     "DigitalLegacyLinkIn",
     "DigitalLegacyLinkOut",
     "DigitalLegacyLinkUpdate",
     "DigitalLegacyLinksReplace",
+    "DuplicateScreeningOut",
+    "DuplicateScreeningRequest",
     "FamilyMemberOut",
     "MediaItemOut",
     "MemorialCreate",
     "MemorialDetailOut",
+    "MemorialMergeRequest",
     "MemorialPublicOut",
     "MemorialPublishRequest",
     "MemorialSummaryOut",
@@ -239,6 +243,9 @@ class MemorialDetailOut(CamelModel):
     steward_email: str | None = None
     my_role: str | None = None
     my_permissions: list[str] = Field(default_factory=list)
+    duplicate_held: bool = False
+    dispute_status: str | None = None
+    merged_into_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -289,6 +296,8 @@ class MemorialUpdate(StrictModel):
     short_epitaph: str | None = None
     portrait_url: str | None = None
     cover_url: str | None = None
+    portrait_media_id: uuid.UUID | None = None
+    cover_media_id: uuid.UUID | None = None
     story: StoryIn | None = None
     privacy: PrivacyLevel | None = None
     theme: MemorialTheme | None = None
@@ -350,3 +359,51 @@ class ArchiveExportStatusOut(CamelModel):
     download_url: str | None = None
     file_size: int | None = None
     error: str | None = None
+
+
+# ─── Identity Screening & Collision Resolution ─────────────────────────────
+
+
+class DuplicateScreeningRequest(StrictModel):
+    full_name: str = Field(min_length=1, max_length=200)
+    birth_date: str | None = Field(default=None, max_length=64)
+    death_date: str | None = Field(default=None, max_length=64)
+    birth_place: str | None = Field(default=None, max_length=200)
+    resting_place: str | None = Field(default=None, max_length=200)
+
+
+class CandidateMatchSummary(CamelModel):
+    id: str
+    full_name: str
+    birth_date: str
+    death_date: str
+    birth_place: str
+    similarity_score: float
+    confidence_tier: str
+    publication_state: str
+    privacy: str
+
+
+class DuplicateScreeningOut(CamelModel):
+    has_potential_collision: bool
+    confidence_tier: str
+    requires_admin_review: bool
+    privacy_safe_message: str
+    candidate_matches: list[CandidateMatchSummary] = Field(default_factory=list)
+
+
+class MemorialMergeRequest(StrictModel):
+    canonical_memorial_id: uuid.UUID
+    duplicate_memorial_id: uuid.UUID
+    reason: str = Field(min_length=5, max_length=500)
+    carry_over_tributes: bool = True
+    carry_over_media: bool = True
+    carry_over_timeline: bool = True
+    co_stewardship: bool = True
+
+
+class StewardTransferRequest(CamelModel):
+    target_user_id: uuid.UUID | None = None
+    target_email: str | None = None
+    reason: str = Field(min_length=3, max_length=500)
+    retain_as_co_steward: bool = True

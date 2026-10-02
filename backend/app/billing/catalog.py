@@ -7,15 +7,13 @@ No client-submitted prices or amounts are ever accepted.
 from __future__ import annotations
 
 import logging
-import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.billing.models import Plan, PlanPrice, SubscriptionEntitlement
+from app.billing.models import Plan, PlanPrice
 from app.core.enums import BillingInterval, PlanCode
 
 logger = logging.getLogger(__name__)
@@ -47,7 +45,8 @@ class TierLimits:
 
 
 # Free Tier: Genuinely useful remembrance without charging for essentials.
-# Allows basic identity and memorial creation (3 photos, 15 MB media, 5 timeline milestones, 1 additional contributor, unlimited tributes).
+# Allows basic identity and memorial creation (3 photos, 15 MB media,
+# 5 timeline milestones, 1 additional contributor, unlimited tributes).
 FREE_TIER_LIMITS = TierLimits(
     max_memorials=1,
     max_photos=3,
@@ -68,7 +67,8 @@ FREE_TIER_LIMITS = TierLimits(
 )
 
 # Memorial Care: Single memorial complete care
-# Calibrated V1: 30 photos, 300 MB total media, 100 MB voice (up to 60 mins), 50 MB max audio file, 50 milestones, 10 collaborators.
+# Calibrated V1: 30 photos, 300 MB total media, 100 MB voice (up to 60 mins),
+# 50 MB max audio file, 50 milestones, 10 collaborators.
 MEMORIAL_CARE_LIMITS = TierLimits(
     max_memorials=1,
     max_photos=30,
@@ -89,7 +89,8 @@ MEMORIAL_CARE_LIMITS = TierLimits(
 )
 
 # Family Archive: Up to 5 memorials with shared preservation
-# Shared 5-memorial capacity pool: 150 photos total (~30/memorial average), 1.5 GB total media, 500 MB voice archive across family
+# Shared 5-memorial capacity pool: 150 photos total (~30/memorial average),
+# 1.5 GB total media, 500 MB voice archive across family.
 FAMILY_ARCHIVE_LIMITS = TierLimits(
     max_memorials=5,
     max_photos=150,
@@ -114,14 +115,15 @@ FAMILY_ARCHIVE_LIMITS = TierLimits(
 # Initial Catalog Definition
 # ---------------------------------------------------------------------------
 
-CATALOG_PLANS = [
+CATALOG_PLANS: list[dict[str, Any]] = [
     {
         "code": PlanCode.MEMORIAL_CARE,
         "name": "PITHROS Memorial Care",
         "product_type": "memorial_care",
         "description": (
-            "Complete digital memorial care for one loved one with up to 30 photographs (300 MB media), "
-            "spoken voice memories (100 MB audio / up to 60 minutes), digital legacy links, PDF archive export, and family collaboration."
+            "Complete digital memorial care for one loved one with up to 30 photographs "
+            "(300 MB media), spoken voice memories (100 MB audio / up to 60 minutes), "
+            "digital legacy links, PDF archive export, and family collaboration."
         ),
         "limits": MEMORIAL_CARE_LIMITS,
         "prices": [
@@ -165,8 +167,9 @@ CATALOG_PLANS = [
         "name": "PITHROS Family Archive",
         "product_type": "family_archive",
         "description": (
-            "Unified remembrance archive preserving up to 5 family memorials with 150 shared photos (1.5 GB media), "
-            "500 MB voice archive, shared family management, and complete archive preservation."
+            "Unified remembrance archive preserving up to 5 family memorials with 150 "
+            "shared photos (1.5 GB media), 500 MB voice archive, shared family management, "
+            "and complete archive preservation."
         ),
         "limits": FAMILY_ARCHIVE_LIMITS,
         "prices": [
@@ -231,9 +234,7 @@ def seed_pricing_catalog(db: Session) -> dict[str, int]:
     prices_created = 0
 
     for plan_data in CATALOG_PLANS:
-        plan = db.execute(
-            select(Plan).where(Plan.code == plan_data["code"])
-        ).scalar_one_or_none()
+        plan = db.execute(select(Plan).where(Plan.code == plan_data["code"])).scalar_one_or_none()
 
         if not plan:
             plan = Plan(

@@ -254,7 +254,9 @@ export interface ApiSearchResult {
   birthDate?: string;
   deathDate?: string;
   birthPlace?: string;
+  restingPlace?: string | null;
   shortEpitaph?: string;
   portraitUrl?: string | null;
   verificationStatus: string;
+  verificationBadgeType?: string | null;
 }

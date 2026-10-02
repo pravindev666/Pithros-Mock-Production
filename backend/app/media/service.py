@@ -7,9 +7,12 @@ application server.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import UTC, datetime
+from typing import cast
 
+from redis.exceptions import RedisError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.requests import Request
@@ -19,9 +22,14 @@ from app.billing.entitlements import assert_can_upload_media, resolve_memorial_e
 from app.core.config import settings
 from app.core.database import transaction
 from app.core.enums import AuditAction, MediaKind, MediaStatus, PrivacyLevel, StorageTier
-from app.core.errors import NotFoundError, RateLimitedError, ValidationError
+from app.core.errors import (
+    ConflictError,
+    NotFoundError,
+    RateLimitedError,
+    StorageError,
+    ValidationError,
+)
 from app.core.redis import get_redis
-from redis.exceptions import RedisError
 from app.media.models import MediaItem
 from app.media.schemas import UploadIntentRequest
 from app.media.storage import build_media_key, extension_of, get_storage
@@ -31,6 +39,8 @@ from app.memorials.models import Memorial
 from app.memorials.permissions import MemorialAccess
 from app.workers.celery_app import enqueue
 from app.workers.tasks.media_tasks import process_uploaded_media
+
+logger = logging.getLogger(__name__)
 
 
 def _tier_for(*, kind: MediaKind) -> StorageTier:
@@ -70,16 +80,21 @@ def create_upload_intent(
     try:
         r = get_redis()
         attempt_key = f"pithros:daily_upload_attempts:{memorial.id}"
-        daily_attempts = int(r.incr(attempt_key))
+        daily_attempts = int(cast(int, r.incr(attempt_key)))
         if daily_attempts == 1:
             r.expire(attempt_key, 86400)
         if daily_attempts > max_daily:
             raise RateLimitedError(
-                f"Daily upload attempt limit reached ({max_daily} attempts/day). Please try again tomorrow.",
-                details={"retryAfterSeconds": max(int(r.ttl(attempt_key)), 0), "dailyLimit": max_daily},
+                f"Daily upload attempt limit reached ({max_daily} attempts/day). "
+                "Please try again tomorrow.",
+                details={
+                    "retryAfterSeconds": max(int(cast(int, r.ttl(attempt_key))), 0),
+                    "dailyLimit": max_daily,
+                },
             )
     except RedisError:
-        pass  # Fail open gracefully if Redis is temporarily unreachable
+        # Fail open: the quota is a safety valve, not a correctness gate.
+        logger.warning("daily_upload_quota_unavailable", exc_info=True)
 
     rule = validate_declaration(
         filename=payload.filename,
@@ -174,7 +189,7 @@ def complete_upload(
         try:
             storage.delete(tier=tier, key=item.storage_key)
         except Exception:
-            pass
+            logger.warning("rejected_upload_object_delete_failed", exc_info=True)
         with transaction(db):
             item.status = MediaStatus.REJECTED.value
             item.deleted_at = datetime.now(UTC)
@@ -228,6 +243,64 @@ def delete_media(
     invalidate_public_memorial_cache(memorial.slug)
 
 
+def _copy_object(item: MediaItem, *, target_tier: StorageTier) -> None:
+    """Move stored bytes between tiers.
+
+    Copy-then-delete: a failure never leaves the only copy in a bucket that is
+    about to be abandoned. Thumbnails follow the original when they exist.
+    """
+    storage = get_storage()
+    source = StorageTier(item.storage_tier)
+    if source == target_tier:
+        return
+
+    data = storage.get_bytes(tier=source, key=item.storage_key, max_bytes=settings.max_upload_bytes)
+    storage.put_bytes(
+        tier=target_tier,
+        key=item.storage_key,
+        data=data,
+        content_type=item.mime_type or "application/octet-stream",
+    )
+
+    if item.thumbnail_key:
+        try:
+            thumb = storage.get_bytes(
+                tier=source, key=item.thumbnail_key, max_bytes=settings.max_upload_bytes
+            )
+            storage.put_bytes(
+                tier=target_tier, key=item.thumbnail_key, data=thumb, content_type="image/jpeg"
+            )
+        except StorageError:
+            # A missing thumbnail is regenerable; the original is the payload.
+            logger.warning("media_thumbnail_copy_failed", exc_info=True)
+
+    storage.delete(tier=source, key=item.storage_key)
+    item.storage_tier = target_tier.value
+    item.storage_bucket = storage.bucket_for(target_tier)
+
+
+def _promote_media_object(item: MediaItem) -> None:
+    """Copy a photo or voice memory into the public bucket.
+
+    Only these kinds are ever promotable — verification evidence is refused
+    outright, so a stray flag can never move a death certificate into a
+    publicly-served bucket.
+    """
+    if item.kind not in (MediaKind.PHOTO.value, MediaKind.VOICE.value):
+        raise ValidationError(
+            "Only photographs and voice memories can appear on the public memorial."
+        )
+    if item.status != MediaStatus.READY.value:
+        raise ConflictError("That file has not finished uploading yet.")
+    _copy_object(item, target_tier=StorageTier.PUBLIC)
+
+
+def _demote_media_object(item: MediaItem) -> None:
+    """Bring a previously-promoted object back to the private bucket."""
+    if item.storage_tier == StorageTier.PUBLIC.value:
+        _copy_object(item, target_tier=StorageTier.PRIVATE)
+
+
 def update_media(
     db: Session,
     *,
@@ -247,14 +320,14 @@ def update_media(
                 if isinstance(requested_privacy, PrivacyLevel)
                 else str(requested_privacy)
             )
-            # Promotion into the public bucket is a separate workflow. Refusing is
-            # the safe behaviour: accepting would leave the bytes private while the
-            # client believed they had been published.
+            if value not in (PrivacyLevel.PRIVATE.value, PrivacyLevel.PUBLIC.value):
+                raise ValidationError("Unknown visibility setting.")
             if value == PrivacyLevel.PUBLIC.value:
-                raise ValidationError(
-                    "This file cannot be made public yet. It stays visible to the family only.",
-                )
-            item.privacy = value
+                _promote_media_object(item)
+                item.privacy = value
+            else:
+                _demote_media_object(item)
+                item.privacy = value
 
         for field in ("title", "caption", "year"):
             if updates.get(field) is not None:

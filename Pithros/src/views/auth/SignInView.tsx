@@ -63,10 +63,15 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
     setIsLoading(false);
 
     if (res.success) {
-      if (onSelectRole) onSelectRole(role);
-      resolveRedirect(role);
+      const targetRole = res.role || role;
+      if (onSelectRole) onSelectRole(targetRole);
+      resolveRedirect(targetRole);
     } else {
-      setErrorMessage(res.error || "The email or password doesn't match. Please try again.");
+      const safeMsg =
+        res.error && res.error !== 'undefined' && !res.error.includes('undefined')
+          ? res.error
+          : "The email or password doesn't match. Please try again.";
+      setErrorMessage(safeMsg);
     }
   };
 
@@ -78,8 +83,9 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
     setIsGoogleLoading(false);
 
     if (res.success) {
-      if (onSelectRole) onSelectRole(role);
-      resolveRedirect(role);
+      const targetRole = res.role || role;
+      if (onSelectRole) onSelectRole(targetRole);
+      resolveRedirect(targetRole);
     } else {
       setErrorMessage(res.error || 'Google sign-in could not be completed. Please try again.');
     }

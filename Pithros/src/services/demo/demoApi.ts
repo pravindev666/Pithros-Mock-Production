@@ -172,6 +172,35 @@ export const demoApi = {
     return newEvent;
   },
 
+  async updateTimelineEvent(
+    memorialId: string,
+    eventId: string,
+    event: Partial<Omit<TimelineEvent, 'id'>>,
+  ): Promise<TimelineEvent> {
+    const list = await this.getMemorials();
+    const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
+    let updated: TimelineEvent = { id: eventId, year: '', title: '', description: '' };
+    if (idx !== -1) {
+      const eIdx = list[idx].timeline.findIndex((e) => e.id === eventId);
+      if (eIdx !== -1) {
+        list[idx].timeline[eIdx] = { ...list[idx].timeline[eIdx], ...event };
+        updated = list[idx].timeline[eIdx];
+        list[idx].timeline.sort((a, b) => parseInt(a.year || '0') - parseInt(b.year || '0'));
+        setStored('memorials', list);
+      }
+    }
+    return updated;
+  },
+
+  async removeTimelineEvent(memorialId: string, eventId: string): Promise<void> {
+    const list = await this.getMemorials();
+    const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
+    if (idx !== -1) {
+      list[idx].timeline = list[idx].timeline.filter((e) => e.id !== eventId);
+      setStored('memorials', list);
+    }
+  },
+
   // Digital Legacy Links
   async addLegacyLink(
     memorialId: string,

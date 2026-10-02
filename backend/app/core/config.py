@@ -95,6 +95,9 @@ class Settings(BaseSettings):
     cashfree_app_id: str = ""
     cashfree_secret_key: str = ""
     cashfree_webhook_secret: str = ""
+    # Sandbox by default: live credentials must be opted into explicitly.
+    cashfree_base_url: str = "https://sandbox.cashfree.com/pg"
+    cashfree_api_version: str = "2023-08-01"
 
     cors_origins: str = _DEFAULT_CORS_ORIGINS
 
@@ -106,7 +109,17 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_json: bool = True
 
+    # Path to the Tesseract OCR binary.  Empty means "find it on PATH", which
+    # is the right default when Tesseract is installed via Scoop or apt.
+    tesseract_cmd: str = ""
+
     invite_token_ttl_hours: int = Field(default=168, ge=1)
+
+    # Account-deletion lifecycle. The grace period is a Pithros safety control
+    # (not a statutory deadline); tests accelerate it by setting it to 0.
+    account_deletion_grace_days: int = Field(default=7, ge=0)
+    recent_reauth_window_minutes: int = Field(default=15, ge=0)
+    verification_document_retention_days: int = Field(default=90, ge=0)
 
     # Email delivery is not wired yet, so the invitation token is returned in the
     # API response to keep the flow testable. That is a development affordance:

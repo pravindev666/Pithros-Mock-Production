@@ -40,44 +40,64 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   const localeList = Object.values(SUPPORTED_LOCALES);
 
+  const [drawerExpanded, setDrawerExpanded] = useState(false);
+
   if (variant === 'drawer') {
     return (
       <div className={`w-full ${className}`}>
-        <label
-          className={`block text-[11px] font-medium tracking-wider uppercase mb-2 ${
-            isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+        <button
+          type="button"
+          onClick={() => setDrawerExpanded(!drawerExpanded)}
+          aria-expanded={drawerExpanded}
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+            isDark
+              ? 'bg-[#182337] border-[#202C40] text-[#D9D2C6] hover:text-[#F8F5EE] hover:border-[#2D3D56]'
+              : 'bg-[#E5DED2] border-[#E5DED2] text-[#554F48] hover:text-[#20242A] hover:border-[#C5B9A6]'
           }`}
         >
-          Language & Indic Script
-        </label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {localeList.map((loc) => {
-            const isSelected = loc.code === locale;
-            return (
-              <button
-                key={loc.code}
-                type="button"
-                onClick={() => setLocale(loc.code)}
-                style={{ fontFamily: loc.uiFontFamily }}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs border transition-colors cursor-pointer text-left ${
-                  isSelected
-                    ? isDark
-                      ? 'border-[#B99452] bg-[#23324A] text-[#F8F5EE] font-medium'
-                      : 'border-[#23324A] bg-[#FCFAF5] text-[#23324A] font-semibold shadow-xs'
-                    : isDark
-                    ? 'border-[#202C40] bg-[#182337] text-[#D9D2C6] hover:border-[#2D3D56]'
-                    : 'border-[#E5DED2] bg-white text-[#554F48] hover:border-[#23324A]/40'
-                }`}
-              >
-                <div>
-                  <div className="text-xs">{loc.nativeName}</div>
-                  <div className="text-[10px] opacity-70">{loc.name}</div>
-                </div>
-                {isSelected && <Check className="w-3.5 h-3.5 text-[#B99452]" />}
-              </button>
-            );
-          })}
-        </div>
+          <div className="flex items-center gap-2.5">
+            <Languages className="w-4 h-4 text-[#B99452]" />
+            <span>Language: <strong className="font-semibold">{metadata.nativeName}</strong> <span className="opacity-75">({metadata.name})</span></span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] opacity-75">
+            <span>{drawerExpanded ? 'Close' : 'Change'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${drawerExpanded ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {drawerExpanded && (
+          <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-inherit">
+            {localeList.map((loc) => {
+              const isSelected = loc.code === locale;
+              return (
+                <button
+                  key={loc.code}
+                  type="button"
+                  onClick={() => {
+                    setLocale(loc.code);
+                    setDrawerExpanded(false);
+                  }}
+                  style={{ fontFamily: loc.uiFontFamily }}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs border transition-colors cursor-pointer text-left ${
+                    isSelected
+                      ? isDark
+                        ? 'border-[#B99452] bg-[#23324A] text-[#F8F5EE] font-medium'
+                        : 'border-[#23324A] bg-[#FCFAF5] text-[#23324A] font-semibold shadow-xs'
+                      : isDark
+                      ? 'border-[#202C40] bg-[#182337] text-[#D9D2C6] hover:border-[#2D3D56]'
+                      : 'border-[#E5DED2] bg-white text-[#554F48] hover:border-[#23324A]/40'
+                  }`}
+                >
+                  <div>
+                    <div className="text-xs">{loc.nativeName}</div>
+                    <div className="text-[10px] opacity-70">{loc.name}</div>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#B99452]" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

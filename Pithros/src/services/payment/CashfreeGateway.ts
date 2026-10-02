@@ -7,6 +7,7 @@ import {
   ProcessGatewayRefundParams,
   GatewayRefundResult,
 } from './types';
+import { http } from '../api/client';
 
 // Helper to compute HMAC-SHA256 using standard Web Crypto API
 async function computeHmacSha256(message: string, secret: string): Promise<string> {
@@ -32,17 +33,18 @@ export class CashfreeGateway implements PaymentGateway {
 
   async createOrder(params: CreateGatewayOrderParams): Promise<GatewayOrderResult> {
     try {
-      // Server-authoritative order creation
-      const res = await fetch('/api/v1/billing/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan_price_id: params.planId,
-          memorial_id: params.memorialId && params.memorialId !== 'mem_default' ? params.memorialId : undefined,
-        }),
+      // Server-authoritative order creation with authentic Bearer token
+      const data = await http.post<{
+        internalOrderId: string;
+        paymentSessionId?: string;
+        currency: string;
+        amountMinor: number;
+      }>('/billing/orders', {
+        plan_price_id: params.planId,
+        memorial_id: params.memorialId && params.memorialId !== 'mem_default' ? params.memorialId : undefined,
       });
-      if (res.ok) {
-        const data = await res.json();
+
+      if (data && data.internalOrderId) {
         return {
           gateway: 'cashfree',
           gatewayOrderId: data.internalOrderId,
@@ -52,22 +54,13 @@ export class CashfreeGateway implements PaymentGateway {
           keyId: this.appId,
         };
       }
-    } catch {
-      // Fallback for standalone demo mode
+    } catch (e) {
+      // Never invent an order: without a server-side order there is no payment.
+      console.error('Cashfree order creation failed:', e);
+      throw e instanceof Error ? e : new Error('The payment could not be started.');
     }
 
-    const timestamp = Date.now().toString().slice(-6);
-    const gatewayOrderId = `order_cf_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
-    const paymentSessionId = `session_cf_${Math.random().toString(36).substring(2, 12)}_${timestamp}`;
-
-    return {
-      gateway: 'cashfree',
-      gatewayOrderId,
-      paymentSessionId,
-      currency: params.currency,
-      amount: params.amount,
-      keyId: this.appId,
-    };
+    throw new Error('The payment gateway did not return an order.');
   }
 
   async verifyPayment(params: VerifyGatewayPaymentParams): Promise<VerifyPaymentResult> {
@@ -82,41 +75,46 @@ export class CashfreeGateway implements PaymentGateway {
     }
 
     try {
-      // Server-authoritative payment verification
-      const res = await fetch('/api/v1/billing/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          internal_order_id: gatewayOrderId,
-          gateway_payment_id: gatewayPaymentId,
-          payment_method_type: 'UPI',
-        }),
+      // Server-authoritative payment verification with authentic Bearer token
+      const res = await http.post<{ success: boolean }>('/billing/verify', {
+        internal_order_id: gatewayOrderId,
+        gateway_payment_id: gatewayPaymentId,
+        payment_method_type: 'UPI',
       });
-      if (res.ok) {
+
+      if (res && res.success) {
         return {
           verified: true,
           gatewayPaymentId,
           paymentMethodMasked: 'UPI Instant / NetBanking via Cashfree',
         };
       }
-    } catch {
-      // Fallback for standalone demo mode
+    } catch (e) {
+      console.error('Payment verification failed:', e);
+      return {
+        verified: false,
+        gatewayPaymentId,
+        error: 'We could not confirm that payment with the gateway.',
+      };
     }
 
     return {
-      verified: true,
+      verified: false,
       gatewayPaymentId,
-      paymentMethodMasked: 'UPI Instant / NetBanking via Cashfree',
+      error: 'The gateway has not confirmed this payment yet.',
     };
   }
 
   async processRefund(params: ProcessGatewayRefundParams): Promise<GatewayRefundResult> {
-    const refundId = `rfnd_cf_${Date.now().toString().slice(-6)}`;
+    // Refunds are issued server-side (admin request → approval → gateway) precisely
+    // so a browser can never mint one. Report that instead of inventing a refund id.
+    console.error('Client-side refunds are not supported.', params);
     return {
-      success: true,
-      refundId,
-      amountRefunded: params.refundAmount,
-      status: 'processed',
+      success: false,
+      refundId: '',
+      amountRefunded: 0,
+      status: 'failed',
+      error: 'Refunds must be issued from the admin refund workflow.',
     };
   }
 

@@ -316,3 +316,58 @@ def test_private_and_draft_memorials_never_cached(client, make_user, make_memori
     r2 = client.get(f"/api/v1/public/memorials/{draft_mem.slug}")
     assert r2.status_code == 404
     assert get_cached_public_memorial(draft_mem.slug) is None
+
+
+def test_cache_invalidation_on_slug_change(client, make_user, make_memorial, auth, db_session):
+    """A rename must never leave a stale page behind — at either address.
+
+    Public slugs are permanent links, and the write API refuses to change one
+    (asserted below). The service keeps a rename branch for administrative moves
+    regardless: when a slug does change, both the old and the new cache keys must
+    be evicted so neither address can serve a stale representation.
+    """
+    from unittest.mock import MagicMock
+
+    from app.memorials import service as memorial_service
+    from app.memorials.permissions import resolve_access
+
+    owner = make_user(name="Owner")
+    memorial = make_memorial(
+        steward=owner,
+        privacy=PrivacyLevel.PUBLIC.value,
+        publication_state=PublicationState.PUBLISHED.value,
+    )
+    headers = auth(owner)
+    old_slug = memorial.slug
+    new_slug = f"{old_slug}-moved"
+    invalidate_public_memorial_cache(old_slug)
+
+    # Populate the cache at the old address.
+    assert client.get(f"/api/v1/public/memorials/{old_slug}").headers.get("X-Cache") == "MISS"
+    assert client.get(f"/api/v1/public/memorials/{old_slug}").headers.get("X-Cache") == "HIT"
+
+    # The public write API refuses to rename: permanence is enforced by the schema.
+    refusal = client.patch(
+        f"/api/v1/memorials/{memorial.id}",
+        json={"slug": new_slug},
+        headers=headers,
+    )
+    assert refusal.status_code == 422
+
+    # Simulate the administrative rename branch. Only a service-side move can
+    # change a slug; when it happens, both addresses must be evicted.
+    payload = MagicMock()
+    payload.model_dump.return_value = {"slug": new_slug}
+    payload.story = None
+
+    access = resolve_access(db_session, memorial, owner)
+    memorial_service.update_memorial(db_session, memorial=memorial, access=access, payload=payload)
+
+    assert get_cached_public_memorial(old_slug) is None
+    assert get_cached_public_memorial(new_slug) is None
+
+    # The old address is gone; the new address serves fresh content from the database.
+    assert client.get(f"/api/v1/public/memorials/{old_slug}").status_code == 404
+    fresh = client.get(f"/api/v1/public/memorials/{new_slug}")
+    assert fresh.status_code == 200
+    assert fresh.headers.get("X-Cache") == "MISS"

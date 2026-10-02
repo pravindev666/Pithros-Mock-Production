@@ -95,15 +95,24 @@ export default defineConfig(() => {
               },
             },
             {
-              // API calls — network-first with offline fallback
-              urlPattern: /^https?:\/\/.*\/api\/v1\/.*/i,
+              // Only anonymous, non-personalised reads are cached. The service worker
+              // matches routes top-down and ignores the Authorization header, so caching
+              // any authenticated response would let one signed-in account replay
+              // another's data on a shared browser. Public reads are safe to cache.
+              urlPattern: /^https?:\/\/.*\/api\/v1\/(public\/|billing\/plans(\?|$))/i,
               handler: 'NetworkFirst',
               options: {
-                cacheName: 'pithros-api-cache',
+                cacheName: 'pithros-public-api-cache',
                 expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 },
                 networkTimeoutSeconds: 10,
                 cacheableResponse: { statuses: [0, 200] },
               },
+            },
+            {
+              // Everything else under /api/v1 is per-account or authoritative
+              // (auth, billing, admin, partner, verification): never cached.
+              urlPattern: /^https?:\/\/.*\/api\/v1\/.*/i,
+              handler: 'NetworkOnly',
             },
             {
               // Cloudflare R2 media (memorial images, portraits)
@@ -125,6 +134,9 @@ export default defineConfig(() => {
       },
     },
     server: {
+      host: '0.0.0.0',
+      port: 3000,
+      allowedHosts: true as const,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

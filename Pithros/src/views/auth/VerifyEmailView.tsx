@@ -12,7 +12,7 @@ interface VerifyEmailViewProps {
 
 export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({ onNavigate }) => {
   const { isDark } = useTheme();
-  const { currentUser, pithrosUser, resendVerificationEmail, isEmailVerified } = useAuth();
+  const { currentUser, pithrosUser, resendVerificationEmail, checkEmailVerification, isEmailVerified, returnUrl, setReturnUrl } = useAuth();
 
   const [cooldown, setCooldown] = useState<number>(0);
   const [isResending, setIsResending] = useState<boolean>(false);
@@ -50,10 +50,14 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({ onNavigate }) 
 
   const handleCheckVerification = async () => {
     setIsChecking(true);
-    await new Promise((r) => setTimeout(r, 650));
+    setNotification(null);
+    const verified = await checkEmailVerification();
     setIsChecking(false);
-    // Simulate verification check success
-    setVerifiedSimulated(true);
+    if (verified) {
+      setVerifiedSimulated(true);
+    } else {
+      setNotification('Email is not yet verified according to your authentication provider. Please click the verification link in your email and try again.');
+    }
   };
 
   return (
@@ -206,7 +210,15 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({ onNavigate }) 
                 <Button
                   variant="primary"
                   className="w-full py-2.5 text-sm"
-                  onClick={() => onNavigate('/dashboard')}
+                  onClick={() => {
+                    if (returnUrl) {
+                      const dest = returnUrl;
+                      setReturnUrl(null);
+                      onNavigate(dest);
+                    } else {
+                      onNavigate('/dashboard');
+                    }
+                  }}
                 >
                   Continue to Pithros
                   <ArrowRight className="w-4 h-4 ml-2" />

@@ -16,7 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { Memorial, BillingInvoice, PaymentRecord } from '../../types';
 import { paymentService } from '../../services/payment/paymentService';
-import { pricingPlans } from '../../data/mockData';
+import { billingApi, UserBillingStatus } from '../../services/api/billing';
 
 interface DashboardBillingViewProps {
   memorial: Memorial;
@@ -30,19 +30,56 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
   const { isDark } = useTheme();
   const [invoices, setInvoices] = useState<BillingInvoice[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [billingStatus, setBillingStatus] = useState<UserBillingStatus | null>(null);
   const [refundRequestModalOpen, setRefundRequestModalOpen] = useState(false);
   const [selectedPaymentForRefund, setSelectedPaymentForRefund] = useState<PaymentRecord | null>(null);
   const [refundReason, setRefundReason] = useState('');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = () => {
-    setInvoices(paymentService.getInvoices());
-    setPayments(paymentService.getPayments());
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [billingData, invs] = await Promise.all([
+        billingApi.getMyBilling().catch(() => null),
+        billingApi.getInvoices().catch(() => []),
+      ]);
+
+      if (billingData) {
+        setBillingStatus(billingData);
+      }
+
+      if (invs && invs.length > 0) {
+        setInvoices(
+          invs.map((inv) => ({
+            id: inv.id,
+            invoiceNumber: inv.invoiceNumber,
+            date: inv.issuedAt ? inv.issuedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+            planName: 'Memorial Care',
+            amount: `₹${(inv.amountMinor / 100).toLocaleString('en-IN')}`,
+            currency: inv.currency,
+            status: (inv.status === 'paid' ? 'success' : inv.status) as any,
+            receiptUrl: inv.pdfUrl || undefined,
+            paymentMethodMasked: 'UPI / NetBanking',
+            memorialName: memorial.fullName,
+          }))
+        );
+      } else {
+        setInvoices(paymentService.getInvoices());
+      }
+
+      setPayments(paymentService.getPayments());
+    } catch {
+      setInvoices(paymentService.getInvoices());
+      setPayments(paymentService.getPayments());
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [memorial.id]);
 
   const handleOpenRefundModal = (payment: PaymentRecord) => {
     setSelectedPaymentForRefund(payment);
@@ -58,8 +95,9 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
       setActionMessage('Compassionate refund request recorded. Processing via payment gateway within 1-2 business days.');
       loadData();
       setTimeout(() => setActionMessage(null), 5000);
-    } catch (err: any) {
-      setActionMessage(err.message || 'Refund request could not be registered.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Refund request could not be registered.';
+      setActionMessage(msg);
       setTimeout(() => setActionMessage(null), 5000);
     }
   };
@@ -67,6 +105,7 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
+      case 'paid':
         return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
       case 'pending':
         return 'bg-amber-500/15 text-amber-500 border-amber-500/30';
@@ -82,6 +121,10 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
         return 'bg-stone-500/15 text-stone-400 border-stone-500/30';
     }
   };
+
+  const activeSubscription = billingStatus?.subscriptions?.[0];
+  const activePlanName = activeSubscription?.planName || 'Memorial Care';
+  const hasActiveSub = !!activeSubscription && activeSubscription.status === 'active';
 
   return (
     <div className="space-y-6">
@@ -133,7 +176,7 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
       >
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className={`w-2.5 h-2.5 rounded-full ${hasActiveSub ? 'bg-emerald-500 animate-pulse' : 'bg-[#B99452]'}`} />
             <span
               className={`text-xs font-mono uppercase tracking-wider ${
                 isDark ? 'text-[#B99452]' : 'text-[#23324A]'
@@ -147,7 +190,7 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
               isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
             }`}
           >
-            Memorial Care
+            {activePlanName}
           </h2>
           <p
             className={`text-xs max-w-lg leading-relaxed ${
@@ -158,9 +201,11 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
           </p>
         </div>
         <div className="flex flex-col sm:items-end gap-2 text-xs">
-          <span className="font-mono text-[11px] opacity-75">Plan: Memorial Care (Annual)</span>
+          <span className="font-mono text-[11px] opacity-75">
+            Plan: {activePlanName} {activeSubscription?.autoRenew ? '(Auto-Renewing)' : '(Annual)'}
+          </span>
           <span className="font-mono text-[11px] text-emerald-500 font-semibold">
-            Status: Active Preservation
+            Status: {hasActiveSub ? 'Active Cloud Preservation' : 'Active Memorial'}
           </span>
           <Button
             variant="outline"
@@ -219,66 +264,48 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
                   <td className="py-3.5 px-4 font-mono font-medium">
                     {inv.invoiceNumber}
                   </td>
-                  <td className="py-3.5 px-4 font-medium">{inv.planName}</td>
-                  <td className="py-3.5 px-4 text-[#9EA3AA]">{inv.date}</td>
-                  <td className="py-3.5 px-4 font-serif font-bold">{inv.amount}</td>
-                  <td className="py-3.5 px-4 text-[11px] text-[#9EA3AA]">
+                  <td className="py-3.5 px-4">
+                    {inv.planName}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#9EA3AA] font-mono text-[11px]">
+                    {inv.date}
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold">
+                    {inv.amount}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#9EA3AA]">
                     {inv.paymentMethodMasked}
                   </td>
                   <td className="py-3.5 px-4">
                     <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono border uppercase ${getStatusBadge(
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono border ${getStatusBadge(
                         inv.status
                       )}`}
                     >
-                      {inv.status.replace('_', ' ')}
+                      {inv.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-right space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        onNavigate?.(inv.receiptUrl || `/payment/receipt/${inv.invoiceNumber}`)
-                      }
-                      icon={Receipt}
+                  <td className="py-3.5 px-4 text-right">
+                    <a
+                      href={inv.receiptUrl || '#'}
+                      onClick={(e) => {
+                        if (!inv.receiptUrl || inv.receiptUrl === '#') {
+                          e.preventDefault();
+                          alert(`Receipt ${inv.invoiceNumber} archived in Pithros cloud.`);
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1.5 text-[11px] font-medium transition-colors ${
+                        isDark ? 'text-[#B99452] hover:text-[#D4AF37]' : 'text-[#23324A] hover:text-[#182337]'
+                      }`}
                     >
-                      Receipt
-                    </Button>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </a>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* 14-Day Compassionate Guarantee Card */}
-      <div
-        className={`p-6 rounded-3xl border flex items-start gap-4 ${
-          isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
-        }`}
-      >
-        <Shield
-          className={`w-6 h-6 flex-shrink-0 mt-0.5 ${
-            isDark ? 'text-[#B99452]' : 'text-[#23324A]'
-          }`}
-        />
-        <div className="space-y-1 text-xs">
-          <h4
-            className={`font-serif text-sm ${
-              isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-            }`}
-          >
-            Family First Guarantee & Cancellation Policy
-          </h4>
-          <p
-            className={`leading-relaxed ${
-              isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
-            }`}
-          >
-            If your family ever wishes to reverse a preservation contribution or adjust plans, our support team honours full refunds within 14 days of upgrade. We believe family memories must always be governed by love, not contractual friction.
-          </p>
         </div>
       </div>
     </div>

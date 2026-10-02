@@ -59,6 +59,11 @@ export const MemorialBookModal: React.FC<MemorialBookModalProps> = ({
         { id: '4', year: '2026', title: 'Enduring Legacy', description: 'Remembered with deep gratitude by children, grandchildren, colleagues, and friends across generations.' },
       ];
 
+  const qrTargetUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/m/${memorial?.slug || 'arun-krishnan'}`
+    : `https://pithros.org/m/${memorial?.slug || 'arun-krishnan'}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrTargetUrl)}`;
+
   const familyList = memorial?.family && memorial.family.length > 0
     ? memorial.family
     : [
@@ -402,7 +407,7 @@ export const MemorialBookModal: React.FC<MemorialBookModalProps> = ({
 
                     {/* QR Code Container */}
                     <div className="w-44 h-44 mx-auto p-3 rounded-2xl bg-white border border-[#23324A]/20 shadow-xs flex flex-col items-center justify-center">
-                      <QrCode className="w-36 h-36 text-black" />
+                      <img src={qrImageUrl} alt={`QR Code for ${name}`} className="w-36 h-36 object-contain" />
                     </div>
 
                     <div className="space-y-2 text-xs font-sans opacity-80">
@@ -478,7 +483,7 @@ export const MemorialBookModal: React.FC<MemorialBookModalProps> = ({
               <h3 className="text-xl font-serif">{name}</h3>
               <p className="text-xs font-mono opacity-70">{dates}</p>
               <div className="w-40 h-40 mx-auto p-3 rounded-2xl bg-white border border-[#23324A]/30 flex items-center justify-center">
-                <QrCode className="w-32 h-32 text-black" />
+                <img src={qrImageUrl} alt={`QR Code for ${name}`} className="w-32 h-32 object-contain" />
               </div>
               <p className="text-xs opacity-80 leading-relaxed font-sans">
                 Point any mobile camera at this code to view their biography, photo gallery, voice recordings, and leave personal memories.
@@ -496,7 +501,7 @@ export const MemorialBookModal: React.FC<MemorialBookModalProps> = ({
                 <h3 className="text-3xl font-serif text-[#F8F5EE]">{name}</h3>
                 <p className="text-xs font-mono text-[#B99452]">{dates}</p>
                 <div className="w-36 h-36 mx-auto p-3 rounded-xl bg-white flex items-center justify-center">
-                  <QrCode className="w-28 h-28 text-black" />
+                  <img src={qrImageUrl} alt={`QR Code for ${name}`} className="w-28 h-28 object-contain" />
                 </div>
                 <p className="text-xs text-[#D9D2C6] italic max-w-sm mx-auto">
                   “A quiet sanctuary of memory, accessible across generations.”

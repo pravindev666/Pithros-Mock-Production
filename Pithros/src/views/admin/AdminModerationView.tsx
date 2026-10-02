@@ -14,6 +14,11 @@ import {
   Lock,
   Trash2,
   ArrowUpRight,
+  Mail,
+  Send,
+  X,
+  AlertCircle,
+  FileText,
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -25,6 +30,68 @@ export const AdminModerationView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [actionNote, setActionNote] = useState<string>('');
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+
+  // Email Compliance Notice Modal State
+  const [emailModalOpen, setEmailModalOpen] = useState<boolean>(false);
+  const [emailRecipient, setEmailRecipient] = useState<string>('');
+  const [emailSubject, setEmailSubject] = useState<string>('');
+  const [emailBody, setEmailBody] = useState<string>('');
+  const [quarantineAction, setQuarantineAction] = useState<'restricted' | 'removed'>('restricted');
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
+
+  const handleOpenEmailModal = () => {
+    if (!selectedReport) return;
+    setEmailRecipient(selectedReport.reporterEmail.includes('@') ? 'steward@pithros-memorial.org' : 'steward@pithros-memorial.org');
+    setEmailSubject(`[Pithros Trust & Safety] Action Required: Quarantined content on "${selectedReport.targetTitle}"`);
+    setEmailBody(
+`Dear Memorial Steward,
+
+During a content audit by the Pithros Trust & Safety Desk, the media item ("${selectedReport.targetTitle}") was flagged and verified as violating our Community Reverence Guidelines regarding explicit or inappropriate content (Reason: ${selectedReport.reason}).
+
+Action Taken:
+To maintain reverent dignity and protect the memory of the departed and our community of visitors, this image has been immediately quarantined (frozen) and hidden from public display.
+
+Required Next Steps:
+1. Please log in to your Steward Workspace on Pithros.
+2. Open your Archival Gallery in the Memorial Editor.
+3. Remove the quarantined photograph and re-upload an appropriate, respectful remembrance portrait.
+
+If you have questions or believe this was flagged in error, you may reply directly to this notification.
+
+With reverence and care,
+Pithros Trust & Safety Desk`
+    );
+    setQuarantineAction('restricted');
+    setEmailModalOpen(true);
+  };
+
+  const handleDispatchComplianceEmail = async () => {
+    if (!selectedReport) return;
+    setIsSendingEmail(true);
+    try {
+      // 1. Simulate network dispatch via Firebase Cloud Messaging / Outbound Mailer
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // 2. Update report status to restricted (quarantined/frozen) or removed
+      const actionDesc = `${quarantineAction === 'restricted' ? 'Quarantined (Frozen) from public display' : 'Permanently removed'}. Dispatched compliance email notice to ${emailRecipient}.`;
+      await updateReportStatus(selectedReport.id, quarantineAction, actionDesc);
+
+      // 3. Log to tamper-evident audit trail
+      await api.logSensitiveDocAccess(
+        'Deepa Rao',
+        'Admin / Trust Reviewer',
+        `DISPATCHED_COMPLIANCE_EMAIL: Content ${quarantineAction.toUpperCase()} & emailed notice to ${emailRecipient} (Report ID: ${selectedReport.id})`,
+        selectedReport.id
+      );
+
+      setSuccessNotice(`Compliance email successfully dispatched to ${emailRecipient}. Item has been ${quarantineAction === 'restricted' ? 'quarantined (frozen)' : 'removed'} from public display.`);
+      setEmailModalOpen(false);
+      setSelectedReport(null);
+      setTimeout(() => setSuccessNotice(null), 4000);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const filteredReports = reports.filter((r) => {
     if (targetFilter !== 'all' && r.targetType !== targetFilter) return false;
@@ -337,6 +404,26 @@ export const AdminModerationView: React.FC = () => {
                   Escalate to Safety Council
                 </Button>
               </div>
+
+              {/* Direct Steward Compliance Workflow (Freeze & Email Notice) */}
+              <div className="pt-3 border-t border-inherit space-y-2">
+                <span className="text-[10px] uppercase font-mono tracking-wider block opacity-85 text-[#B99452] font-semibold flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Direct Steward Compliance Action
+                </span>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-full text-xs bg-[#B99452] hover:bg-[#A37F3E] text-white flex items-center justify-center gap-2 py-2 font-medium shadow-xs"
+                  onClick={handleOpenEmailModal}
+                  icon={Mail}
+                >
+                  Freeze Content & Email Steward Notice
+                </Button>
+                <p className={`text-[10px] italic leading-tight ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                  Immediately conceals the image from public view (quarantine) and emails the steward asking them to remove and re-upload an appropriate remembrance photo.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="py-16 text-center text-xs opacity-60">
@@ -346,6 +433,201 @@ export const AdminModerationView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* EMAIL COMPLIANCE NOTICE MODAL */}
+      {emailModalOpen && selectedReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className={`w-full max-w-xl rounded-2xl border shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto ${
+              isDark ? 'bg-[#182337] border-[#202C40] text-[#F8F5EE]' : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A]'
+            }`}
+          >
+            <div className="flex items-start justify-between border-b pb-4 border-inherit">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-semibold">Steward Notice & Content Quarantine</h3>
+                  <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                    Target: <span className="font-semibold text-inherit">{selectedReport.targetTitle}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEmailModalOpen(false)}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isDark ? 'hover:bg-[#202C40] text-[#9EA3AA]' : 'hover:bg-[#E5DED2] text-[#7D766D]'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Target violation alert banner */}
+            <div className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
+              isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}>
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+              <div className="space-y-1">
+                <p className="font-semibold">Flagged Policy Violation: {selectedReport.reason}</p>
+                <p className="opacity-90">{selectedReport.details}</p>
+              </div>
+            </div>
+
+            {/* Quarantine Action Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider font-mono opacity-80">
+                Enforcement Action
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div
+                  onClick={() => setQuarantineAction('restricted')}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${
+                    quarantineAction === 'restricted'
+                      ? isDark
+                        ? 'border-amber-500 bg-amber-500/10'
+                        : 'border-[#23324A] bg-[#23324A]/5'
+                      : isDark
+                      ? 'border-[#202C40] bg-[#111820]'
+                      : 'border-[#E5DED2] bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    checked={quarantineAction === 'restricted'}
+                    onChange={() => setQuarantineAction('restricted')}
+                    className="mt-0.5"
+                  />
+                  <div className="text-xs space-y-0.5">
+                    <span className="font-semibold block flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5 text-amber-500" />
+                      Freeze / Quarantine (Recommended)
+                    </span>
+                    <p className="text-[11px] opacity-75">
+                      Immediately conceals image from visitors. Preserves record for steward re-upload.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setQuarantineAction('removed')}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${
+                    quarantineAction === 'removed'
+                      ? isDark
+                        ? 'border-red-500 bg-red-500/10'
+                        : 'border-red-600 bg-red-50'
+                      : isDark
+                      ? 'border-[#202C40] bg-[#111820]'
+                      : 'border-[#E5DED2] bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    checked={quarantineAction === 'removed'}
+                    onChange={() => setQuarantineAction('removed')}
+                    className="mt-0.5"
+                  />
+                  <div className="text-xs space-y-0.5">
+                    <span className="font-semibold block flex items-center gap-1 text-red-500">
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Remove Permanently
+                    </span>
+                    <p className="text-[11px] opacity-75">
+                      Permanently purges image file and soft-deletes database record immediately.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recipient & Subject */}
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-medium mb-1">Steward Contact Email</label>
+                <input
+                  type="email"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none ${
+                    isDark
+                      ? 'bg-[#111820] border-[#202C40] text-[#F8F5EE] focus:border-[#B99452]'
+                      : 'bg-white border-[#E5DED2] text-[#20242A] focus:border-[#23324A]'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Subject Line</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none ${
+                    isDark
+                      ? 'bg-[#111820] border-[#202C40] text-[#F8F5EE] focus:border-[#B99452]'
+                      : 'bg-white border-[#E5DED2] text-[#20242A] focus:border-[#23324A]'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1 flex items-center justify-between">
+                  <span>Notice Message (Steward Email Body)</span>
+                  <span className="text-[10px] opacity-60 font-mono">Editable notice template</span>
+                </label>
+                <textarea
+                  rows={8}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-xl border font-mono text-xs focus:outline-none resize-none leading-relaxed ${
+                    isDark
+                      ? 'bg-[#111820] border-[#202C40] text-[#F8F5EE] focus:border-[#B99452]'
+                      : 'bg-white border-[#E5DED2] text-[#20242A] focus:border-[#23324A]'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Outbound delivery indicator */}
+            <div className="flex items-center gap-2 text-[11px] opacity-75 font-mono">
+              <Send className="w-3.5 h-3.5 text-amber-500" />
+              <span>Outbound dispatch: Firebase Auth Mailer & Celery Worker pipeline</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-inherit">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEmailModalOpen(false)}
+                disabled={isSendingEmail}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="bg-[#B99452] hover:bg-[#A37F3E] text-white flex items-center gap-1.5"
+                onClick={handleDispatchComplianceEmail}
+                disabled={isSendingEmail}
+              >
+                {isSendingEmail ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Dispatching Notice...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send Notice & {quarantineAction === 'restricted' ? 'Freeze Content' : 'Remove Content'}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -28,16 +28,18 @@ interface AuthContextType {
   setReturnUrl: (url: string | null) => void;
 
   // Actions
-  signInWithEmail: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithEmail: (email: string, password?: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
   signUpWithEmail: (data: SignUpCredentials) => Promise<{ success: boolean; error?: string }>;
-  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string; role?: UserRole }>;
   sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   confirmPasswordReset: (code: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   sendPhoneOtp: (phoneNumber: string) => Promise<{ success: boolean; verificationId?: string; error?: string }>;
   verifyPhoneOtp: (code: string) => Promise<{ success: boolean; error?: string }>;
   resendVerificationEmail: () => Promise<{ success: boolean; error?: string }>;
+  checkEmailVerification: () => Promise<boolean>;
   updateProfile: (data: { name?: string; phone?: string; avatar?: string }) => Promise<{ success: boolean; error?: string }>;
   changePassword: (newPass: string) => Promise<{ success: boolean; error?: string }>;
+  reauthenticate: (password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   verifyMfaStep: (pin: string) => Promise<boolean>;
   switchRole: (role: UserRole) => void;
@@ -168,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, [authState]);
 
-  const signInWithEmail = async (email: string, password = ''): Promise<{ success: boolean; error?: string }> => {
+  const signInWithEmail = async (email: string, password = ''): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
     setIsLoading(true);
     const res = await authService.signInWithEmail({ email, password });
     setIsLoading(false);
@@ -186,10 +188,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       setAuthState(res.data.user.email_verified ? 'authenticated' : 'email_not_verified');
       setSessionTimeRemaining(3600);
-      return { success: true };
+      const userRole = (res.data.claims?.role || res.data.user?.role || 'visitor') as UserRole;
+      return { success: true, role: userRole };
     }
 
-    return { success: false, error: res.error || 'Authentication failed.' };
+    const safeError =
+      res.error && res.error !== 'undefined' && !res.error.includes('undefined')
+        ? res.error
+        : "The email or password doesn't match. Please try again.";
+    return { success: false, error: safeError };
   };
 
   const signUpWithEmail = async (data: SignUpCredentials): Promise<{ success: boolean; error?: string }> => {
@@ -216,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error || 'Unable to create account.' };
   };
 
-  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
     setIsLoading(true);
     const res = await authService.signInWithGoogle();
     setIsLoading(false);
@@ -234,7 +241,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       setAuthState('authenticated');
       setSessionTimeRemaining(3600);
-      return { success: true };
+      const userRole = (res.data.claims?.role || res.data.user?.role || 'visitor') as UserRole;
+      return { success: true, role: userRole };
     }
 
     return { success: false, error: res.error || 'Google sign-in could not be completed.' };
@@ -284,6 +292,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await authService.resendVerificationEmail();
   };
 
+  const checkEmailVerification = async (): Promise<boolean> => {
+    try {
+      if (auth?.currentUser) {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          const token = await auth.currentUser.getIdToken(true);
+          const verification = await verifyTokenAndResolveUser(auth.currentUser.uid, token, {
+            email: auth.currentUser.email,
+            displayName: auth.currentUser.displayName,
+            photoURL: auth.currentUser.photoURL,
+            phoneNumber: auth.currentUser.phoneNumber,
+            emailVerified: true,
+          });
+          setCurrentUser(authService.normalizeFirebaseUser(auth.currentUser));
+          setPithrosUser(verification.user);
+          setAuthState('authenticated');
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      console.error('Failed to check email verification:', e);
+      return false;
+    }
+  };
+
   const updateProfile = async (data: { name?: string; phone?: string; avatar?: string }): Promise<{ success: boolean; error?: string }> => {
     if (!pithrosUser) return { success: false, error: 'No active session.' };
     const res = await authService.updateProfileData(pithrosUser.firebase_uid, data);
@@ -306,10 +340,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await authService.changePassword(newPass);
   };
 
+  const reauthenticate = async (
+    password: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    return await authService.reauthenticateWithPassword(password);
+  };
+
   const signOut = async () => {
     await authService.signOut();
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('pithros_demo_role');
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('pithros_memorial_draft');
+        localStorage.removeItem('pithros_active_memorial');
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('pithros_draft_') || k.startsWith('pithros_active_memorial_') || k === 'pithros_memorial_draft')) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+      } catch {
+        // ignore
+      }
     }
     setCurrentUser(null);
     setPithrosUser(null);
@@ -445,8 +499,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sendPhoneOtp,
         verifyPhoneOtp,
         resendVerificationEmail,
+        checkEmailVerification,
         updateProfile,
         changePassword,
+        reauthenticate,
         signOut,
         verifyMfaStep,
         switchRole,

@@ -17,8 +17,8 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import CurrentUser, OptionalUser
 from app.core.concurrency import ensure_version, etag, parse_if_match
 from app.core.database import get_db
-from app.core.enums import MemorialPermission, PrivacyLevel, PublicationState
-from app.core.errors import NotFoundError
+from app.core.enums import MemorialPermission, PrivacyLevel, PublicationState, UserRole
+from app.core.errors import ForbiddenError, NotFoundError
 from app.core.idempotency import record, reserve, subject_for
 from app.core.pagination import PageParams, apply_page_headers, page_params
 from app.core.rate_limit import rate_limit, user_rate_limit
@@ -42,8 +42,11 @@ from app.memorials.schemas import (
     DigitalLegacyLinkOut,
     DigitalLegacyLinksReplace,
     DigitalLegacyLinkUpdate,
+    DuplicateScreeningOut,
+    DuplicateScreeningRequest,
     MemorialCreate,
     MemorialDetailOut,
+    MemorialMergeRequest,
     MemorialPublicOut,
     MemorialPublishRequest,
     MemorialSummaryOut,
@@ -51,6 +54,7 @@ from app.memorials.schemas import (
     PaginatedSearchOut,
     PermissionCatalogOut,
     SearchResultOut,
+    StewardTransferRequest,
     TimelineEventIn,
     TimelineEventOut,
 )
@@ -79,7 +83,7 @@ def list_my_memorials(
     """
     result = repository.list_for_user(db, user.id, limit=page.limit, cursor=page.cursor)
     apply_page_headers(response, result)
-    return [memorial_summary_out(memorial) for memorial in result.items]
+    return [memorial_summary_out(memorial, db) for memorial in result.items]
 
 
 # ─── Authenticated: memorial CRUD ───────────────────────────────────────────
@@ -123,6 +127,52 @@ def create_memorial(
     )
     record(request, subject=subject, status_code=201, body=detail)
     return detail
+
+
+@router.post("/screening/duplicate-check", response_model=DuplicateScreeningOut)
+def check_duplicate_memorial(
+    payload: DuplicateScreeningRequest,
+    user: CurrentUser,
+    db: DbSession,
+) -> DuplicateScreeningOut:
+    """Privacy-safe duplicate screening check during creation or publication."""
+    from app.memorials import identity
+
+    return identity.screen_for_duplicates(db, actor=user, payload=payload)
+
+
+@router.post("/admin/merge", response_model=MemorialDetailOut)
+def merge_memorials_admin(
+    payload: MemorialMergeRequest,
+    request: Request,
+    user: CurrentUser,
+    db: DbSession,
+) -> MemorialDetailOut:
+    """Super Admin merges a duplicate memorial into a canonical memorial."""
+    if user.role != UserRole.ADMIN.value:
+        raise ForbiddenError("Administrative privileges required to merge memorials.")
+    from app.memorials import identity
+
+    canonical = identity.merge_memorials(
+        db,
+        canonical_id=payload.canonical_memorial_id,
+        duplicate_id=payload.duplicate_memorial_id,
+        actor=user,
+        request=request,
+        carry_over_tributes=payload.carry_over_tributes,
+        carry_over_media=payload.carry_over_media,
+        carry_over_timeline=payload.carry_over_timeline,
+        co_stewardship=payload.co_stewardship,
+    )
+    access = service.access_for(db, canonical, user)
+    return memorial_detail_out(
+        db,
+        canonical,
+        access,
+        story=canonical.story,
+        timeline=canonical.timeline_events,
+        legacy_links=canonical.legacy_links,
+    )
 
 
 @router.get("/{memorial_id}", response_model=MemorialDetailOut)
@@ -208,6 +258,33 @@ def set_publication(
         state=PublicationState(payload.publication_state),
         request=request,
     )
+    return memorial_detail_out(
+        db,
+        updated,
+        access,
+        story=updated.story,
+        timeline=updated.timeline_events,
+        legacy_links=updated.legacy_links,
+    )
+
+
+@router.post("/{memorial_id}/transfer-stewardship", response_model=MemorialDetailOut)
+def transfer_stewardship(
+    payload: StewardTransferRequest,
+    request: Request,
+    memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.TRANSFER_STEWARDSHIP))],
+    user: CurrentUser,
+    db: DbSession,
+) -> MemorialDetailOut:
+    """Transfer primary stewardship of the memorial to a family successor or co-steward."""
+    updated = service.transfer_stewardship(
+        db,
+        memorial=memorial,
+        actor=user,
+        payload=payload,
+        request=request,
+    )
+    access = resolve_access(db, updated, user)
     return memorial_detail_out(
         db,
         updated,
@@ -416,9 +493,7 @@ def delete_legacy_link(
 ) -> Response:
     access = resolve_access(db, memorial, user)
     link = service.get_legacy_link(db, memorial_id=memorial.id, link_id=link_id)
-    service.delete_legacy_link(
-        db, memorial=memorial, access=access, link=link, request=request
-    )
+    service.delete_legacy_link(db, memorial=memorial, access=access, link=link, request=request)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -445,6 +520,15 @@ def get_public_memorial(
     memorial = repository.get_by_slug(db, slug)
     if memorial is None:
         raise NotFoundError("Memorial not found")
+
+    # QR & Link Permanence: If this memorial was merged into another,
+    # follow the pointer to canonical.
+    if memorial.merged_into_id is not None:
+        canonical = repository.get_by_id(db, memorial.merged_into_id)
+        if canonical is not None:
+            memorial = canonical
+            slug = canonical.slug
+            response.headers["X-Pithros-Merged-Canonical"] = canonical.slug
 
     access = resolve_access(db, memorial, user)
 
@@ -587,7 +671,7 @@ def get_export_status(
     task_id: str,
     user: CurrentUser,
 ) -> ArchiveExportStatusOut:
-    return service.get_export_status(task_id)
+    return service.get_export_status(task_id, actor=user)
 
 
 @router.get(
@@ -641,7 +725,7 @@ def get_memorial_export_status(
     memorial: Annotated[Memorial, Depends(authorized(MemorialPermission.VIEW))],
     user: CurrentUser,
 ) -> ArchiveExportStatusOut:
-    return service.get_export_status(task_id)
+    return service.get_export_status(task_id, actor=user, expected_memorial_id=memorial.id)
 
 
 @router.get(
@@ -666,4 +750,3 @@ def download_memorial_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
-

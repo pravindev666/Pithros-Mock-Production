@@ -18,11 +18,11 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
 
   return (
     <div
-      className={`min-h-screen py-16 px-4 sm:px-6 lg:px-8 transition-colors ${
+      className={`min-h-screen py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 transition-colors ${
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      <div className="max-w-6xl mx-auto space-y-16">
+      <div className="max-w-6xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
         {/* Title */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <span
@@ -49,7 +49,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
           {displayPlans.map((plan) => {
             const isCare = plan.id === 'plan_care_annual';
             const price = isCare
@@ -87,7 +87,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
             return (
               <div
                 key={plan.id}
-                className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${
+                className={`p-5 sm:p-6 md:p-8 rounded-3xl border flex flex-col justify-between transition-all ${
                   plan.popular
                     ? isDark
                       ? 'border-[#B99452] bg-[#16120E] shadow-2xl shadow-black/80'
@@ -613,7 +613,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
 
         {/* Zero Ads Guarantee */}
         <div
-          className={`rounded-3xl border p-8 text-center max-w-3xl mx-auto space-y-3 ${
+          className={`rounded-3xl border p-6 sm:p-8 text-center max-w-3xl mx-auto space-y-3 ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'

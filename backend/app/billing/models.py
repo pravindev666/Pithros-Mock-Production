@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -42,7 +42,6 @@ from app.core.models import (
     VersionMixin,
     allowed_values,
 )
-
 from app.memorials.models import Memorial
 from app.users.models import User
 
@@ -53,9 +52,7 @@ class Plan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """Product catalog: Memorial Care, Family Archive, Additional Memorial Slot."""
 
     __tablename__ = "plans"
-    __table_args__ = (
-        CheckConstraint(f"code IN ({_allowed(PlanCode)})", name="plan_code_valid"),
-    )
+    __table_args__ = (CheckConstraint(f"code IN ({_allowed(PlanCode)})", name="plan_code_valid"),)
 
     code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -249,24 +246,35 @@ class SubscriptionEntitlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     max_memorials: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     max_photos: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
     max_media_bytes: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, default=300 * 1024 * 1024
-    )  # 300 MB
+        BigInteger,
+        nullable=False,
+        default=300 * 1024 * 1024,
+        server_default=text("1073741824"),
+    )  # 300 MB applied by the service; DB fallback 1 GB
     max_file_bytes: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, default=10 * 1024 * 1024
+        BigInteger,
+        nullable=False,
+        default=10 * 1024 * 1024,
+        server_default=text("10485760"),
     )  # 10 MB per file
-    max_video_bytes: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, default=0
-    )  # Roadmap
+    max_video_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)  # Roadmap
     max_audio_bytes: Mapped[int] = mapped_column(
         BigInteger, nullable=False, default=100 * 1024 * 1024
     )  # 100 MB (~60 minutes audio)
     max_audio_file_bytes: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, default=50 * 1024 * 1024
+        BigInteger,
+        nullable=False,
+        default=50 * 1024 * 1024,
+        server_default=text("52428800"),
     )  # 50 MB per audio file
     max_documents: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
     max_contributors: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
-    max_timeline_events: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
-    max_daily_upload_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    max_timeline_events: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=50, server_default=text("50")
+    )
+    max_daily_upload_attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=50, server_default=text("50")
+    )
     verification_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default=text("true")
     )
@@ -298,9 +306,7 @@ class MemorialEntitlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             f"status IN ({_allowed(MemorialEntitlementStatus)})",
             name="memorial_entitlement_status_valid",
         ),
-        UniqueConstraint(
-            "subscription_id", "slot_number", name="uq_subscription_slot_number"
-        ),
+        UniqueConstraint("subscription_id", "slot_number", name="uq_subscription_slot_number"),
         Index("ix_memorial_entitlement_active", "memorial_id", "status"),
     )
 

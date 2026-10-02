@@ -61,11 +61,11 @@ def generate_memorial_pdf(
     base_styles = getSampleStyleSheet()
 
     # Custom reverent typography palette
-    c_primary = colors.HexColor("#23324A")    # Deep Slate / Navy
-    c_gold = colors.HexColor("#8C5C0F")       # Warm Pithros Archival Gold
-    c_dark = colors.HexColor("#20242A")       # Soft Charcoal Body
-    c_muted = colors.HexColor("#6B655B")      # Muted Subtext
-    c_line = colors.HexColor("#D8CFC0")       # Border / Separator
+    c_primary = colors.HexColor("#23324A")  # Deep Slate / Navy
+    c_gold = colors.HexColor("#8C5C0F")  # Warm Pithros Archival Gold
+    c_dark = colors.HexColor("#20242A")  # Soft Charcoal Body
+    c_muted = colors.HexColor("#6B655B")  # Muted Subtext
+    c_line = colors.HexColor("#D8CFC0")  # Border / Separator
 
     header_style = ParagraphStyle(
         "ArchivalHeader",
@@ -191,9 +191,7 @@ def generate_memorial_pdf(
     elements.append(Spacer(1, 16))
 
     if memorial.short_epitaph:
-        elements.append(
-            Paragraph(f"&ldquo;{_esc(memorial.short_epitaph)}&rdquo;", epitaph_style)
-        )
+        elements.append(Paragraph(f"&ldquo;{_esc(memorial.short_epitaph)}&rdquo;", epitaph_style))
 
     elements.append(Spacer(1, 30))
 
@@ -203,9 +201,7 @@ def generate_memorial_pdf(
         qr_buf.seek(0)
         elements.append(Image(qr_buf, width=120, height=120))
         elements.append(Spacer(1, 8))
-        elements.append(
-            Paragraph("Scan to visit the permanent digital sanctuary", meta_style)
-        )
+        elements.append(Paragraph("Scan to visit the permanent digital sanctuary", meta_style))
 
     elements.append(Spacer(1, 40))
     elements.append(
@@ -262,9 +258,7 @@ def generate_memorial_pdf(
             time_label = " • ".join(heading_parts) or "Milestone"
 
             block.append(
-                Paragraph(
-                    f"<b>{_esc(time_label)}</b> — {_esc(event.title)}", subheading_style
-                )
+                Paragraph(f"<b>{_esc(time_label)}</b> — {_esc(event.title)}", subheading_style)
             )
             if event.description:
                 block.append(Paragraph(_esc(event.description), body_style))

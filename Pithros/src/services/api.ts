@@ -38,3 +38,4 @@ export type _NoMethodsMissing = AssertNever<MissingFromLive>;
 export type _NoUnexpectedMethods = AssertNever<ExtraInLive>;
 
 export const api: ApiClient = DEMO_MODE ? demoApi : (liveApi as unknown as ApiClient);
+export { mediaApi, memorialsApi, offeringsApi, tributesApi, contributorsApi, verificationApi, billingApi } from './api/index';

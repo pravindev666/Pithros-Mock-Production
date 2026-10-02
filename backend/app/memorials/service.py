@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import uuid
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from celery.result import AsyncResult
 from sqlalchemy import select
@@ -15,6 +17,8 @@ from app.audit.service import record as audit_record
 from app.core.database import transaction
 from app.core.enums import (
     AuditAction,
+    MediaKind,
+    MediaStatus,
     MemorialPermission,
     PrivacyLevel,
     PublicationState,
@@ -22,7 +26,8 @@ from app.core.enums import (
     UserRole,
     VerificationState,
 )
-from app.core.errors import ConflictError, NotFoundError
+from app.core.errors import ConflictError, NotFoundError, ValidationError
+from app.media.models import MediaItem
 from app.memorials import repository
 from app.memorials.cache import invalidate_public_memorial_cache
 from app.memorials.models import (
@@ -47,6 +52,7 @@ from app.memorials.schemas import (
     DigitalLegacyLinkUpdate,
     MemorialCreate,
     MemorialUpdate,
+    StewardTransferRequest,
     StoryIn,
     TimelineEventIn,
 )
@@ -54,6 +60,50 @@ from app.tributes.models import Tribute
 from app.users.models import User
 from app.workers.celery_app import celery_app
 from app.workers.tasks.archive_tasks import generate_memorial_pdf_export
+
+logger = logging.getLogger(__name__)
+
+# How long an export task's owner/memorial mapping is remembered, so the status
+# endpoint can authorise a poll without a database round-trip. Comfortably longer
+# than any export takes.
+_EXPORT_SCOPE_TTL_SECONDS = 24 * 60 * 60
+
+
+def _remember_export_scope(
+    *, task_id: str, memorial_id: uuid.UUID, user_id: uuid.UUID | None
+) -> None:
+    """Record which memorial (and requester) a background export belongs to."""
+    try:
+        from app.core.redis import get_redis
+
+        get_redis().set(
+            f"memorial_export:{task_id}",
+            json.dumps(
+                {
+                    "memorialId": str(memorial_id),
+                    "userId": str(user_id) if user_id else None,
+                }
+            ),
+            ex=_EXPORT_SCOPE_TTL_SECONDS,
+        )
+    except Exception:
+        logger.warning("export_scope_remember_failed", extra={"task_id": task_id})
+
+
+def _load_export_scope(task_id: str) -> dict | None:
+    try:
+        from app.core.redis import get_redis
+
+        raw: Any = get_redis().get(f"memorial_export:{task_id}")
+    except Exception:
+        logger.warning("export_scope_read_failed", extra={"task_id": task_id})
+        return None
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return None
 
 
 def _apply_story(db: Session, memorial: Memorial, payload: StoryIn) -> Story:
@@ -132,6 +182,46 @@ def create_memorial(
     client can nominate someone else as owner, which is the bug this replaces.
     """
     with transaction(db):
+        from app.memorials.identity import calculate_identity_similarity
+
+        duplicate_held = False
+        candidates = list(
+            db.scalars(
+                select(Memorial).where(
+                    Memorial.deleted_at.is_(None),
+                )
+            )
+        )
+        for cand in candidates:
+            # Skip if caller is already steward
+            if any(s.user_id == actor.id for s in cand.stewards):
+                continue
+            match = calculate_identity_similarity(
+                payload.full_name,
+                payload.birth_date,
+                payload.death_date,
+                payload.birth_place or payload.resting_place,
+                cand.full_name,
+                cand.birth_date,
+                cand.death_date,
+                cand.birth_place or cand.resting_place,
+            )
+            if match.confidence_tier == "high_confidence":
+                duplicate_held = True
+                break
+
+        from app.billing.entitlements import assert_steward_can_use_premium_theme
+        from app.core.errors import ValidationError
+
+        theme_allowed, theme_reason = assert_steward_can_use_premium_theme(
+            actor.id, payload.theme.value, db
+        )
+        if not theme_allowed:
+            raise ValidationError(
+                theme_reason or "That theme is part of a paid plan.",
+                details={"entitlementGated": True},
+            )
+
         memorial = Memorial(
             slug=repository.unique_slug(db, payload.full_name),
             full_name=payload.full_name.strip(),
@@ -147,9 +237,21 @@ def create_memorial(
             theme=payload.theme.value,
             publication_state=PublicationState.DRAFT.value,
             verification_state=VerificationState.DRAFT.value,
+            duplicate_held=duplicate_held,
         )
         db.add(memorial)
         db.flush()
+
+        if duplicate_held:
+            audit_record(
+                db,
+                action=AuditAction.MEMORIAL_COLLISION_DETECTED,
+                entity="memorial",
+                entity_id=memorial.id,
+                actor=actor,
+                detail={"slug": memorial.slug, "heldForReview": True},
+                request=request,
+            )
 
         # Appended through the relationship rather than `db.add(...)`: that keeps
         # `memorial.stewards` consistent in memory, so `primary_steward` reflects
@@ -181,6 +283,35 @@ def create_memorial(
     return memorial
 
 
+def _apply_media_reference(
+    db: Session, memorial: Memorial, field: str, value: uuid.UUID | None
+) -> None:
+    """Bind (or clear) a portrait/cover reference to one of this memorial's photos.
+
+    Validated rather than trusted: the media must belong to this memorial, have
+    finished uploading, and be a photograph — a stray id can never point one
+    memorial at another family's file.
+    """
+    if value is None:
+        setattr(memorial, field, None)
+        return
+
+    media = db.scalar(
+        select(MediaItem).where(
+            MediaItem.id == value,
+            MediaItem.memorial_id == memorial.id,
+            MediaItem.deleted_at.is_(None),
+        )
+    )
+    if media is None:
+        raise NotFoundError("Photo not found")
+    if media.kind != MediaKind.PHOTO.value:
+        raise ValidationError("Only photographs can be used as a portrait or cover.")
+    if media.status != MediaStatus.READY.value:
+        raise ConflictError("That photo has not finished uploading yet.")
+    setattr(memorial, field, media.id)
+
+
 def update_memorial(
     db: Session,
     *,
@@ -209,7 +340,20 @@ def update_memorial(
                 memorial.privacy = value.value
                 continue
             if field == "theme":
+                from app.billing.entitlements import assert_can_use_premium_theme
+
+                theme_allowed, theme_reason = assert_can_use_premium_theme(
+                    memorial.id, value.value, db
+                )
+                if not theme_allowed:
+                    raise ValidationError(
+                        theme_reason or "That theme is part of a paid plan.",
+                        details={"entitlementGated": True},
+                    )
                 memorial.theme = value.value
+                continue
+            if field in ("portrait_media_id", "cover_media_id"):
+                _apply_media_reference(db, memorial, field, value)
                 continue
             if value is not None:
                 setattr(memorial, field, value)
@@ -256,6 +400,13 @@ def set_publication_state(
     if state == PublicationState.PUBLISHED and memorial.privacy == PrivacyLevel.PRIVATE.value:
         raise ConflictError(
             "Choose a visibility setting before publishing. A private memorial cannot be published."
+        )
+
+    if state == PublicationState.PUBLISHED and getattr(memorial, "duplicate_held", False):
+        raise ConflictError(
+            "This memorial is held under Family Trust review due to an identity collision "
+            "with an existing record. Please provide supporting relationship evidence to the "
+            "Trust Desk to resolve."
         )
 
     with transaction(db):
@@ -314,6 +465,16 @@ def add_timeline_event(
     payload: TimelineEventIn,
     request: Request | None = None,
 ) -> TimelineEvent:
+    from app.billing.entitlements import assert_can_add_timeline_event
+    from app.core.errors import ValidationError
+
+    allowed, reason = assert_can_add_timeline_event(memorial.id, db)
+    if not allowed:
+        raise ValidationError(
+            reason or "This plan's timeline limit has been reached.",
+            details={"entitlementGated": True},
+        )
+
     with transaction(db):
         next_order = max((event.sort_order for event in memorial.timeline_events), default=0) + 1
         event = TimelineEvent(
@@ -432,6 +593,16 @@ def add_legacy_link(
     payload: DigitalLegacyLinkIn,
     request: Request | None = None,
 ) -> DigitalLegacyLink:
+    from app.billing.entitlements import assert_can_manage_legacy_links
+    from app.core.errors import ValidationError
+
+    allowed, reason = assert_can_manage_legacy_links(memorial.id, db)
+    if not allowed:
+        raise ValidationError(
+            reason or "Digital legacy links are part of a paid plan.",
+            details={"entitlementGated": True},
+        )
+
     platform_val = (
         payload.platform.value if hasattr(payload.platform, "value") else str(payload.platform)
     )
@@ -593,18 +764,38 @@ def trigger_pdf_export(
 ) -> ArchiveExportOut:
     access.require_permission(MemorialPermission.EXPORT_ARCHIVE)
 
+    from app.billing.entitlements import assert_can_export_archive
+    from app.core.errors import ValidationError
+
+    allowed, reason = assert_can_export_archive(memorial.id, db)
+    if not allowed:
+        raise ValidationError(
+            reason or "Archive export is part of a paid plan.",
+            details={"entitlementGated": True},
+        )
+
+    # Read identity before dispatching: in eager/background execution the task
+    # may expire the session, and re-reading an expired attribute would detach.
+    memorial_id = memorial.id
+    requester_id = access.user.id if access.user else None
+
     task = generate_memorial_pdf_export.delay(
-        memorial_id=str(memorial.id),
-        requested_by_user_id=str(access.user.id) if access.user else None,
+        memorial_id=str(memorial_id),
+        requested_by_user_id=str(requester_id) if requester_id else None,
     )
     task_id = str(task.id)
+    _remember_export_scope(
+        task_id=task_id,
+        memorial_id=memorial_id,
+        user_id=requester_id,
+    )
 
     if task.ready():
         res = task.result or {}
         return ArchiveExportOut(
             task_id=task_id,
             status=res.get("status", "ready"),
-            memorial_id=str(memorial.id),
+            memorial_id=str(memorial_id),
             download_url=res.get("download_url"),
             file_size=res.get("file_size"),
         )
@@ -612,11 +803,31 @@ def trigger_pdf_export(
     return ArchiveExportOut(
         task_id=task_id,
         status="queued",
-        memorial_id=str(memorial.id),
+        memorial_id=str(memorial_id),
     )
 
 
-def get_export_status(task_id: str) -> ArchiveExportStatusOut:
+def get_export_status(
+    task_id: str,
+    *,
+    actor: User,
+    expected_memorial_id: uuid.UUID | None = None,
+) -> ArchiveExportStatusOut:
+    """Status of a background export, readable only by its requester or an admin.
+
+    A task id is a bearer-ish capability: without this check, any authenticated
+    user who saw or guessed one could read another family's export status (and its
+    download URL). The scope record written at enqueue time is the authority.
+    """
+    scope = _load_export_scope(task_id)
+    if scope is None:
+        raise NotFoundError("Export task not found.")
+    is_admin = actor.role == UserRole.ADMIN.value
+    if not is_admin and scope.get("userId") != str(actor.id):
+        raise NotFoundError("Export task not found.")
+    if expected_memorial_id is not None and scope.get("memorialId") != str(expected_memorial_id):
+        raise NotFoundError("Export task not found.")
+
     async_res = AsyncResult(task_id, app=celery_app)
     state = async_res.state
     if state == "SUCCESS":
@@ -706,3 +917,79 @@ def get_public_memorial_qr_bytes(
     memorial_url = build_memorial_url(memorial.slug)
     qr_bytes = generate_qr_code(memorial_url, format=format)
     return qr_bytes, memorial.slug
+
+
+def transfer_stewardship(
+    db: Session,
+    *,
+    memorial: Memorial,
+    actor: User,
+    payload: StewardTransferRequest,
+    request: Request | None = None,
+) -> Memorial:
+    """Transfer primary stewardship of a memorial to another user.
+
+    Gated by `MemorialPermission.TRANSFER_STEWARDSHIP`.
+    Supports voluntary family handoff, succession planning, and admin rescue of orphaned memorials.
+    """
+    target_user: User | None = None
+    if payload.target_user_id:
+        target_user = db.get(User, payload.target_user_id)
+    elif payload.target_email:
+        target_user = db.scalar(
+            select(User).where(User.email == payload.target_email.strip().lower())
+        )
+
+    if target_user is None:
+        raise NotFoundError("Successor user account not found.")
+
+    primary = memorial.primary_steward
+    if primary and primary.user_id == target_user.id:
+        raise ConflictError("User is already the primary steward of this memorial.")
+
+    with transaction(db):
+        # 1. Update current primary steward
+        if primary:
+            if payload.retain_as_co_steward:
+                primary.is_primary = False
+            else:
+                memorial.stewards.remove(primary)
+
+        # 2. Assign target user as primary steward
+        existing_steward = next((s for s in memorial.stewards if s.user_id == target_user.id), None)
+        if existing_steward:
+            existing_steward.is_primary = True
+        else:
+            # If target user was a contributor, remove to avoid duplicate membership record
+            contributor = next(
+                (c for c in memorial.contributors if c.user_id == target_user.id), None
+            )
+            if contributor:
+                memorial.contributors.remove(contributor)
+
+            memorial.stewards.append(MemorialSteward(user_id=target_user.id, is_primary=True))
+
+        if target_user.role == UserRole.VISITOR.value:
+            target_user.role = UserRole.FAMILY_STEWARD.value
+
+        db.flush()
+
+        audit_record(
+            db,
+            action=AuditAction.STEWARD_TRANSFERRED,
+            entity="memorial",
+            entity_id=memorial.id,
+            actor=actor,
+            detail={
+                "previous_steward_id": str(actor.id),
+                "new_steward_id": str(target_user.id),
+                "new_steward_email": target_user.email,
+                "reason": payload.reason,
+                "retained_as_co_steward": payload.retain_as_co_steward,
+            },
+            request=request,
+        )
+
+        invalidate_public_memorial_cache(memorial.slug)
+
+    return memorial

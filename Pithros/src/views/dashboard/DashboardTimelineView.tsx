@@ -18,42 +18,56 @@ export const DashboardTimelineView: React.FC<DashboardTimelineViewProps> = ({
 }) => {
   const { isDark } = useTheme();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
   const [year, setYear] = useState('');
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
 
-  const handleAddMilestone = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!year.trim() || !title.trim()) return;
+  const handleStartEdit = (evt: TimelineEvent) => {
+    setEditingMilestoneId(evt.id);
+    setYear(evt.year);
+    setTitle(evt.title);
+    setLocation(evt.location || '');
+    setDescription(evt.description || '');
+    setShowAddForm(true);
+  };
 
-    const newMilestone: TimelineEvent = {
-      id: `tl-${Date.now()}`,
-      year: year.trim(),
-      title: title.trim(),
-      location: location.trim() || undefined,
-      description: description.trim(),
-    };
-
-    const sortedTimeline = [...memorial.timeline, newMilestone].sort(
-      (a, b) => parseInt(a.year || '0') - parseInt(b.year || '0')
-    );
-
-    await api.updateMemorial(memorial.id, {
-      timeline: sortedTimeline,
-    });
-
+  const handleCancelForm = () => {
     setShowAddForm(false);
+    setEditingMilestoneId(null);
     setYear('');
     setTitle('');
     setLocation('');
     setDescription('');
+  };
+
+  const handleAddMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!year.trim() || !title.trim()) return;
+
+    if (editingMilestoneId) {
+      await api.updateTimelineEvent(memorial.id, editingMilestoneId, {
+        year: year.trim(),
+        title: title.trim(),
+        location: location.trim() || undefined,
+        description: description.trim(),
+      });
+    } else {
+      await api.addTimelineEvent(memorial.id, {
+        year: year.trim(),
+        title: title.trim(),
+        location: location.trim() || undefined,
+        description: description.trim(),
+      });
+    }
+
+    handleCancelForm();
     onUpdate();
   };
 
   const handleDelete = async (id: string) => {
-    const updated = memorial.timeline.filter((t) => t.id !== id);
-    await api.updateMemorial(memorial.id, { timeline: updated });
+    await api.removeTimelineEvent(memorial.id, id);
     onUpdate();
   };
 
@@ -238,11 +252,11 @@ export const DashboardTimelineView: React.FC<DashboardTimelineViewProps> = ({
           </div>
 
           <div className="flex justify-end gap-2.5">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
+            <Button type="button" variant="ghost" size="sm" onClick={handleCancelForm}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" size="sm">
-              Save Milestone
+              {editingMilestoneId ? 'Update Milestone' : 'Save Milestone'}
             </Button>
           </div>
         </form>
@@ -291,13 +305,26 @@ export const DashboardTimelineView: React.FC<DashboardTimelineViewProps> = ({
                 {evt.description}
               </p>
             </div>
-            <button
-              onClick={() => handleDelete(evt.id)}
-              className="p-1 rounded text-[#9EA3AA] hover:text-red-500 flex-shrink-0 cursor-pointer"
-              title="Delete milestone"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => handleStartEdit(evt)}
+                className="p-1 rounded text-[#9EA3AA] hover:text-[#B99452] cursor-pointer"
+                title="Edit milestone"
+                aria-label="Edit milestone"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(evt.id)}
+                className="p-1 rounded text-[#9EA3AA] hover:text-red-500 cursor-pointer"
+                title="Delete milestone"
+                aria-label="Delete milestone"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

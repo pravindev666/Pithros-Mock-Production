@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { Search, ArrowRight, MapPin, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ArrowRight, MapPin, Calendar, X } from 'lucide-react';
 import { Memorial } from '../types';
 import { VerificationBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useLocale } from '../context/LocaleContext';
+import { api } from '../services/api';
+import { memorialsApi } from '../services/api/memorials';
+import type { ApiSearchResult } from '../services/api/mappers';
 
 interface ExploreMemorialsViewProps {
   memorials: Memorial[];
@@ -23,8 +26,61 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [verificationFilter, setVerificationFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');
+  const [activeList, setActiveList] = useState<Memorial[]>(memorials && memorials.length > 0 ? memorials : []);
 
-  const filtered = memorials.filter((m) => {
+  useEffect(() => {
+    if (memorials && memorials.length > 0) {
+      setActiveList(memorials);
+    } else {
+      memorialsApi.search().then((results) => {
+        if (results && results.length > 0) {
+          const mapped: Memorial[] = results.map((r: ApiSearchResult) => ({
+            id: r.slug,
+            slug: r.slug,
+            fullName: r.fullName,
+            birthDate: r.birthDate || '',
+            deathDate: r.deathDate || '',
+            birthPlace: r.birthPlace || '',
+            restingPlace: r.restingPlace || undefined,
+            shortEpitaph: r.shortEpitaph || '',
+            portraitUrl: r.portraitUrl || '',
+            privacy: 'public',
+            verificationStatus: (r.verificationStatus === 'approved' ? 'approved' : 'unverified') as any,
+            verificationBadgeType: (r.verificationBadgeType as any) || (r.verificationStatus === 'approved' ? 'Document Reviewed' : undefined),
+            story: { overview: '', favoriteQuotes: [] },
+            timeline: [],
+            family: [],
+            media: [],
+            voiceMemories: [],
+            tributes: [],
+            offerings: [],
+            legacyLinks: [],
+            stewardId: '',
+            stewardName: '',
+            stewardEmail: '',
+            completenessPercent: 100,
+            createdAt: '',
+            updatedAt: '',
+          }));
+          setActiveList(mapped);
+        } else {
+          api.getMemorials().then((list) => {
+            if (list && list.length > 0) {
+              setActiveList(list);
+            }
+          }).catch(() => {});
+        }
+      }).catch(() => {
+        api.getMemorials().then((list) => {
+          if (list && list.length > 0) {
+            setActiveList(list);
+          }
+        }).catch(() => {});
+      });
+    }
+  }, [memorials]);
+
+  const filtered = activeList.filter((m) => {
     // Only show public memorials in explore
     if (m.privacy !== 'public') return false;
 
@@ -104,12 +160,22 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, life quote, or city..."
               style={{ fontFamily: metadata.uiFontFamily }}
-              className={`w-full pl-12 pr-4 py-3.5 rounded-2xl border text-sm transition-colors shadow-sm focus:outline-none ${
+              className={`w-full pl-12 pr-10 py-3.5 rounded-2xl border text-sm transition-colors shadow-sm focus:outline-none ${
                 isDark
                   ? 'bg-[#182337] border-[#202C40] text-[#F8F5EE] placeholder-[#737982] focus:border-[#B99452]'
                   : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A] placeholder-[#7D766D] focus:border-[#23324A]'
               }`}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-neutral-400 hover:text-neutral-200"
+                aria-label="Clear search input"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Quick Filter Pills */}
@@ -198,6 +264,28 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
               Try searching with a different name or clear the filters.
             </p>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              {(searchQuery || selectedCity !== 'all' || verificationFilter !== 'all') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCity('all');
+                    setVerificationFilter('all');
+                  }}
+                >
+                  Clear All Filters
+                </Button>
+              )}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onNavigate('/create-memorial')}
+              >
+                Create a Memorial
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

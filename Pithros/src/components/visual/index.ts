@@ -8,6 +8,10 @@ export { StarField } from './StarField';
 export { MemorialGlow } from './MemorialGlow';
 export { OfferingLight } from './OfferingLight';
 
+export { HeroAtmosphere } from './HeroAtmosphere';
+export { LandingAtmosphere } from './LandingAtmosphere';
+export { MemorialAtmosphere } from './MemorialAtmosphere';
+
 // Extended Coherent SVG Visual Symbols
 export {
   DoveSymbol,

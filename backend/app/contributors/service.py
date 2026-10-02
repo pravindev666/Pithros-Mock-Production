@@ -117,6 +117,16 @@ def invite(
     payload: ContributorInviteRequest,
     request: Request | None = None,
 ) -> tuple[MemorialContributor, str]:
+    from app.billing.entitlements import assert_can_add_contributor
+    from app.core.errors import ValidationError
+
+    allowed, reason = assert_can_add_contributor(memorial.id, db)
+    if not allowed:
+        raise ValidationError(
+            reason or "This plan's contributor limit has been reached.",
+            details={"entitlementGated": True},
+        )
+
     email = payload.email.strip().lower()
 
     if payload.role == ContributorRole.STEWARD:

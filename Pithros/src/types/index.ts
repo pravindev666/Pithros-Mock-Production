@@ -171,6 +171,8 @@ export interface Memorial {
   shortEpitaph: string;
   portraitUrl: string;
   coverUrl?: string;
+  portraitMediaId?: string | null;
+  coverMediaId?: string | null;
   story: {
     overview: string;
     earlyLife?: string;
@@ -273,7 +275,17 @@ export interface AdminReport {
   targetType: 'memorial' | 'tribute' | 'media' | 'provider' | 'review';
   targetId: string;
   targetTitle: string;
-  reason: 'Incorrect information' | 'Impersonation' | 'Harassment' | 'Privacy concern' | 'Fraudulent content' | 'Other';
+  reason:
+    | 'Incorrect information'
+    | 'Impersonation'
+    | 'Harassment'
+    | 'Harassment or Defamation'
+    | 'Privacy concern'
+    | 'Fraudulent content'
+    | 'Inappropriate / Nudity / Explicit content'
+    | 'Violence or Graphic content'
+    | 'Other'
+    | (string & {});
   details: string;
   reporterEmail: string;
   status: 'pending' | 'under_review' | 'resolved' | 'restricted' | 'removed' | 'escalated';

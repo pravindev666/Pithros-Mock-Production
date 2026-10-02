@@ -1,9 +1,9 @@
-"""Unit and integration tests for the PITHROS billing, subscriptions, entitlements, and state machine."""
+"""Unit and integration tests for the PITHROS billing, subscriptions,
+entitlements, and state machine."""
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import select
@@ -15,29 +15,31 @@ from app.billing.entitlements import (
     assert_can_export_archive,
     assert_can_manage_legacy_links,
     assert_can_upload_media,
-    resolve_memorial_entitlements,
 )
 from app.billing.models import (
-    BillingAccount,
     Invoice,
     MemorialEntitlement,
     Payment,
-    Plan,
-    PlanPrice,
     Subscription,
-    SubscriptionEntitlement,
 )
-from app.billing.schemas import CreateOrderRequest, VerifyPaymentRequest
+from app.billing.schemas import (
+    AdminExtendSubscriptionRequest,
+    AdminGrantEntitlementRequest,
+    AdminRevokeSubscriptionRequest,
+    CreateOrderRequest,
+    VerifyPaymentRequest,
+)
 from app.billing.service import (
+    admin_extend_subscription,
+    admin_get_billing_overview,
+    admin_grant_entitlement,
+    admin_revoke_subscription,
     assign_memorial_slot,
-    cancel_subscription,
     create_family_sponsorship_link,
     create_order,
-    get_or_create_billing_account,
     get_pricing_catalog,
     get_sponsorship_info,
     release_memorial_slot,
-    resume_subscription,
     verify_and_activate_payment,
 )
 from app.billing.state_machine import (
@@ -81,7 +83,10 @@ def test_pricing_catalog_spec(db_session):
     # Family Archive pricing
     family_prices = {pr.id: pr for pr in plans[PlanCode.FAMILY_ARCHIVE].prices}
     assert family_prices["family_archive_annual_v1"].amount_minor == 299900  # ₹2,999
-    assert family_prices["family_archive_annual_v1"].savings_copy == "Save ₹1,996 vs 5 individual memorials"
+    assert (
+        family_prices["family_archive_annual_v1"].savings_copy
+        == "Save ₹1,996 vs 5 individual memorials"
+    )
 
     # Free Tier Limits
     assert catalog.free_tier.max_photos == 3
@@ -117,9 +122,10 @@ def test_order_creation_and_tamper_defense(db_session, make_user):
 
 
 def test_payment_verification_and_subscription_activation(db_session, make_user, make_memorial):
-    """Verify that successful payment activates subscription, assigns slot, and generates invoice."""
+    """Verify that successful payment activates subscription, assigns slot, and
+    generates invoice."""
     user = make_user(name="Aarti Sharma", email="aarti@example.com")
-    memorial = make_memorial(steward=user, full_name="Grandfather Sharma")
+    memorial = make_memorial(steward=user, full_name="Grandfather Sharma", premium=False)
 
     # 1. Create order
     order = create_order(
@@ -166,9 +172,7 @@ def test_payment_verification_and_subscription_activation(db_session, make_user,
     assert slot.status == MemorialEntitlementStatus.ASSIGNED
 
     # 5. Check Immutable Invoice
-    inv = db_session.execute(
-        select(Invoice).where(Invoice.subscription_id == sub.id)
-    ).scalar_one()
+    inv = db_session.execute(select(Invoice).where(Invoice.subscription_id == sub.id)).scalar_one()
     assert inv.amount_minor == 99900
     assert inv.status == "paid"
 
@@ -230,7 +234,9 @@ def test_subscription_state_machine_and_zero_deletion(db_session, make_user, mak
 def test_illegal_state_transition_rejected(db_session, make_user):
     """Verify state machine prohibits illegal jumps (e.g. PENDING straight to PAST_DUE)."""
     user = make_user()
-    order = create_order(user, CreateOrderRequest(planPriceId="memorial_care_monthly_v1"), db_session)
+    order = create_order(
+        user, CreateOrderRequest(planPriceId="memorial_care_monthly_v1"), db_session
+    )
     payment = db_session.execute(
         select(Payment).where(Payment.internal_order_id == order.internal_order_id)
     ).scalar_one()
@@ -241,8 +247,8 @@ def test_illegal_state_transition_rejected(db_session, make_user):
         plan_id=payment.price.plan_id,
         price_id=payment.plan_price_id,
         status=SubscriptionStatus.PENDING,
-        current_period_start=datetime.now(timezone.utc),
-        current_period_end=datetime.now(timezone.utc),
+        current_period_start=datetime.now(UTC),
+        current_period_end=datetime.now(UTC),
     )
     db_session.add(sub)
     db_session.flush()
@@ -288,11 +294,11 @@ def test_memorial_slot_capacity_limits(db_session, make_user, make_memorial):
 
 def test_entitlement_checks_free_vs_premium(db_session, make_user, make_memorial):
     """Verify media uploads and features are properly gated between Free and Premium."""
-    from app.media.models import MediaItem
     from app.core.enums import MediaStatus
+    from app.media.models import MediaItem
 
     user = make_user()
-    memorial = make_memorial(steward=user, full_name="Test Memorial")
+    memorial = make_memorial(steward=user, full_name="Test Memorial", premium=False)
 
     # 1. FREE MEMORIAL: Per-file size ceiling (>5 MB rejected)
     can_oversize, oversize_msg = assert_can_upload_media(
@@ -370,7 +376,8 @@ def test_entitlement_checks_free_vs_premium(db_session, make_user, make_memorial
         user, VerifyPaymentRequest(internalOrderId=order.internal_order_id), db_session
     )
 
-    # 3. PREMIUM MEMORIAL: 30 photos, 300 MB media, Voice up to 100 MB (50 MB/file), Export, Legacy now permitted!
+    # 3. PREMIUM MEMORIAL: 30 photos, 300 MB media, Voice up to 100 MB
+    # (50 MB/file), Export, Legacy now permitted!
     can_voice_now, _ = assert_can_upload_media(
         memorial.id, MediaKind.VOICE, 5 * 1024 * 1024, db_session
     )
@@ -385,7 +392,10 @@ def test_entitlement_checks_free_vs_premium(db_session, make_user, make_memorial
 
     # Photo 4 now permitted on Memorial Care (which supports up to 30 photos)
     can_care_photo, _ = assert_can_upload_media(
-        memorial.id, MediaKind.PHOTO, 8 * 1024 * 1024, db_session  # 8 MB file (<10 MB)
+        memorial.id,
+        MediaKind.PHOTO,
+        8 * 1024 * 1024,
+        db_session,  # 8 MB file (<10 MB)
     )
     assert can_care_photo is True
 
@@ -409,6 +419,7 @@ def test_family_sponsorship_workflow(db_session, make_user, make_memorial):
     memorial = make_memorial(steward=creator, full_name="Ancestor Memorial")
 
     from app.billing.schemas import CreateSponsorshipRequest
+
     sponsorship = create_family_sponsorship_link(
         creator,
         CreateSponsorshipRequest(planPriceId="memorial_care_annual_v1", memorialId=memorial.id),
@@ -424,3 +435,86 @@ def test_family_sponsorship_workflow(db_session, make_user, make_memorial):
     assert info["memorialName"] == "Ancestor Memorial"
     assert info["amountMinor"] == 99900
     assert info["currency"] == "INR"
+
+
+def test_admin_manual_grant_extend_revoke_lifecycle(db_session, make_user, make_memorial):
+    """Privileged Admin Control: Grant complimentary access, extend duration, and revoke."""
+    admin = make_user(name="Admin Officer", role="admin")
+    customer = make_user(name="Pravin Mathew", email="pravin.mathew@example.com")
+    memorial = make_memorial(steward=customer, full_name="Beloved Mother", premium=False)
+
+    # 1. Admin Grant 12 months complimentary Memorial Care
+    grant_req = AdminGrantEntitlementRequest(
+        targetUserEmail="pravin.mathew@example.com",
+        planCode="MEMORIAL_CARE",
+        durationMonths=12,
+        reason="Compassionate bereavement grant after support review",
+        memorialId=memorial.id,
+    )
+    grant_res = admin_grant_entitlement(admin, grant_req, db_session)
+
+    assert grant_res.status == SubscriptionStatus.ACTIVE
+    assert grant_res.source == "ADMIN_GRANT"
+    assert grant_res.plan_code == PlanCode.MEMORIAL_CARE
+    assert grant_res.assigned_memorial_id == memorial.id
+
+    # Verify subscription in database
+    sub = db_session.execute(
+        select(Subscription).where(Subscription.id == grant_res.subscription_id)
+    ).scalar_one()
+    assert sub.status == SubscriptionStatus.ACTIVE
+    assert sub.gateway == "admin_grant"
+    assert sub.auto_renew is False
+    assert sub.entitlements.max_photos == 30
+    assert sub.entitlements.max_media_bytes == 300 * 1024 * 1024
+    assert sub.entitlements.max_audio_bytes == 100 * 1024 * 1024
+
+    # Verify $0 complimentary invoice was generated for accounting
+    inv = db_session.execute(select(Invoice).where(Invoice.subscription_id == sub.id)).scalar_one()
+    assert inv.amount_minor == 0
+    assert inv.status == "paid"
+    assert inv.invoice_number.startswith("PITH-COMP-")
+
+    # 2. Admin Extend Subscription by 6 months
+    old_end = sub.current_period_end
+    extend_req = AdminExtendSubscriptionRequest(
+        additionalMonths=6,
+        reason="Family partnership extension",
+    )
+    extend_res = admin_extend_subscription(admin, sub.id, extend_req, db_session)
+    assert extend_res.status == SubscriptionStatus.ACTIVE
+    assert extend_res.current_period_end > old_end
+
+    # 3. Admin Revoke Subscription
+    revoke_req = AdminRevokeSubscriptionRequest(
+        reason="Customer requested transition back to standard tier",
+    )
+    revoke_res = admin_revoke_subscription(admin, sub.id, revoke_req, db_session)
+    assert revoke_res.status == SubscriptionStatus.CANCELLED
+
+    # CRITICAL: Memorial data is never destroyed on admin revoke!
+    db_session.refresh(memorial)
+    assert memorial.deleted_at is None
+    assert memorial.full_name == "Beloved Mother"
+
+
+def test_admin_billing_overview(db_session, make_user, make_memorial):
+    """Verify admin billing overview aggregates accounts, subscriptions, and revenue."""
+    admin = make_user(role="admin")
+    customer = make_user(email="buyer@example.com")
+    memorial = make_memorial(steward=customer)
+
+    order = create_order(
+        customer,
+        CreateOrderRequest(planPriceId="memorial_care_annual_v1", memorialId=memorial.id),
+        db_session,
+    )
+    verify_and_activate_payment(
+        customer, VerifyPaymentRequest(internalOrderId=order.internal_order_id), db_session
+    )
+
+    overview = admin_get_billing_overview(admin, db_session)
+    assert overview["metrics"]["activeSubscriptions"] >= 1
+    assert overview["metrics"]["totalRevenueMinor"] >= 99900
+    assert len(overview["recentPayments"]) >= 1
+    assert len(overview["recentSubscriptions"]) >= 1

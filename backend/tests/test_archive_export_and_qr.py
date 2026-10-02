@@ -36,9 +36,7 @@ def test_public_can_fetch_qr_for_discoverable_memorial(
     assert res_png.content.startswith(b"\x89PNG\r\n\x1a\n")
 
     # SVG format with download header
-    res_svg = client.get(
-        f"/api/v1/public/memorials/{memorial.slug}/qr?format=svg&download=true"
-    )
+    res_svg = client.get(f"/api/v1/public/memorials/{memorial.slug}/qr?format=svg&download=true")
     assert res_svg.status_code == 200
     assert "image/svg+xml" in res_svg.headers["content-type"]
     assert "attachment" in res_svg.headers.get("content-disposition", "")
@@ -121,9 +119,7 @@ def test_steward_can_trigger_celery_pdf_export_and_poll_status(
     assert audit_entry.action == "MEMORIAL_EXPORTED"
 
 
-def test_steward_can_directly_download_pdf_book(
-    client, make_user, make_memorial, auth, db_session
-):
+def test_steward_can_directly_download_pdf_book(client, make_user, make_memorial, auth, db_session):
     owner = make_user(name="Owner")
     memorial = make_memorial(steward=owner, full_name="Mahatma Gandhi")
     memorial.short_epitaph = "My life is my message."

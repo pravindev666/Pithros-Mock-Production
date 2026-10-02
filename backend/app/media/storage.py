@@ -185,6 +185,12 @@ def build_media_key(*, memorial_id: uuid.UUID, kind: str, extension: str) -> str
     return f"memorials/{memorial_id}/{kind}/{uuid.uuid4().hex}.{suffix}"
 
 
+def build_provider_media_key(*, provider_id: uuid.UUID, kind: str, extension: str) -> str:
+    """Provider gallery objects live under their own prefix, same random-key rule."""
+    suffix = extension.lower().lstrip(".")
+    return f"providers/{provider_id}/{kind}/{uuid.uuid4().hex}.{suffix}"
+
+
 def extension_of(filename: str) -> str:
     return Path(filename).suffix.lower().lstrip(".")
 

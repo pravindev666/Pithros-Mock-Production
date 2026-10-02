@@ -119,6 +119,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
 
 
 def _build_api_router() -> APIRouter:
+    from app.audit.router import router as audit_router
     from app.billing.router import router as billing_router
     from app.contributors.router import invitation_router
     from app.contributors.router import me_router as contributors_me_router
@@ -126,6 +127,12 @@ def _build_api_router() -> APIRouter:
     from app.media.router import router as media_router
     from app.memorials.router import me_router, public_router
     from app.memorials.router import router as memorials_router
+    from app.notifications.router import router as notifications_router
+    from app.privacy.router import admin_router as privacy_admin_router
+    from app.privacy.router import router as privacy_router
+    from app.providers.router import admin_router as providers_admin_router
+    from app.providers.router import partner_router as providers_partner_router
+    from app.providers.router import public_router as providers_public_router
     from app.tributes.router import moderation_router as tribute_moderation_router
     from app.tributes.router import router as tributes_router
     from app.users.router import router as users_router
@@ -136,6 +143,8 @@ def _build_api_router() -> APIRouter:
     api = APIRouter(prefix=settings.api_v1_prefix)
     api.include_router(users_router)
     api.include_router(me_router)
+    api.include_router(notifications_router)
+    api.include_router(privacy_router)
     api.include_router(contributors_me_router)
     api.include_router(invitation_router)
     api.include_router(public_router)
@@ -147,8 +156,42 @@ def _build_api_router() -> APIRouter:
     api.include_router(verification_router)
     api.include_router(verification_evidence_router)
     api.include_router(verification_admin_router)
+    api.include_router(providers_partner_router)
+    api.include_router(providers_public_router)
+    api.include_router(providers_admin_router)
+    api.include_router(audit_router)
     api.include_router(billing_router)
+    api.include_router(privacy_admin_router)
+
+    @api.get("/health", tags=["Admin"], summary="Liveness")
+    async def api_health() -> dict[str, str]:
+        return {"status": "ok", "environment": settings.environment}
+
+    @api.get("/ready", tags=["Admin"], summary="Readiness")
+    async def api_ready() -> JSONResponse:
+        return _perform_readiness_checks()
+
     return api
+
+
+def _perform_readiness_checks() -> JSONResponse:
+    checks: dict[str, bool] = {}
+
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        checks["database"] = True
+    except Exception:
+        checks["database"] = False
+
+    checks["redis"] = redis_healthy()
+    checks["storage"] = storage_is_reachable()
+
+    required_ready = checks["database"] and checks["redis"]
+    return JSONResponse(
+        status_code=200 if required_ready else 503,
+        content={"status": "ready" if required_ready else "degraded", "checks": checks},
+    )
 
 
 def create_app() -> FastAPI:
@@ -167,10 +210,9 @@ def create_app() -> FastAPI:
             "Backend for the Pithros digital memorial platform. "
             "Firebase provides identity; this service is the business authority."
         ),
-        openapi_tags=TAGS,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
+        openapi_url="/openapi.json" if not settings.is_production else None,
     )
 
     app.add_middleware(RequestContextMiddleware)
@@ -202,25 +244,7 @@ def create_app() -> FastAPI:
     @app.get("/ready", tags=["Admin"], summary="Readiness")
     async def ready() -> JSONResponse:
         """Dependencies the API needs to serve requests."""
-        checks: dict[str, bool] = {}
-
-        try:
-            with engine.connect() as connection:
-                connection.execute(text("SELECT 1"))
-            checks["database"] = True
-        except Exception:
-            checks["database"] = False
-
-        checks["redis"] = redis_healthy()
-        checks["storage"] = storage_is_reachable()
-
-        # Storage is reported but not fatal: reads and writes that do not touch
-        # media should still be served if object storage is briefly unavailable.
-        required_ready = checks["database"] and checks["redis"]
-        return JSONResponse(
-            status_code=200 if required_ready else 503,
-            content={"status": "ready" if required_ready else "degraded", "checks": checks},
-        )
+        return _perform_readiness_checks()
 
     return app
 

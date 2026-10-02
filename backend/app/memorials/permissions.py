@@ -31,6 +31,7 @@ from app.core.enums import (
     ContributorStatus,
     MemorialPermission,
     PrivacyLevel,
+    UserRole,
 )
 from app.core.errors import ForbiddenError, NotFoundError
 from app.memorials.models import Memorial
@@ -132,6 +133,13 @@ def resolve_access(db: Session, memorial: Memorial, user: User | None) -> Memori
                 except ValueError:
                     continue
 
+    # Platform administrators have universal governance access over memorials
+    if user.role == UserRole.ADMIN.value:
+        permissions |= ALL_PERMISSIONS
+        is_steward = True
+        if role is None:
+            role = ContributorRole.STEWARD.value
+
     return MemorialAccess(
         memorial=memorial,
         user=user,
@@ -212,6 +220,8 @@ FIELD_PERMISSIONS: dict[str, MemorialPermission] = {
     "short_epitaph": MemorialPermission.EDIT_DETAILS,
     "portrait_url": MemorialPermission.EDIT_DETAILS,
     "cover_url": MemorialPermission.EDIT_DETAILS,
+    "portrait_media_id": MemorialPermission.EDIT_DETAILS,
+    "cover_media_id": MemorialPermission.EDIT_DETAILS,
     "story": MemorialPermission.EDIT_STORY,
     "privacy": MemorialPermission.MANAGE_PRIVACY,
     "theme": MemorialPermission.CHANGE_THEME,

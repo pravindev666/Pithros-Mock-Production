@@ -1,13 +1,21 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle2, Lock, X } from 'lucide-react';
-import { Button } from './Button';
+import { UploadCloud, FileText, CheckCircle2, Lock, X, AlertCircle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+
+export interface UploadedFileInfo {
+  name: string;
+  url: string;
+  size: string;
+  file?: File;
+}
 
 interface MediaUploaderProps {
   label?: string;
   accept?: string;
   isVerificationDocument?: boolean;
-  onUploadComplete?: (fileInfo: { name: string; url: string; size: string }) => void;
+  onUploadComplete?: (fileInfo: UploadedFileInfo) => void;
+  onUploadFile?: (file: File, onProgress: (percent: number) => void) => Promise<{ name: string; url: string; size: string } | void>;
+  onError?: (error: Error) => void;
   className?: string;
 }
 
@@ -16,25 +24,54 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   accept = 'image/*,application/pdf',
   isVerificationDocument = false,
   onUploadComplete,
+  onUploadFile,
+  onError,
   className = '',
 }) => {
   const { isDark } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const simulateUpload = (file: File) => {
+  const processFile = async (file: File) => {
+    setErrorMessage(null);
+
+    if (onUploadFile) {
+      setUploadProgress(1);
+      try {
+        const result = await onUploadFile(file, (percent) => setUploadProgress(percent));
+        const fileInfo: UploadedFileInfo = {
+          name: file.name,
+          size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+          url: result && 'url' in result && result.url ? result.url : URL.createObjectURL(file),
+          file,
+        };
+        setUploadedFile(fileInfo);
+        onUploadComplete?.(fileInfo);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+        setErrorMessage(message);
+        if (err instanceof Error) onError?.(err);
+      } finally {
+        setUploadProgress(null);
+      }
+      return;
+    }
+
+    // Offline / fallback simulation only when no onUploadFile is provided
     setUploadProgress(10);
     const interval = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev === null) return 10;
         if (prev >= 100) {
           clearInterval(interval);
-          const fileInfo = {
+          const fileInfo: UploadedFileInfo = {
             name: file.name,
             size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
             url: URL.createObjectURL(file),
+            file,
           };
           setUploadedFile(fileInfo);
           onUploadComplete?.(fileInfo);
@@ -49,13 +86,13 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      simulateUpload(e.dataTransfer.files[0]);
+      processFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      simulateUpload(e.target.files[0]);
+      processFile(e.target.files[0]);
     }
   };
 
@@ -74,6 +111,19 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           <span>
             <strong>Strictly Confidential:</strong> Official certificates and identity documents are stored in an encrypted vault for reviewer verification only. They are <strong>never</strong> displayed on the public memorial.
           </span>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div
+          className={`flex items-center gap-2 p-3 rounded-xl border text-xs ${
+            isDark
+              ? 'bg-[#3A1414] border-[#7F1D1D] text-[#FCA5A5]'
+              : 'bg-[#FEF2F2] border-[#F87171] text-[#991B1B]'
+          }`}
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
@@ -120,7 +170,10 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             />
             <button
               type="button"
-              onClick={() => setUploadedFile(null)}
+              onClick={() => {
+                setUploadedFile(null);
+                setErrorMessage(null);
+              }}
               className={`p-1 rounded-md transition-colors cursor-pointer ${
                 isDark
                   ? 'text-[#9EA3AA] hover:text-[#F8F5EE]'
@@ -202,7 +255,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
                   isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
                 }`}
               >
-                Encrypting and uploading... {uploadProgress}%
+                {uploadProgress < 100
+                  ? `Direct upload to cloud storage... ${uploadProgress}%`
+                  : 'Verifying stored media bytes...'}
               </span>
             </div>
           )}
@@ -211,4 +266,3 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     </div>
   );
 };
-

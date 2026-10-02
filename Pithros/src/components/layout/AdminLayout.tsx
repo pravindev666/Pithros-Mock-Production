@@ -16,11 +16,14 @@ import {
   Menu,
   X,
   AlertCircle,
+  LayoutDashboard,
+  Inbox,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { PageTransition } from '../../lib/motion';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface AdminLayoutProps {
   currentRoute: string;
@@ -36,6 +39,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
 }) => {
   const { isDark } = useTheme();
+  const { pithrosUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const menuItems = [
@@ -55,6 +59,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { label: 'Content Review Desk', route: '/admin/content', icon: FileCheck },
     { label: 'Family Disputes', route: '/admin/disputes', icon: Scale },
     { label: 'Farewell Providers', route: '/admin/providers', icon: Building2 },
+    { label: 'Farewell Leads', route: '/admin/leads', icon: Inbox },
     { label: 'Endowment Plans', route: '/admin/plans', icon: CreditCard },
     { label: 'Preservation Census', route: '/admin/analytics', icon: Activity },
     { label: 'Audit Trail & Logs', route: '/admin/audit', icon: History },
@@ -194,24 +199,55 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px]">Officer: Deepa Rao</span>
+            <span className="text-[10px] truncate max-w-[130px] font-medium text-stone-200">
+              {pithrosUser?.name || 'Pravin Admin'}
+            </span>
             <span
-              className={`text-[9px] ${
-                isDark ? 'text-[#737982]' : 'text-[#7D766D]'
+              className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded font-medium ${
+                isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'
               }`}
             >
-              Role: Sr. Reviewer
+              {pithrosUser?.admin_subrole?.replace('_', ' ') || 'Super Admin'}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-[11px] h-7 justify-start"
-            onClick={() => onNavigate('/')}
-            icon={ExternalLink}
-          >
-            Exit to Public Site
-          </Button>
+
+          <div className="space-y-1 pt-1">
+            <button
+              onClick={() => onNavigate('/dashboard')}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                isDark
+                  ? 'text-stone-300 hover:text-white hover:bg-[#202C40]'
+                  : 'text-stone-700 hover:text-stone-900 hover:bg-[#E5DED2]'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-amber-500" />
+              <span>Family Memorials</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('/partner/dashboard')}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                isDark
+                  ? 'text-stone-300 hover:text-white hover:bg-[#202C40]'
+                  : 'text-stone-700 hover:text-stone-900 hover:bg-[#E5DED2]'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Partner Platform</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('/')}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                isDark
+                  ? 'text-stone-400 hover:text-stone-200 hover:bg-[#202C40]'
+                  : 'text-stone-500 hover:text-stone-800 hover:bg-[#E5DED2]'
+              }`}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Exit to Public Site</span>
+            </button>
+          </div>
         </div>
       </aside>
 

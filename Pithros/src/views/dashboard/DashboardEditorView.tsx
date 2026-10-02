@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Memorial } from '../../types';
 import { Button } from '../../components/ui/Button';
-import { Save, Check, RefreshCw } from 'lucide-react';
+import { MediaUploader } from '../../components/ui/MediaUploader';
+import { Save, Check, RefreshCw, Camera } from 'lucide-react';
 import { api } from '../../services/api';
+import { mediaApi } from '../../services/api/media';
 import { useTheme } from '../../context/ThemeContext';
 
 interface DashboardEditorViewProps {
@@ -15,6 +17,8 @@ export const DashboardEditorView: React.FC<DashboardEditorViewProps> = ({
   onUpdate,
 }) => {
   const { isDark } = useTheme();
+  const [displayPortraitUrl, setDisplayPortraitUrl] = useState(memorial.portraitUrl || '');
+  const [manualPortraitUrl, setManualPortraitUrl] = useState('');
   const [fullName, setFullName] = useState(memorial.fullName);
   const [preferredName, setPreferredName] = useState(memorial.preferredName || '');
   const [birthDate, setBirthDate] = useState(memorial.birthDate);
@@ -38,6 +42,9 @@ export const DashboardEditorView: React.FC<DashboardEditorViewProps> = ({
     await api.updateMemorial(memorial.id, {
       fullName: fullName.trim(),
       preferredName: preferredName.trim() || undefined,
+      ...(manualPortraitUrl.trim()
+        ? { portraitUrl: manualPortraitUrl.trim(), portraitMediaId: null }
+        : {}),
       birthDate: birthDate.trim(),
       deathDate: deathDate.trim(),
       birthPlace: birthPlace.trim() || 'India',
@@ -115,6 +122,84 @@ export const DashboardEditorView: React.FC<DashboardEditorViewProps> = ({
         >
           Essential Details
         </h3>
+
+        {/* Portrait Photograph */}
+        <div className="space-y-2 pb-2">
+          <div className="flex items-center justify-between">
+            <label
+              className={`block text-xs font-medium ${
+                isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
+              }`}
+            >
+              Portrait Photograph
+            </label>
+            <span className="text-[11px] opacity-75 font-mono">Preserved in Memorial Sanctuary</span>
+          </div>
+
+          <div
+            className={`flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border transition-colors ${
+              isDark ? 'border-[#202C40] bg-[#111820]' : 'border-[#E5DED2] bg-[#F3EEE4]/50'
+            }`}
+          >
+            <div
+              className={`w-20 h-20 rounded-full overflow-hidden border-2 flex-shrink-0 relative shadow-sm ${
+                isDark ? 'border-[#B99452]/50 bg-[#182337]' : 'border-[#23324A]/50 bg-[#E5DED2]'
+              }`}
+            >
+              {displayPortraitUrl ? (
+                <img
+                  src={displayPortraitUrl}
+                  alt={fullName || 'Memorial Portrait'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-stone-400">
+                  <Camera className="w-6 h-6" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 space-y-2 w-full">
+              <MediaUploader
+                label="Upload new photograph from device (JPG, PNG)"
+                accept="image/*"
+                className="w-full"
+                onUploadFile={async (file, onProgress) => {
+                  const { mediaId } = await mediaApi.uploadFile(memorial.id, file, {
+                    kind: 'photo',
+                    title: 'Portrait',
+                    onProgress,
+                  });
+                  const updated = await api.updateMemorial(memorial.id, {
+                    portraitMediaId: mediaId,
+                  });
+                  setDisplayPortraitUrl(updated?.portraitUrl || '');
+                  setManualPortraitUrl('');
+                  onUpdate();
+                  return {
+                    name: file.name,
+                    url: updated?.portraitUrl || URL.createObjectURL(file),
+                    size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+                  };
+                }}
+              />
+              <input
+                type="text"
+                value={manualPortraitUrl}
+                onChange={(e) => {
+                  setManualPortraitUrl(e.target.value);
+                  setDisplayPortraitUrl(e.target.value);
+                }}
+                placeholder="Or paste direct image URL (https://...)"
+                className={`w-full px-3 py-1.5 rounded-xl border text-xs focus:outline-none ${
+                  isDark
+                    ? 'bg-[#182337] border-[#202C40] text-[#F8F5EE] focus:border-[#B99452]'
+                    : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A] focus:border-[#23324A]'
+                }`}
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>

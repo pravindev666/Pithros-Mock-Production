@@ -1,49 +1,48 @@
-"""FastAPI router for PITHROS billing, subscriptions, pricing, entitlements, and family sponsorship."""
+"""FastAPI router for PITHROS billing, subscriptions, pricing, entitlements,
+and family sponsorship."""
 
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import logging
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import CurrentUser, OptionalUser
+from app.auth.dependencies import CurrentUser, require_admin_role
 from app.billing import service
+from app.billing.cashfree import verify_webhook_signature
 from app.billing.entitlements import (
-    MemorialEntitlementsReport,
     resolve_memorial_entitlements,
 )
 from app.billing.models import (
-    BillingAccount,
     Invoice,
-    MemorialEntitlement,
+    Payment,
     Subscription,
     WebhookEvent,
 )
 from app.billing.schemas import (
+    AdminEntitlementResponse,
+    AdminExtendSubscriptionRequest,
+    AdminGrantEntitlementRequest,
+    AdminRevokeSubscriptionRequest,
     AssignSlotRequest,
-    BillingAccountRead,
     CreateOrderRequest,
     CreateOrderResponse,
     CreateSponsorshipRequest,
     InvoiceRead,
-    MemorialSlotRead,
     PricingCatalogResponse,
     SponsorshipResponse,
-    SubscriptionRead,
     VerifyPaymentRequest,
     VerifyPaymentResponse,
 )
-from app.billing.state_machine import transition_subscription_state
 from app.core.database import get_db
-from app.core.enums import SubscriptionStatus, WebhookProcessingStatus
-from app.core.errors import ConflictError, NotFoundError
+from app.core.enums import AdminSubRole, PaymentStatus, WebhookProcessingStatus
+from app.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,8 @@ router = APIRouter(prefix="/billing", tags=["Payments"])
 
 @router.get("/plans", response_model=PricingCatalogResponse, summary="Public pricing catalog")
 def get_plans(db: Session = Depends(get_db)) -> PricingCatalogResponse:
-    """Return active pricing tiers (Memorial Care, Family Archive, Additional Slots) and free limits."""
+    """Return active pricing tiers (Memorial Care, Family Archive, Additional Slots)
+    and free limits."""
     return service.get_pricing_catalog(db)
 
 
@@ -61,12 +61,15 @@ def get_my_billing(
     current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    """Retrieve billing account, subscriptions, slot allocations, and invoices for authenticated user."""
+    """Retrieve billing account, subscriptions, slot allocations, and invoices for
+    authenticated user."""
     account = service.get_or_create_billing_account(current_user, db)
 
-    subs = db.execute(
-        select(Subscription).where(Subscription.billing_account_id == account.id)
-    ).scalars().all()
+    subs = (
+        db.execute(select(Subscription).where(Subscription.billing_account_id == account.id))
+        .scalars()
+        .all()
+    )
 
     subscriptions_data = []
     for s in subs:
@@ -109,7 +112,12 @@ def get_my_billing(
     }
 
 
-@router.post("/orders", response_model=CreateOrderResponse, status_code=status.HTTP_201_CREATED, summary="Create checkout order")
+@router.post(
+    "/orders",
+    response_model=CreateOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create checkout order",
+)
 def create_checkout_order(
     req: CreateOrderRequest,
     current_user: CurrentUser,
@@ -119,7 +127,11 @@ def create_checkout_order(
     return service.create_order(current_user, req, db)
 
 
-@router.post("/verify", response_model=VerifyPaymentResponse, summary="Verify payment and activate entitlements")
+@router.post(
+    "/verify",
+    response_model=VerifyPaymentResponse,
+    summary="Verify payment and activate entitlements",
+)
 def verify_payment(
     req: VerifyPaymentRequest,
     current_user: CurrentUser,
@@ -129,7 +141,9 @@ def verify_payment(
     return service.verify_and_activate_payment(current_user, req, db)
 
 
-@router.post("/subscriptions/{subscription_id}/slots/assign", summary="Assign memorial to subscription slot")
+@router.post(
+    "/subscriptions/{subscription_id}/slots/assign", summary="Assign memorial to subscription slot"
+)
 def assign_slot(
     subscription_id: uuid.UUID,
     req: AssignSlotRequest,
@@ -147,7 +161,10 @@ def assign_slot(
     }
 
 
-@router.post("/subscriptions/{subscription_id}/slots/release", summary="Release memorial from subscription slot")
+@router.post(
+    "/subscriptions/{subscription_id}/slots/release",
+    summary="Release memorial from subscription slot",
+)
 def release_slot(
     subscription_id: uuid.UUID,
     req: AssignSlotRequest,
@@ -236,7 +253,9 @@ def get_memorial_entitlements(
     }
 
 
-@router.post("/sponsorship", response_model=SponsorshipResponse, summary="Create family sponsorship link")
+@router.post(
+    "/sponsorship", response_model=SponsorshipResponse, summary="Create family sponsorship link"
+)
 def create_sponsorship(
     req: CreateSponsorshipRequest,
     current_user: CurrentUser,
@@ -262,9 +281,15 @@ def list_invoices(
 ) -> list[InvoiceRead]:
     """Retrieve immutable invoices for the authenticated user."""
     account = service.get_or_create_billing_account(current_user, db)
-    invoices = db.execute(
-        select(Invoice).where(Invoice.billing_account_id == account.id).order_by(Invoice.issued_at.desc())
-    ).scalars().all()
+    invoices = (
+        db.execute(
+            select(Invoice)
+            .where(Invoice.billing_account_id == account.id)
+            .order_by(Invoice.issued_at.desc())
+        )
+        .scalars()
+        .all()
+    )
     return [InvoiceRead.model_validate(inv) for inv in invoices]
 
 
@@ -273,16 +298,37 @@ async def cashfree_webhook(
     request: Request,
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    """Authoritative webhook processor: raw body verification, idempotency, and transactional fulfilment."""
+    """Authoritative webhook processor.
+
+    Cashfree's signature is verified over `timestamp + raw body` *before* anything
+    in the payload is read, and fulfilment itself re-confirms the payment with the
+    gateway. An unsigned or badly signed request is refused, never fulfilled.
+    """
     raw_body = await request.body()
-    body_str = raw_body.decode("utf-8")
-    payload_hash = hashlib.sha256(raw_body).hexdigest()
+    signature = request.headers.get("x-webhook-signature")
+    timestamp = request.headers.get("x-webhook-timestamp")
+
+    if not verify_webhook_signature(raw_body=raw_body, timestamp=timestamp, signature=signature):
+        logger.warning("cashfree_webhook_rejected", extra={"reason": "invalid_signature"})
+
+        from app.audit.service import record_independently
+        from app.core.enums import AuditAction, AuditResult
+
+        record_independently(
+            action=AuditAction.PAYMENT_FAILED,
+            entity="webhook_event",
+            result=AuditResult.DENIED,
+            actor_label="cashfree",
+            detail={"reason": "invalid_signature"},
+        )
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     try:
-        data = json.loads(body_str)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        data = json.loads(raw_body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise HTTPException(status_code=400, detail="Invalid JSON payload") from None
 
+    payload_hash = hashlib.sha256(raw_body).hexdigest()
     event_id = request.headers.get("x-webhook-id") or data.get("event_id") or payload_hash[:32]
     event_type = data.get("type", "PAYMENT_NOTIFICATION")
 
@@ -295,7 +341,7 @@ async def cashfree_webhook(
         logger.info("webhook_duplicate_ignored", extra={"event_id": event_id})
         return {"status": "already_processed"}
 
-    # 2. Record incoming webhook event
+    # 2. Record incoming webhook event — the signature really was verified above.
     if not existing_event:
         existing_event = WebhookEvent(
             gateway="cashfree",
@@ -310,28 +356,146 @@ async def cashfree_webhook(
         db.flush()
 
     # 3. Handle event types
-    # Payment success / subscription renewal
     order_data = data.get("data", {}).get("order", {})
     order_id = order_data.get("order_id")
 
-    if event_type in ("PAYMENT_SUCCESS_WEBHOOK", "SUBSCRIPTION_STATUS_CHANGE", "PAYMENT_NOTIFICATION") and order_id:
+    if (
+        event_type
+        in ("PAYMENT_SUCCESS_WEBHOOK", "SUBSCRIPTION_STATUS_CHANGE", "PAYMENT_NOTIFICATION")
+        and order_id
+    ):
         payment = db.execute(
             select(Payment).where(Payment.internal_order_id == order_id)
         ).scalar_one_or_none()
 
         if payment and payment.status != PaymentStatus.SUCCESS:
-            user = payment.billing_account.owner_user
-            service.verify_and_activate_payment(
-                user,
-                VerifyPaymentRequest(
-                    internalOrderId=order_id,
-                    gatewayPaymentId=data.get("data", {}).get("payment", {}).get("cf_payment_id"),
-                    paymentMethodType="UPI",
-                ),
-                db,
-            )
+            # Activation re-confirms with the gateway, so a signed event alone is
+            # never treated as proof that money moved.
+            from app.core.errors import AppError
+
+            try:
+                service.verify_and_activate_payment(
+                    payment.billing_account.owner_user,
+                    VerifyPaymentRequest(
+                        internal_order_id=order_id,
+                        gateway_payment_id=(
+                            data.get("data", {}).get("payment", {}).get("cf_payment_id")
+                        ),
+                        payment_method_type="UPI",
+                    ),
+                    db,
+                )
+            except AppError as exc:
+                logger.warning(
+                    "cashfree_webhook_activation_deferred",
+                    extra={"code": exc.code, "event_id": event_id},
+                )
+                existing_event.processing_status = WebhookProcessingStatus.FAILED
+                db.commit()
+                return {"status": "deferred"}
 
     existing_event.processing_status = WebhookProcessingStatus.PROCESSED
     db.commit()
 
     return {"status": "ok"}
+
+
+AdminUserDep = Annotated[
+    User,
+    Depends(require_admin_role(AdminSubRole.SUPER_ADMIN, AdminSubRole.ADMIN, AdminSubRole.FINANCE)),
+]
+
+
+@router.post(
+    "/admin/grant",
+    response_model=AdminEntitlementResponse,
+    summary="Admin manual grant entitlement",
+)
+def admin_grant(
+    req: AdminGrantEntitlementRequest,
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> AdminEntitlementResponse:
+    """Privileged admin operation: manually grant complimentary preservation access
+    with explicit audit logging."""
+    return service.admin_grant_entitlement(admin_user, req, db)
+
+
+@router.post(
+    "/admin/subscriptions/{subscription_id}/extend",
+    response_model=AdminEntitlementResponse,
+    summary="Admin extend subscription",
+)
+def admin_extend(
+    subscription_id: uuid.UUID,
+    req: AdminExtendSubscriptionRequest,
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> AdminEntitlementResponse:
+    """Privileged admin operation: extend subscription duration."""
+    return service.admin_extend_subscription(admin_user, subscription_id, req, db)
+
+
+@router.post(
+    "/admin/subscriptions/{subscription_id}/revoke",
+    response_model=AdminEntitlementResponse,
+    summary="Admin revoke subscription",
+)
+def admin_revoke(
+    subscription_id: uuid.UUID,
+    req: AdminRevokeSubscriptionRequest,
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> AdminEntitlementResponse:
+    """Privileged admin operation: revoke subscription while strictly preserving all
+    user memorial data."""
+    return service.admin_revoke_subscription(admin_user, subscription_id, req, db)
+
+
+@router.post("/admin/payments/{payment_id}/refunds", summary="Admin requests a refund")
+def admin_request_refund(
+    payment_id: uuid.UUID,
+    body: dict[str, Any],
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Privileged admin operation: open a refund request against a paid order."""
+    refund = service.admin_request_refund(
+        admin_user,
+        payment_id,
+        body.get("amountMinor"),
+        body.get("reason") or "Refund issued by administration.",
+        db,
+    )
+    db.commit()
+    return {
+        "id": str(refund.id),
+        "status": refund.status,
+        "amountMinor": refund.amount_minor,
+    }
+
+
+@router.post("/admin/refunds/{refund_id}/approve", summary="Admin approves and issues a refund")
+def admin_approve_refund(
+    refund_id: uuid.UUID,
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Privileged admin operation: issue the refund at the gateway and record it."""
+    refund = service.admin_approve_refund(admin_user, refund_id, db)
+    db.commit()
+    return {
+        "id": str(refund.id),
+        "status": refund.status,
+        "gatewayRefundId": refund.gateway_refund_id,
+    }
+
+
+@router.get("/admin/overview", summary="Admin billing and financial overview")
+def admin_overview(
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Privileged financial overview: transaction ledger, subscription counts, and
+    active revenue."""
+    return service.admin_get_billing_overview(admin_user, db)

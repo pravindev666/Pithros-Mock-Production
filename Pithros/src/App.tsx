@@ -63,6 +63,7 @@ import { AdminAuditView } from './views/admin/AdminAuditView';
 import { AdminMemorialsView } from './views/admin/AdminMemorialsView';
 import { AdminUsersView } from './views/admin/AdminUsersView';
 import { AdminProvidersView } from './views/admin/AdminProvidersView';
+import { AdminLeadsView } from './views/admin/AdminLeadsView';
 import { AdminSystemHealthView } from './views/admin/AdminSystemHealthView';
 import { AdminPlansView } from './views/admin/AdminPlansView';
 import { AdminContentView } from './views/admin/AdminContentView';
@@ -78,6 +79,7 @@ import { VerifyEmailView } from './views/auth/VerifyEmailView';
 import { PhoneAuthView } from './views/auth/PhoneAuthView';
 import { AdminSignInView } from './views/auth/AdminSignInView';
 import { ForbiddenView } from './views/auth/ForbiddenView';
+import { AcceptInvitationView } from './views/auth/AcceptInvitationView';
 import { AccountSecurityView } from './views/account/AccountSecurityView';
 import { AccountProfileView } from './views/account/AccountProfileView';
 
@@ -93,9 +95,11 @@ import { DashboardPaymentDetailView } from './views/dashboard/DashboardPaymentDe
 export default function App() {
   const { isDark } = useTheme();
   const {
+    currentUser,
     authState,
     role: authRole,
     pithrosUser,
+    isLoading: authLoading,
     switchRole,
     setReturnUrl,
   } = useAuth();
@@ -130,6 +134,7 @@ export default function App() {
       loadMemorials();
     } else if (authState === 'signed_out') {
       setMemorials([]);
+      setActiveMemorialSlug('');
       setLoading(false);
     }
   }, [authState]);
@@ -181,15 +186,15 @@ export default function App() {
     memorials[0] ||
     null;
 
-  // Remember the selection for the next visit (UI convenience only).
+  // Remember the selection for the next visit (UI convenience only, scoped to user).
   useEffect(() => {
-    if (!activeMemorial) return;
+    if (!activeMemorial || !currentUser) return;
     try {
-      localStorage.setItem('pithros_active_memorial', activeMemorial.slug);
+      localStorage.setItem(`pithros_active_memorial_${currentUser.uid}`, activeMemorial.slug);
     } catch {
       // ignore
     }
-  }, [activeMemorial]);
+  }, [activeMemorial, currentUser]);
 
   // A public memorial page must work for signed-out visitors, who have no
   // memorials of their own — so it is fetched by slug rather than looked up in
@@ -249,22 +254,6 @@ export default function App() {
 
   // Main View Dispatcher with Strict Shell Enforcement
   const renderShellContent = () => {
-    if (loading && memorials.length === 0) {
-      return (
-        <div
-          className={`min-h-screen flex items-center justify-center text-sm ${
-            isDark ? 'bg-[#111820] text-[#D9D2C6]' : 'bg-[#F3EEE4] text-[#554F48]'
-          }`}
-        >
-          <span
-            className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-3"
-            style={{ borderColor: isDark ? '#B99452' : '#23324A', borderTopColor: 'transparent' }}
-          />
-          Opening Pithros Memorial…
-        </div>
-      );
-    }
-
     // ─────────────────────────────────────────────────────────────
     // 1. AUTHENTICATION SHELL (No PublicNavbar, No PublicFooter)
     // ─────────────────────────────────────────────────────────────
@@ -313,11 +302,38 @@ export default function App() {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // Protected Routes & Creation Workflow: Wait for Firebase Auth initialization
+    // ─────────────────────────────────────────────────────────────
+    if (authLoading && (isAdminRoute || isPartnerRoute || isDashboardRoute || currentRoute === '/create-memorial')) {
+      return (
+        <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0E0C0A]' : 'bg-[#FDFBF7]'}`}>
+          <div className="w-8 h-8 rounded-full border-2 border-[#D9941E] border-t-transparent animate-spin" />
+        </div>
+      );
+    }
+
+    // Only block if loading memorials for dashboard or specific memorial details
+    if (loading && memorials.length === 0 && (isDashboardRoute || isMemorialDetail)) {
+      return (
+        <div
+          className={`min-h-screen flex items-center justify-center text-sm ${
+            isDark ? 'bg-[#111820] text-[#D9D2C6]' : 'bg-[#F3EEE4] text-[#554F48]'
+          }`}
+        >
+          <span
+            className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-3"
+            style={{ borderColor: isDark ? '#B99452' : '#23324A', borderTopColor: 'transparent' }}
+          />
+          Opening Pithros Memorial…
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // 2. ADMIN SHELL (RBAC Protected)
     // ─────────────────────────────────────────────────────────────
     if (isAdminRoute) {
       if (authState === 'signed_out') {
-        setReturnUrl(currentRoute);
         return (
           <AuthShell
             currentRoute="/admin/signin"
@@ -357,6 +373,7 @@ export default function App() {
                 <AdminUsersView />
               )}
               {currentRoute === '/admin/providers' && <AdminProvidersView />}
+              {currentRoute === '/admin/leads' && <AdminLeadsView />}
               {currentRoute === '/admin/payments' && <AdminPaymentsView onNavigate={navigate} />}
               {currentRoute === '/admin/refunds' && <AdminRefundsView />}
               {currentRoute === '/admin/payment-disputes' && <AdminPaymentDisputesView />}
@@ -376,7 +393,6 @@ export default function App() {
     // ─────────────────────────────────────────────────────────────
     if (isPartnerRoute) {
       if (authState === 'signed_out') {
-        setReturnUrl(currentRoute);
         return (
           <AuthShell currentRoute="/signin" onNavigate={navigate}>
             <SignInView onNavigate={navigate} onSelectRole={handleSelectRole} />
@@ -419,7 +435,6 @@ export default function App() {
     // ─────────────────────────────────────────────────────────────
     if (isDashboardRoute) {
       if (authState === 'signed_out') {
-        setReturnUrl(currentRoute);
         return (
           <AuthShell currentRoute="/signin" onNavigate={navigate}>
             <SignInView onNavigate={navigate} onSelectRole={handleSelectRole} />
@@ -618,6 +633,7 @@ export default function App() {
                   navigate(`/m/${newMem.slug}`);
                 }}
                 onCancel={() => navigate('/')}
+                onNavigate={navigate}
               />
             )}
             {currentRoute.startsWith('/farewell') && (
@@ -627,6 +643,13 @@ export default function App() {
             {currentRoute === '/pricing' && <PricingView onNavigate={navigate} />}
 
             {/* Checkout & Formal Tax Receipt Routes */}
+            {currentRoute.startsWith('/invite') && (
+              <AcceptInvitationView
+                currentRoute={currentRoute}
+                onNavigate={navigate}
+                memorials={memorials}
+              />
+            )}
             {currentRoute.startsWith('/checkout') && (
               <CheckoutView
                 currentRoute={currentRoute}

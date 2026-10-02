@@ -310,9 +310,7 @@ def test_search_pagination_and_total_count(client, make_user, make_memorial, db_
             birth_place="Pageville",
         )
 
-    res = client.get(
-        "/api/v1/public/search", params={"city": "Pageville", "limit": 5, "offset": 0}
-    )
+    res = client.get("/api/v1/public/search", params={"city": "Pageville", "limit": 5, "offset": 0})
     assert res.status_code == 200
     data = res.json()
     assert data["totalReturned"] == 5
