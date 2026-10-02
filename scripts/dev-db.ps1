@@ -49,7 +49,26 @@ function Start-Postgres {
 
     $pidFile = Join-Path $PgData 'postmaster.pid'
     if (Test-Path $pidFile) {
-        Write-Host 'Removing a stale postmaster.pid left by an unclean shutdown.'
+        # A pid file is only "stale" if the process it names is actually gone.
+        # A readiness probe is not enough: a postmaster that is recovering or
+        # briefly not accepting connections must never have its pid file deleted,
+        # or a second start would race it and corrupt the cluster.
+        $recordedPid = 0
+        try { $recordedPid = [int]((Get-Content -LiteralPath $pidFile -TotalCount 1)) } catch { $recordedPid = 0 }
+        $stillRunning = $false
+        if ($recordedPid -gt 0) {
+            $stillRunning = $null -ne (Get-Process -Id $recordedPid -ErrorAction SilentlyContinue)
+        }
+        if ($stillRunning) {
+            Write-Warning "A PostgreSQL postmaster (PID $recordedPid) is already running but not accepting connections yet; leaving its pid file untouched."
+            for ($i = 0; $i -lt 30; $i++) {
+                Start-Sleep -Milliseconds 500
+                if (Test-Postgres) { Write-Host 'PostgreSQL is accepting connections on 5432.'; return }
+            }
+            Write-Warning "PostgreSQL is still not ready. See $PgLog. Not starting a second instance."
+            return
+        }
+        Write-Host 'Removing a stale postmaster.pid (the process it named is not running).'
         Remove-Item $pidFile -Force
     }
 
@@ -73,8 +92,14 @@ function Stop-Postgres {
         return
     }
     Start-Process -FilePath $PgCtl -ArgumentList '-D', $PgData, '-m', 'fast', 'stop' -WindowStyle Hidden
-    Start-Sleep -Seconds 2
-    Write-Host 'PostgreSQL stopped.'
+    for ($i = 0; $i -lt 24; $i++) {
+        Start-Sleep -Milliseconds 500
+        if (-not (Test-Postgres)) {
+            Write-Host 'PostgreSQL stopped.'
+            return
+        }
+    }
+    Write-Warning 'PostgreSQL did not stop within 12 seconds.'
 }
 
 function Start-Redis {

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { PithrosLogo } from '../../components/visual/PithrosLogo';
 import { Button } from '../../components/ui/Button';
+import { DEMO_MODE } from '../../lib/config';
 
 interface AdminSignInViewProps {
   onNavigate: (route: string) => void;
@@ -37,8 +38,18 @@ export const AdminSignInView: React.FC<AdminSignInViewProps> = ({ onNavigate }) 
     setIsLoading(false);
 
     if (res.success) {
-      // Step into administrative MFA requirement
-      setMfaRequired(true);
+      if (DEMO_MODE) {
+        // Demo-only: step into the simulated MFA form.
+        setMfaRequired(true);
+        return;
+      }
+      // Live mode: the server-resolved role decides. There is no client-side
+      // second factor here, so we must not grant the admin shell locally.
+      if (res.role === 'admin') {
+        onNavigate('/admin');
+      } else {
+        setErrorMessage('This account does not have administrator access.');
+      }
     } else {
       setErrorMessage(res.error || 'Invalid administrative credentials.');
     }
@@ -46,6 +57,10 @@ export const AdminSignInView: React.FC<AdminSignInViewProps> = ({ onNavigate }) 
 
   const handleMfaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!DEMO_MODE) {
+      setErrorMessage('Two-factor verification is not available in this environment.');
+      return;
+    }
     if (!mfaCode || mfaCode.length < 4) {
       setErrorMessage('Please provide a valid 6-digit TOTP / security key code.');
       return;
@@ -54,7 +69,7 @@ export const AdminSignInView: React.FC<AdminSignInViewProps> = ({ onNavigate }) 
     setIsLoading(true);
     setErrorMessage(null);
 
-    // Simulate cryptographic TOTP verification
+    // Demo-only simulated TOTP verification.
     await new Promise((r) => setTimeout(r, 550));
     setIsLoading(false);
 

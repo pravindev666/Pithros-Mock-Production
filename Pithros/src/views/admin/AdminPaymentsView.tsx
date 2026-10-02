@@ -27,6 +27,7 @@ import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { paymentService } from '../../services/payment/paymentService';
 import { billingApi } from '../../services/api/billing';
+import { DEMO_MODE } from '../../lib/config';
 import { PaymentRecord, PaymentStatus, PaymentGatewayConfig } from '../../types';
 
 interface AdminPaymentsViewProps {
@@ -49,44 +50,44 @@ export interface AdminSubscriptionRecord {
   auditReason?: string;
 }
 
-const initialDemoSubscriptions: AdminSubscriptionRecord[] = [
-  {
-    id: 'sub_cf_8841',
-    userEmail: 'anita.k@example.com',
-    userName: 'Anita Krishnan',
-    planName: 'Memorial Care (Annual)',
-    planCode: 'MEMORIAL_CARE',
-    status: 'active',
-    gateway: 'cashfree',
-    currentPeriodStart: '2026-01-16T10:15:30Z',
-    currentPeriodEnd: '2027-01-16T10:15:30Z',
-    maxMemorials: 1,
-    assignedMemorialsCount: 1,
-    memorialName: 'Dr. Arun Krishnan',
-  },
-  {
-    id: 'sub_adm_0912',
-    userEmail: 'pravindev666@gmail.com',
-    userName: 'Pravin Dev',
-    planName: 'Family Archive (5 Memorials)',
-    planCode: 'FAMILY_ARCHIVE',
-    status: 'active',
-    gateway: 'admin_grant',
-    currentPeriodStart: '2026-03-30T10:00:00Z',
-    currentPeriodEnd: '2027-03-30T10:00:00Z',
-    maxMemorials: 5,
-    assignedMemorialsCount: 2,
-    memorialName: 'Raghavan Master Archive',
-    auditReason: 'Founding steward legacy archive grant',
-  },
-];
+function mapAdminPayment(p: any): PaymentRecord {
+  const amountMinor = typeof p?.amountMinor === 'number' ? p.amountMinor : 0;
+  return {
+    id: p?.id ?? '',
+    userId: '',
+    userName: p?.userName ?? '',
+    userEmail: p?.userEmail ?? '',
+    memorialId: p?.memorialId ?? '',
+    planId: p?.planPriceId ?? '',
+    planName: p?.planPriceId ?? '',
+    amount: amountMinor / 100,
+    formattedAmount: `₹${(amountMinor / 100).toLocaleString('en-IN')}`,
+    currency: p?.currency ?? 'INR',
+    gateway: p?.gateway === 'cashfree' ? 'cashfree' : 'razorpay',
+    gatewayOrderId: p?.gatewayOrderId ?? p?.internalOrderId ?? '',
+    status: (p?.status ?? 'pending') as PaymentStatus,
+    createdAt: p?.createdAt ?? new Date().toISOString(),
+    updatedAt: p?.paidAt ?? p?.createdAt ?? new Date().toISOString(),
+    completedAt: p?.paidAt ?? undefined,
+  };
+}
 
 export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate }) => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<'transactions' | 'entitlements'>('transactions');
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [subscriptions, setSubscriptions] = useState<AdminSubscriptionRecord[]>(initialDemoSubscriptions);
-  const [config, setConfig] = useState<PaymentGatewayConfig>(paymentService.getConfig());
+  const [subscriptions, setSubscriptions] = useState<AdminSubscriptionRecord[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [config, setConfig] = useState<PaymentGatewayConfig>(
+    DEMO_MODE
+      ? paymentService.getConfig()
+      : {
+          activeGateway: 'cashfree',
+          mode: 'live',
+          webhookSecretConfigured: true,
+          signatureVerificationStrict: true,
+        },
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
@@ -104,16 +105,25 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
   const [revokeReason, setRevokeReason] = useState('');
 
   const loadData = async () => {
-    setPayments(paymentService.getPayments());
-    setConfig(paymentService.getConfig());
-
     try {
       const overview = await billingApi.adminGetOverview();
-      if (overview?.recentSubscriptions && overview.recentSubscriptions.length > 0) {
-        setSubscriptions(overview.recentSubscriptions);
-      }
-    } catch {
-      // Keep rich demo data fallback
+      const rows = Array.isArray(overview?.recentPayments) ? overview.recentPayments : [];
+      setPayments(rows.map(mapAdminPayment));
+      setSubscriptions(
+        Array.isArray(overview?.recentSubscriptions) ? overview.recentSubscriptions : [],
+      );
+      setLoadError(null);
+    } catch (err) {
+      // No client-side ledger to fall back to: if the server cannot be read, the
+      // operator must see an honest error, never a fabricated transaction list.
+      setPayments([]);
+      setSubscriptions([]);
+      setLoadError(
+        err instanceof Error ? err.message : 'Could not load billing data from the server.',
+      );
+    }
+    if (DEMO_MODE) {
+      setConfig(paymentService.getConfig());
     }
   };
 
@@ -122,6 +132,7 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
   }, []);
 
   const handleToggleGateway = (gateway: 'razorpay' | 'cashfree') => {
+    if (!DEMO_MODE) return;
     const updated = paymentService.setConfig({ activeGateway: gateway });
     setConfig(updated);
     setActionSuccess(`Active runtime gateway switched to ${gateway.toUpperCase()}`);
@@ -129,6 +140,7 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
   };
 
   const handleSimulateWebhook = async () => {
+    if (!DEMO_MODE) return;
     const samplePayload = JSON.stringify({
       event: 'payment.captured',
       timestamp: Date.now(),
@@ -154,45 +166,23 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
 
     setIsSubmittingGrant(true);
     try {
-      try {
-        await billingApi.adminGrantEntitlement({
-          targetUserEmail: grantEmail.trim().toLowerCase(),
-          planCode: grantPlan,
-          durationMonths: grantDurationMonths,
-          reason: grantReason.trim(),
-        });
-      } catch (backendErr) {
-        console.info('Backend admin dispatch note:', backendErr);
-      }
-
-      // Add to local state
-      const now = new Date();
-      const end = new Date();
-      end.setMonth(now.getMonth() + grantDurationMonths);
-
-      const newSub: AdminSubscriptionRecord = {
-        id: `sub_adm_${Date.now().toString().slice(-4)}`,
-        userEmail: grantEmail.trim().toLowerCase(),
-        userName: grantEmail.split('@')[0],
-        planName: grantPlan === 'FAMILY_ARCHIVE' ? 'Family Archive (5 Memorials)' : 'Memorial Care (Annual)',
+      await billingApi.adminGrantEntitlement({
+        targetUserEmail: grantEmail.trim().toLowerCase(),
         planCode: grantPlan,
-        status: 'active',
-        gateway: 'admin_grant',
-        currentPeriodStart: now.toISOString(),
-        currentPeriodEnd: end.toISOString(),
-        maxMemorials: grantPlan === 'FAMILY_ARCHIVE' ? 5 : 1,
-        assignedMemorialsCount: 0,
-        auditReason: grantReason,
-      };
-
-      setSubscriptions([newSub, ...subscriptions]);
+        durationMonths: grantDurationMonths,
+        reason: grantReason.trim(),
+      });
+      // Re-read from the server; never assert a grant the backend did not confirm.
+      await loadData();
       setIsGrantModalOpen(false);
       setGrantEmail('');
       setGrantReason('');
-      setActionSuccess(`Complimentary preservation plan successfully granted to ${newSub.userEmail} (${grantDurationMonths} mos).`);
+      setActionSuccess(
+        `Complimentary preservation plan granted to ${grantEmail.trim().toLowerCase()} (${grantDurationMonths} mos).`,
+      );
       setTimeout(() => setActionSuccess(null), 4000);
     } catch (err: any) {
-      alert(err.message || 'Failed to grant entitlement');
+      alert(err?.message || 'Failed to grant entitlement');
     } finally {
       setIsSubmittingGrant(false);
     }
@@ -204,30 +194,15 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
     if (!reason) return;
 
     try {
-      try {
-        await billingApi.adminExtendSubscription(sub.id, {
-          additionalMonths: 12,
-          reason,
-        });
-      } catch (err) {
-        console.info('Backend extend note:', err);
-      }
-
-      setSubscriptions(
-        subscriptions.map((s) => {
-          if (s.id === sub.id) {
-            const currentEnd = new Date(s.currentPeriodEnd);
-            currentEnd.setMonth(currentEnd.getMonth() + 12);
-            return { ...s, currentPeriodEnd: currentEnd.toISOString() };
-          }
-          return s;
-        })
-      );
-
+      await billingApi.adminExtendSubscription(sub.id, {
+        additionalMonths: 12,
+        reason,
+      });
+      await loadData();
       setActionSuccess(`Extended preservation subscription for ${sub.userEmail} by 12 months.`);
       setTimeout(() => setActionSuccess(null), 3500);
     } catch (err: any) {
-      alert(err.message || 'Failed to extend subscription');
+      alert(err?.message || 'Failed to extend subscription');
     }
   };
 
@@ -239,27 +214,14 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
     }
 
     try {
-      try {
-        await billingApi.adminRevokeSubscription(revokingSub.id, { reason: revokeReason });
-      } catch (err) {
-        console.info('Backend revoke note:', err);
-      }
-
-      setSubscriptions(
-        subscriptions.map((s) => {
-          if (s.id === revokingSub.id) {
-            return { ...s, status: 'cancelled' };
-          }
-          return s;
-        })
-      );
-
+      await billingApi.adminRevokeSubscription(revokingSub.id, { reason: revokeReason });
+      await loadData();
       setActionSuccess(`Preservation subscription for ${revokingSub.userEmail} has been cancelled. Memorial data is safely retained.`);
       setRevokingSub(null);
       setRevokeReason('');
       setTimeout(() => setActionSuccess(null), 4000);
     } catch (err: any) {
-      alert(err.message || 'Failed to revoke subscription');
+      alert(err?.message || 'Failed to revoke subscription');
     }
   };
 
@@ -337,6 +299,13 @@ export const AdminPaymentsView: React.FC<AdminPaymentsViewProps> = ({ onNavigate
         <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{actionSuccess}</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="p-3 rounded-xl bg-red-950/40 border border-red-800 text-red-300 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 

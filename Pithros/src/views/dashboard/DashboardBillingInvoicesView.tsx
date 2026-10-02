@@ -3,7 +3,27 @@ import { Receipt, ArrowLeft, Download, Printer, Shield } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { paymentService } from '../../services/payment/paymentService';
+import { billingApi, type BillingInvoiceOut } from '../../services/api/billing';
+import { DEMO_MODE } from '../../lib/config';
 import { BillingInvoice, Memorial } from '../../types';
+
+function toInvoice(inv: BillingInvoiceOut): BillingInvoice {
+  const total = inv.totalMinor ?? inv.amountMinor;
+  const tax = inv.taxMinor ?? 0;
+  return {
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    planName: inv.planName || 'Memorial Care',
+    amount: `₹${(total / 100).toLocaleString('en-IN')}`,
+    currency: inv.currency,
+    date: inv.issuedAt ? inv.issuedAt.split('T')[0] : '',
+    status: (inv.status === 'paid' ? 'success' : inv.status) as BillingInvoice['status'],
+    paymentMethodMasked: inv.paymentMethodMasked || 'Cashfree Payments',
+    receiptUrl: inv.pdfUrl || undefined,
+    subtotal: `₹${(inv.amountMinor / 100).toLocaleString('en-IN')}`,
+    taxAmount: tax ? `₹${(tax / 100).toLocaleString('en-IN')}` : undefined,
+  };
+}
 
 interface DashboardBillingInvoicesViewProps {
   memorial: Memorial;
@@ -18,7 +38,22 @@ export const DashboardBillingInvoicesView: React.FC<DashboardBillingInvoicesView
   const [invoices, setInvoices] = useState<BillingInvoice[]>([]);
 
   useEffect(() => {
-    setInvoices(paymentService.getInvoices());
+    let cancelled = false;
+    if (DEMO_MODE) {
+      setInvoices(paymentService.getInvoices());
+      return;
+    }
+    billingApi
+      .getInvoices()
+      .then((invs) => {
+        if (!cancelled) setInvoices(invs.map(toInvoice));
+      })
+      .catch(() => {
+        if (!cancelled) setInvoices([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

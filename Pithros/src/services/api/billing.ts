@@ -106,12 +106,51 @@ export interface BillingInvoiceOut {
   id: string;
   invoiceNumber: string;
   amountMinor: number;
+  taxMinor?: number;
+  totalMinor?: number;
   currency: string;
   status: string;
   pdfUrl?: string | null;
   issuedAt: string;
+  paidAt?: string | null;
   periodStart?: string | null;
   periodEnd?: string | null;
+  planName?: string | null;
+  memorialName?: string | null;
+  billingName?: string | null;
+  billingEmail?: string | null;
+  paymentMethodMasked?: string | null;
+}
+
+export interface PaymentOut {
+  id: string;
+  internalOrderId: string;
+  gateway: string;
+  gatewayOrderId?: string | null;
+  gatewayPaymentId?: string | null;
+  amountMinor: number;
+  currency: string;
+  status: string;
+  planName?: string | null;
+  memorialName?: string | null;
+  invoiceNumber?: string | null;
+  createdAt: string;
+  paidAt?: string | null;
+}
+
+export interface RefundOut {
+  id: string;
+  paymentId: string;
+  internalOrderId?: string | null;
+  userEmail?: string | null;
+  userName?: string | null;
+  amountMinor: number;
+  currency: string;
+  status: string;
+  reason?: string | null;
+  gatewayRefundId?: string | null;
+  createdAt: string;
+  processedAt?: string | null;
 }
 
 export const billingApi = {
@@ -157,6 +196,41 @@ export const billingApi = {
    */
   async getInvoices(): Promise<BillingInvoiceOut[]> {
     return http.get<BillingInvoiceOut[]>('/billing/invoices');
+  },
+
+  /**
+   * Fetch one invoice / tax receipt by its number.
+   */
+  async getInvoice(invoiceNumber: string): Promise<BillingInvoiceOut> {
+    return http.get<BillingInvoiceOut>(`/billing/invoices/${encodeURIComponent(invoiceNumber)}`);
+  },
+
+  /**
+   * Fetch the caller's own payments (server-scoped).
+   */
+  async getMyPayments(): Promise<PaymentOut[]> {
+    return http.get<PaymentOut[]>('/billing/payments');
+  },
+
+  /**
+   * Request a refund for one of the caller's own payments (admin approves).
+   */
+  async requestRefund(paymentId: string, params: { reason: string }): Promise<RefundOut> {
+    return http.post<RefundOut>(`/billing/payments/${paymentId}/refund-request`, params);
+  },
+
+  /**
+   * Admin: refund queue.
+   */
+  async adminListRefunds(): Promise<RefundOut[]> {
+    return http.get<RefundOut[]>('/billing/admin/refunds');
+  },
+
+  /**
+   * Admin: issue an approved refund at the gateway.
+   */
+  async adminApproveRefund(refundId: string): Promise<RefundOut> {
+    return http.post<RefundOut>(`/billing/admin/refunds/${refundId}/approve`);
   },
 
   /**

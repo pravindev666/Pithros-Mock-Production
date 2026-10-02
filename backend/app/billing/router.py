@@ -35,7 +35,10 @@ from app.billing.schemas import (
     CreateOrderResponse,
     CreateSponsorshipRequest,
     InvoiceRead,
+    PaymentRead,
     PricingCatalogResponse,
+    RefundRead,
+    RefundRequestCreate,
     SponsorshipResponse,
     VerifyPaymentRequest,
     VerifyPaymentResponse,
@@ -290,7 +293,46 @@ def list_invoices(
         .scalars()
         .all()
     )
-    return [InvoiceRead.model_validate(inv) for inv in invoices]
+    return [service.invoice_to_read(inv) for inv in invoices]
+
+
+@router.get(
+    "/invoices/{invoice_number}",
+    response_model=InvoiceRead,
+    summary="Get one invoice / tax receipt by number",
+)
+def get_invoice(
+    invoice_number: str,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db),
+) -> InvoiceRead:
+    """A single invoice, scoped to the caller's own billing account."""
+    return service.get_invoice_for_user(current_user, invoice_number, db)
+
+
+@router.post(
+    "/payments/{payment_id}/refund-request",
+    response_model=RefundRead,
+    summary="Request a refund for one of your own payments",
+)
+def request_refund(
+    payment_id: uuid.UUID,
+    req: RefundRequestCreate,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db),
+) -> RefundRead:
+    """Create a PENDING refund for admin action. Money moves only on approval."""
+    return service.request_own_refund(current_user, payment_id, req.reason, db)
+
+
+@router.get(
+    "/payments",
+    response_model=list[PaymentRead],
+    summary="List the caller's own payments",
+)
+def list_my_payments(current_user: CurrentUser, db: Session = Depends(get_db)) -> list[PaymentRead]:
+    """Requester-scoped payment history for the signed-in account."""
+    return service.list_own_payments(current_user, db)
 
 
 @router.post("/webhooks/cashfree", summary="Secure Cashfree webhook receiver")
@@ -450,6 +492,19 @@ def admin_revoke(
     """Privileged admin operation: revoke subscription while strictly preserving all
     user memorial data."""
     return service.admin_revoke_subscription(admin_user, subscription_id, req, db)
+
+
+@router.get(
+    "/admin/refunds",
+    response_model=list[RefundRead],
+    summary="Admin refund queue",
+)
+def admin_list_refunds(
+    admin_user: AdminUserDep,
+    db: Session = Depends(get_db),
+) -> list[RefundRead]:
+    """Privileged: every refund record, newest first, for the admin queue."""
+    return service.list_refunds_for_admin(db)
 
 
 @router.post("/admin/payments/{payment_id}/refunds", summary="Admin requests a refund")

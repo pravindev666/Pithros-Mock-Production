@@ -13,7 +13,36 @@ import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { PithrosLogo } from '../../components/visual/PithrosLogo';
 import { paymentService } from '../../services/payment/paymentService';
+import { billingApi, type BillingInvoiceOut } from '../../services/api/billing';
+import { DEMO_MODE } from '../../lib/config';
 import { BillingInvoice, PaymentRecord } from '../../types';
+
+function mapInvoice(inv: BillingInvoiceOut): BillingInvoice {
+  const total = inv.totalMinor ?? inv.amountMinor;
+  const tax = inv.taxMinor ?? 0;
+  return {
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    planName: inv.planName || 'Memorial Preservation',
+    amount: `₹${(total / 100).toLocaleString('en-IN')}`,
+    currency: inv.currency,
+    date: inv.issuedAt
+      ? new Date(inv.issuedAt).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '',
+    status: (inv.status === 'paid' ? 'success' : inv.status) as BillingInvoice['status'],
+    paymentMethodMasked: inv.paymentMethodMasked || 'Cashfree Payments',
+    receiptUrl: inv.pdfUrl || undefined,
+    memorialName: inv.memorialName || undefined,
+    customerName: inv.billingName || undefined,
+    customerEmail: inv.billingEmail || undefined,
+    taxAmount: tax ? `₹${(tax / 100).toLocaleString('en-IN')}` : undefined,
+    subtotal: `₹${(inv.amountMinor / 100).toLocaleString('en-IN')}`,
+  };
+}
 
 interface PaymentReceiptViewProps {
   receiptId: string;
@@ -29,15 +58,31 @@ export const PaymentReceiptView: React.FC<PaymentReceiptViewProps> = ({
   const [paymentRecord, setPaymentRecord] = useState<PaymentRecord | null>(null);
 
   useEffect(() => {
-    // Lookup invoice by invoice number, id, or default
+    let cancelled = false;
     const cleanId = receiptId.replace('/payment/receipt/', '');
-    const foundInvoice = paymentService.getInvoiceById(cleanId) || paymentService.getInvoices()[0];
-    setInvoice(foundInvoice);
 
-    if (foundInvoice?.paymentId) {
-      const foundPayment = paymentService.getPaymentById(foundInvoice.paymentId);
-      setPaymentRecord(foundPayment);
+    if (DEMO_MODE) {
+      const foundInvoice =
+        paymentService.getInvoiceById(cleanId) || paymentService.getInvoices()[0];
+      setInvoice(foundInvoice);
+      if (foundInvoice?.paymentId) {
+        setPaymentRecord(paymentService.getPaymentById(foundInvoice.paymentId));
+      }
+      return;
     }
+
+    // Live mode: the receipt is the server's invoice record, nothing local.
+    billingApi
+      .getInvoice(cleanId)
+      .then((inv) => {
+        if (!cancelled) setInvoice(mapInvoice(inv));
+      })
+      .catch(() => {
+        if (!cancelled) setInvoice(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [receiptId]);
 
   const handlePrint = () => {
@@ -137,9 +182,9 @@ export const PaymentReceiptView: React.FC<PaymentReceiptViewProps> = ({
               >
                 Billed To (Family Steward)
               </span>
-              <div className="font-medium text-sm">{invoice.customerName || 'Anita Krishnan'}</div>
+              <div className="font-medium text-sm">{invoice.customerName || '—'}</div>
               <div className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>
-                {invoice.customerEmail || 'anita.k@example.com'}
+                {invoice.customerEmail || '—'}
               </div>
               <div className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>
                 Payment: {invoice.paymentMethodMasked}
@@ -155,7 +200,7 @@ export const PaymentReceiptView: React.FC<PaymentReceiptViewProps> = ({
                 Dedicated Memorial
               </span>
               <div className="font-serif text-sm font-semibold">
-                {invoice.memorialName || 'Dr. Arun Krishnan'}
+                {invoice.memorialName || '—'}
               </div>
               <div className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>
                 Preservation Status: Permanent Vault Active

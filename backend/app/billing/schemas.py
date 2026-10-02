@@ -173,6 +173,55 @@ class InvoiceRead(BaseModel):
     status: str
     issued_at: datetime = Field(alias="issuedAt")
     paid_at: datetime | None = Field(default=None, alias="paidAt")
+    # Derived from related rows so a receipt can be rendered without a second call.
+    plan_name: str | None = Field(default=None, alias="planName")
+    memorial_name: str | None = Field(default=None, alias="memorialName")
+    billing_name: str | None = Field(default=None, alias="billingName")
+    billing_email: str | None = Field(default=None, alias="billingEmail")
+    payment_method_masked: str | None = Field(default=None, alias="paymentMethodMasked")
+    pdf_url: str | None = Field(default=None, alias="pdfUrl")
+
+
+class RefundRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: uuid.UUID
+    payment_id: uuid.UUID = Field(alias="paymentId")
+    internal_order_id: str | None = Field(default=None, alias="internalOrderId")
+    user_email: str | None = Field(default=None, alias="userEmail")
+    user_name: str | None = Field(default=None, alias="userName")
+    amount_minor: int = Field(alias="amountMinor")
+    currency: str
+    status: str
+    reason: str | None = None
+    gateway_refund_id: str | None = Field(default=None, alias="gatewayRefundId")
+    created_at: datetime = Field(alias="createdAt")
+    processed_at: datetime | None = Field(default=None, alias="processedAt")
+
+
+class RefundRequestCreate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    reason: str = Field(min_length=3, max_length=1000)
+    amount_minor: int | None = Field(default=None, ge=1, alias="amountMinor")
+
+
+class PaymentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: uuid.UUID
+    internal_order_id: str = Field(alias="internalOrderId")
+    gateway: str
+    gateway_order_id: str | None = Field(default=None, alias="gatewayOrderId")
+    gateway_payment_id: str | None = Field(default=None, alias="gatewayPaymentId")
+    amount_minor: int = Field(alias="amountMinor")
+    currency: str
+    status: str
+    plan_name: str | None = Field(default=None, alias="planName")
+    memorial_name: str | None = Field(default=None, alias="memorialName")
+    invoice_number: str | None = Field(default=None, alias="invoiceNumber")
+    created_at: datetime = Field(alias="createdAt")
+    paid_at: datetime | None = Field(default=None, alias="paidAt")
 
 
 class AdminGrantEntitlementRequest(BaseModel):

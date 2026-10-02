@@ -3,7 +3,42 @@ import { ArrowLeft, Receipt, CheckCircle2, ShieldCheck, Clock, AlertTriangle } f
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { paymentService } from '../../services/payment/paymentService';
+import { billingApi } from '../../services/api/billing';
+import { DEMO_MODE } from '../../lib/config';
 import { PaymentRecord, Memorial } from '../../types';
+
+function toPaymentRecord(p: {
+  id: string;
+  gateway: string;
+  gatewayOrderId?: string | null;
+  amountMinor: number;
+  currency: string;
+  status: string;
+  planName?: string | null;
+  memorialName?: string | null;
+  invoiceNumber?: string | null;
+  createdAt: string;
+  paidAt?: string | null;
+}): PaymentRecord {
+  return {
+    id: p.id,
+    userId: '',
+    memorialId: '',
+    memorialName: p.memorialName ?? undefined,
+    planId: '',
+    planName: p.planName || 'Memorial Preservation',
+    amount: p.amountMinor / 100,
+    formattedAmount: `₹${(p.amountMinor / 100).toLocaleString('en-IN')}`,
+    currency: p.currency,
+    gateway: p.gateway === 'cashfree' ? 'cashfree' : 'razorpay',
+    gatewayOrderId: p.gatewayOrderId ?? '',
+    status: p.status as PaymentRecord['status'],
+    invoiceId: p.invoiceNumber ?? undefined,
+    createdAt: p.createdAt,
+    updatedAt: p.paidAt ?? p.createdAt,
+    completedAt: p.paidAt ?? undefined,
+  };
+}
 
 interface DashboardPaymentDetailViewProps {
   paymentId: string;
@@ -20,9 +55,28 @@ export const DashboardPaymentDetailView: React.FC<DashboardPaymentDetailViewProp
   const [payment, setPayment] = useState<PaymentRecord | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const cleanId = paymentId.replace('/dashboard/billing/payment/', '');
-    const found = paymentService.getPaymentById(cleanId) || paymentService.getPayments()[0];
-    setPayment(found);
+
+    if (DEMO_MODE) {
+      setPayment(paymentService.getPaymentById(cleanId) || paymentService.getPayments()[0]);
+      return;
+    }
+
+    // Live mode: read the caller's own payments from the server, nothing local.
+    billingApi
+      .getMyPayments()
+      .then((payments) => {
+        if (cancelled) return;
+        const found = payments.find((p) => p.id === cleanId) ?? payments[0];
+        setPayment(found ? toPaymentRecord(found) : null);
+      })
+      .catch(() => {
+        if (!cancelled) setPayment(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [paymentId]);
 
   if (!payment) {

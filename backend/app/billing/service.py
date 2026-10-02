@@ -28,6 +28,7 @@ from app.billing.models import (
     Payment,
     Plan,
     PlanPrice,
+    Refund,
     SponsorshipLink,
     Subscription,
     SubscriptionEntitlement,
@@ -41,9 +42,12 @@ from app.billing.schemas import (
     CreateOrderResponse,
     CreateSponsorshipRequest,
     FreeTierSummary,
+    InvoiceRead,
+    PaymentRead,
     PlanPriceRead,
     PlanRead,
     PricingCatalogResponse,
+    RefundRead,
     SponsorshipResponse,
     VerifyPaymentRequest,
     VerifyPaymentResponse,
@@ -58,6 +62,7 @@ from app.core.enums import (
     MemorialEntitlementStatus,
     PaymentStatus,
     PlanCode,
+    RefundStatus,
     SponsorshipStatus,
     SubscriptionStatus,
 )
@@ -281,7 +286,9 @@ def verify_and_activate_payment(
 
     # 1. Update Payment status
     payment.status = PaymentStatus.SUCCESS
-    payment.gateway_payment_id = req.gateway_payment_id or f"pay_{payment.internal_order_id}"
+    # Only ever store the gateway's own identifier. If neither the gateway nor the
+    # caller supplied one, leave it null rather than inventing a plausible-looking id.
+    payment.gateway_payment_id = req.gateway_payment_id or None
     payment.gateway_order_id = req.gateway_order_id or payment.internal_order_id
     payment.payment_method_type = req.payment_method_type or "UPI"
     payment.paid_at = now
@@ -1141,9 +1148,9 @@ def admin_approve_refund(admin_user: User, refund_id: uuid.UUID, db: Session) ->
         raise
 
     refund.status = RefundStatus.PROCESSED.value
-    refund.gateway_refund_id = str(
-        result.get("cf_refund_id") or result.get("refund_id") or refund.id
-    )
+    # Keep only the gateway's identifier; never substitute our own row id for it.
+    gateway_refund_id = result.get("cf_refund_id") or result.get("refund_id")
+    refund.gateway_refund_id = str(gateway_refund_id) if gateway_refund_id else None
     refund.approved_by = admin_user.id
     if refund.amount_minor >= payment.amount_minor:
         payment.status = PaymentStatus.REFUNDED
@@ -1249,3 +1256,167 @@ def admin_get_billing_overview(admin_user: User, db: Session) -> dict[str, Any]:
         "recentPayments": payments_data,
         "recentSubscriptions": subs_data,
     }
+
+
+def invoice_to_read(invoice: Invoice) -> InvoiceRead:
+    """Project an Invoice row into the receipt shape, deriving display fields."""
+    plan_name: str | None = None
+    if invoice.subscription is not None and invoice.subscription.plan is not None:
+        plan_name = invoice.subscription.plan.name
+    elif invoice.payment is not None and invoice.payment.price is not None:
+        plan_name = invoice.payment.price.plan.name
+
+    memorial_name: str | None = None
+    payment_method: str | None = None
+    if invoice.payment is not None:
+        if invoice.payment.memorial is not None:
+            memorial_name = invoice.payment.memorial.full_name
+        payment_method = (
+            invoice.payment.payment_method_masked or invoice.payment.payment_method_type
+        )
+
+    billing_name: str | None = None
+    billing_email: str | None = None
+    if invoice.billing_account is not None:
+        billing_name = invoice.billing_account.billing_name
+        billing_email = invoice.billing_account.billing_email
+
+    return InvoiceRead(
+        id=invoice.id,
+        invoice_number=invoice.invoice_number,
+        amount_minor=invoice.amount_minor,
+        tax_minor=invoice.tax_minor,
+        total_minor=invoice.total_minor,
+        currency=invoice.currency,
+        status=invoice.status,
+        issued_at=invoice.issued_at,
+        paid_at=invoice.paid_at,
+        plan_name=plan_name,
+        memorial_name=memorial_name,
+        billing_name=billing_name,
+        billing_email=billing_email,
+        payment_method_masked=payment_method,
+        pdf_url=None,
+    )
+
+
+def get_invoice_for_user(user: User, invoice_number: str, db: Session) -> InvoiceRead:
+    """A single invoice, scoped to the caller's own billing account."""
+    account = get_or_create_billing_account(user, db)
+    invoice = db.execute(
+        select(Invoice).where(
+            Invoice.invoice_number == invoice_number,
+            Invoice.billing_account_id == account.id,
+        )
+    ).scalar_one_or_none()
+    if invoice is None:
+        raise NotFoundError("Invoice not found.")
+    return invoice_to_read(invoice)
+
+
+def refund_to_read(refund: Refund) -> RefundRead:
+    payment = refund.payment
+    owner = payment.billing_account.owner_user if payment and payment.billing_account else None
+    return RefundRead(
+        id=refund.id,
+        payment_id=refund.payment_id,
+        internal_order_id=payment.internal_order_id if payment else None,
+        user_email=owner.email if owner else None,
+        user_name=owner.name if owner else None,
+        amount_minor=refund.amount_minor,
+        currency=refund.currency,
+        status=refund.status,
+        reason=refund.reason,
+        gateway_refund_id=refund.gateway_refund_id,
+        created_at=refund.created_at,
+        processed_at=refund.processed_at,
+    )
+
+
+def list_refunds_for_admin(db: Session, *, limit: int = 200) -> list[RefundRead]:
+    refunds = (
+        db.execute(select(Refund).order_by(Refund.created_at.desc()).limit(limit)).scalars().all()
+    )
+    return [refund_to_read(refund) for refund in refunds]
+
+
+def request_own_refund(user: User, payment_id: uuid.UUID, reason: str, db: Session) -> RefundRead:
+    """A steward requests a refund for their own successful payment.
+
+    Creates a PENDING refund for an admin to action — money only moves on admin
+    approval, so a browser can request but never mint a refund.
+    """
+    account = get_or_create_billing_account(user, db)
+    payment = db.execute(
+        select(Payment).where(
+            Payment.id == payment_id,
+            Payment.billing_account_id == account.id,
+        )
+    ).scalar_one_or_none()
+    if payment is None or payment.status != PaymentStatus.SUCCESS:
+        raise NotFoundError("Payment not found.")
+
+    existing = db.execute(
+        select(Refund).where(
+            Refund.payment_id == payment.id,
+            Refund.status == RefundStatus.PENDING.value,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return refund_to_read(existing)
+
+    refund = Refund(
+        payment_id=payment.id,
+        amount_minor=payment.amount_minor,
+        currency=payment.currency,
+        status=RefundStatus.PENDING.value,
+        reason=reason,
+        requested_by=user.id,
+    )
+    db.add(refund)
+    db.flush()
+    audit_service.record(
+        db,
+        action=AuditAction.REFUND_REQUESTED,
+        entity="refund",
+        entity_id=refund.id,
+        actor=user,
+        detail={"paymentId": str(payment.id), "amountMinor": refund.amount_minor},
+    )
+    db.commit()
+    db.refresh(refund)
+    return refund_to_read(refund)
+
+
+def payment_to_read(payment: Payment) -> PaymentRead:
+    return PaymentRead(
+        id=payment.id,
+        internal_order_id=payment.internal_order_id,
+        gateway=payment.gateway,
+        gateway_order_id=payment.gateway_order_id,
+        gateway_payment_id=payment.gateway_payment_id,
+        amount_minor=payment.amount_minor,
+        currency=payment.currency,
+        status=payment.status,
+        plan_name=payment.price.plan.name if payment.price is not None else None,
+        memorial_name=payment.memorial.full_name if payment.memorial is not None else None,
+        invoice_number=payment.invoices[0].invoice_number if payment.invoices else None,
+        created_at=payment.created_at,
+        paid_at=payment.paid_at,
+    )
+
+
+def list_own_payments(user: User, db: Session, *, limit: int = 100) -> list[PaymentRead]:
+    """Payments belonging to the caller's own billing account, newest first."""
+    account = get_or_create_billing_account(user, db)
+    payments = (
+        db.execute(
+            select(Payment)
+            .where(Payment.billing_account_id == account.id)
+            .order_by(Payment.created_at.desc())
+            .limit(limit)
+        )
+        .scalars()
+        .all()
+    )
+    return [payment_to_read(payment) for payment in payments]

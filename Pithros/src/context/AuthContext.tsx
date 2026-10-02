@@ -10,6 +10,7 @@ import {
 } from '../services/auth/authTypes';
 import { authService } from '../services/auth/authService';
 import { verifyTokenAndResolveUser, updatePithrosUserRecord } from '../services/auth/pithrosUserStore';
+import { DEMO_MODE } from '../lib/config';
 
 export type { AuthState } from '../services/auth/authTypes';
 
@@ -115,8 +116,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (isMounted) setAuthState('unauthorized');
             }
           } else {
-            // Check if demo persona was explicitly activated by user
-            const savedDemo = typeof window !== 'undefined' ? sessionStorage.getItem('pithros_demo_role') : null;
+            // Persona switching is a demo-only affordance and must never be
+            // restored in live mode — the server-resolved account is authoritative.
+            const savedDemo = DEMO_MODE && typeof window !== 'undefined'
+              ? sessionStorage.getItem('pithros_demo_role')
+              : null;
             if (savedDemo && savedDemo !== 'visitor') {
               switchRole(savedDemo as UserRole);
             } else {
@@ -136,7 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       } else {
         // Firebase not configured in local environment: check if explicit demo mode persona was chosen
-        const savedDemo = typeof window !== 'undefined' ? sessionStorage.getItem('pithros_demo_role') : null;
+        const savedDemo = DEMO_MODE && typeof window !== 'undefined'
+          ? sessionStorage.getItem('pithros_demo_role')
+          : null;
         if (savedDemo && savedDemo !== 'visitor') {
           switchRole(savedDemo as UserRole);
         } else {
@@ -382,6 +388,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchRole = (newRole: UserRole) => {
+    // Demo-only. In live mode this must be inert: the account and role come from
+    // the backend after token verification, never from a client-chosen persona.
+    // Fabricating a role here would let any visitor render the admin shell.
+    if (!DEMO_MODE) {
+      return;
+    }
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('pithros_demo_role', newRole);
     }

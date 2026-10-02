@@ -15,8 +15,49 @@ import {
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { Memorial, BillingInvoice, PaymentRecord } from '../../types';
-import { paymentService } from '../../services/payment/paymentService';
-import { billingApi, UserBillingStatus } from '../../services/api/billing';
+import {
+  billingApi,
+  type BillingInvoiceOut,
+  type PaymentOut,
+  type UserBillingStatus,
+} from '../../services/api/billing';
+
+function toInvoice(inv: BillingInvoiceOut, memorialName: string): BillingInvoice {
+  const total = inv.totalMinor ?? inv.amountMinor;
+  return {
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    date: inv.issuedAt ? inv.issuedAt.split('T')[0] : '',
+    planName: inv.planName || 'Memorial Care',
+    amount: `₹${(total / 100).toLocaleString('en-IN')}`,
+    currency: inv.currency,
+    status: (inv.status === 'paid' ? 'success' : inv.status) as BillingInvoice['status'],
+    receiptUrl: inv.pdfUrl || undefined,
+    paymentMethodMasked: inv.paymentMethodMasked || 'Cashfree Payments',
+    memorialName: inv.memorialName || memorialName,
+  };
+}
+
+function toPayment(p: PaymentOut): PaymentRecord {
+  return {
+    id: p.id,
+    userId: '',
+    memorialId: '',
+    memorialName: p.memorialName ?? undefined,
+    planId: '',
+    planName: p.planName || 'Memorial Care',
+    amount: p.amountMinor / 100,
+    formattedAmount: `₹${(p.amountMinor / 100).toLocaleString('en-IN')}`,
+    currency: p.currency,
+    gateway: p.gateway === 'cashfree' ? 'cashfree' : 'razorpay',
+    gatewayOrderId: p.gatewayOrderId ?? '',
+    status: p.status as PaymentRecord['status'],
+    invoiceId: p.invoiceNumber ?? undefined,
+    createdAt: p.createdAt,
+    updatedAt: p.paidAt ?? p.createdAt,
+    completedAt: p.paidAt ?? undefined,
+  };
+}
 
 interface DashboardBillingViewProps {
   memorial: Memorial;
@@ -40,38 +81,18 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [billingData, invs] = await Promise.all([
+      // Live mode only: everything below is server-scoped to the caller.
+      const [billingData, invs, pays] = await Promise.all([
         billingApi.getMyBilling().catch(() => null),
-        billingApi.getInvoices().catch(() => []),
+        billingApi.getInvoices().catch(() => [] as BillingInvoiceOut[]),
+        billingApi.getMyPayments().catch(() => [] as PaymentOut[]),
       ]);
 
       if (billingData) {
         setBillingStatus(billingData);
       }
-
-      if (invs && invs.length > 0) {
-        setInvoices(
-          invs.map((inv) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceNumber,
-            date: inv.issuedAt ? inv.issuedAt.split('T')[0] : new Date().toISOString().split('T')[0],
-            planName: 'Memorial Care',
-            amount: `₹${(inv.amountMinor / 100).toLocaleString('en-IN')}`,
-            currency: inv.currency,
-            status: (inv.status === 'paid' ? 'success' : inv.status) as any,
-            receiptUrl: inv.pdfUrl || undefined,
-            paymentMethodMasked: 'UPI / NetBanking',
-            memorialName: memorial.fullName,
-          }))
-        );
-      } else {
-        setInvoices(paymentService.getInvoices());
-      }
-
-      setPayments(paymentService.getPayments());
-    } catch {
-      setInvoices(paymentService.getInvoices());
-      setPayments(paymentService.getPayments());
+      setInvoices((invs ?? []).map((inv) => toInvoice(inv, memorial.fullName)));
+      setPayments((pays ?? []).map(toPayment));
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +111,9 @@ export const DashboardBillingView: React.FC<DashboardBillingViewProps> = ({
   const handleConfirmRefundRequest = async () => {
     if (!selectedPaymentForRefund) return;
     try {
-      await paymentService.requestRefund(selectedPaymentForRefund.id, refundReason);
+      await billingApi.requestRefund(selectedPaymentForRefund.id, { reason: refundReason });
       setRefundRequestModalOpen(false);
-      setActionMessage('Compassionate refund request recorded. Processing via payment gateway within 1-2 business days.');
+      setActionMessage('Refund request recorded. An administrator will review and issue it.');
       loadData();
       setTimeout(() => setActionMessage(null), 5000);
     } catch (err: unknown) {
