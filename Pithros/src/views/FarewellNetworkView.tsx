@@ -71,12 +71,24 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
   const [providersError, setProvidersError] = useState<string | null>(null);
 
+  // Slugs whose full detail payload (services, photos, description) has been fetched.
+  const detailedSlugs = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const list = await api.getProviders();
-        if (!cancelled) setProviders(list);
+        if (cancelled) return;
+        // The directory summary must never clobber a provider whose full detail has
+        // already arrived. On a deep-link load both requests fire together and the
+        // list can resolve last, which previously wiped the services list.
+        setProviders((previous) => {
+          const detailed = new Map(
+            previous.filter((p) => detailedSlugs.current.has(p.slug)).map((p) => [p.slug, p]),
+          );
+          return list.map((p) => detailed.get(p.slug) ?? p);
+        });
       } catch {
         if (!cancelled) {
           setProvidersError('The Farewell Network could not be loaded right now.');
@@ -92,16 +104,19 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
 
   // The directory list carries summaries; a profile needs the full detail payload
   // (services, gallery, description). Fetch it for whichever provider is open.
-  const detailedSlugs = useRef<Set<string>>(new Set());
   useEffect(() => {
     const slug = routeSlug ?? selectedProviderSlug;
     if (!slug || detailedSlugs.current.has(slug)) return;
     let cancelled = false;
     (async () => {
-      const detail = await api.getProviderBySlug(slug);
-      if (cancelled || !detail) return;
-      detailedSlugs.current.add(slug);
-      setProviders((previous) => [...previous.filter((p) => p.slug !== slug), detail]);
+      try {
+        const detail = await api.getProviderBySlug(slug);
+        if (cancelled || !detail) return;
+        detailedSlugs.current.add(slug);
+        setProviders((previous) => [...previous.filter((p) => p.slug !== slug), detail]);
+      } catch (err) {
+        console.error('Failed to load provider detail', err);
+      }
     })();
     return () => {
       cancelled = true;

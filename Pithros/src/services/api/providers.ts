@@ -189,7 +189,7 @@ export function toServiceProvider(provider: PublicProvider): ServiceProvider {
     startingPrice: provider.startingPrice,
     operatingHours: provider.operatingHours,
     photos: provider.photos,
-    services: provider.services.map((service) => ({
+    services: (provider.services ?? []).map((service) => ({
       id: service.id,
       name: service.name,
       startingPrice: service.startingPrice,
