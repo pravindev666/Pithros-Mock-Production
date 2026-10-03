@@ -24,7 +24,7 @@ import { api } from '../../services/api';
 
 export const AdminModerationView: React.FC = () => {
   const { isDark } = useTheme();
-  const { reports, isLoading, updateReportStatus } = useModeration();
+  const { reports, isLoading, isUnavailable, updateReportStatus } = useModeration();
   const [selectedReport, setSelectedReport] = useState<AdminReport | null>(null);
   const [targetFilter, setTargetFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -241,6 +241,13 @@ Pithros Trust & Safety Desk`
               Reported Objects ({filteredReports.length})
             </span>
           </div>
+
+          {isUnavailable && (
+            <p className={`text-[11px] italic leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Content reporting is not available yet — the server does not store reports. Nothing is
+              listed here rather than showing invented cases.
+            </p>
+          )}
 
           <div className="space-y-2.5">
             {filteredReports.map((report) => {

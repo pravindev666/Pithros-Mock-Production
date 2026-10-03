@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import cast
 
 from redis.exceptions import RedisError
@@ -241,6 +241,64 @@ def delete_media(
         )
 
     invalidate_public_memorial_cache(memorial.slug)
+
+
+def purge_soft_deleted_media(
+    db: Session, *, older_than_days: int = 30, batch: int = 500
+) -> dict[str, int]:
+    """Reap soft-deleted media rows and their storage objects after retention.
+
+    Soft delete deliberately retains the object for a recovery window; without a
+    sweep the bucket grows without bound. Rows soft-deleted before the cutoff are
+    hard-deleted. Media still referenced by a verification submission is kept, so
+    document retention policy is never violated as a side effect.
+    """
+    from app.verification.models import VerificationEvidence
+
+    cutoff = datetime.now(UTC) - timedelta(days=older_than_days)
+    referenced = (
+        select(VerificationEvidence.id)
+        .where(VerificationEvidence.media_id == MediaItem.id)
+        .exists()
+    )
+    rows = (
+        db.execute(
+            select(MediaItem)
+            .where(
+                MediaItem.deleted_at.is_not(None),
+                MediaItem.deleted_at <= cutoff,
+                ~referenced,
+            )
+            .order_by(MediaItem.deleted_at)
+            .limit(batch)
+        )
+        .scalars()
+        .all()
+    )
+
+    storage = get_storage()
+    purged = 0
+    objects_removed = 0
+    for item in rows:
+        tier = StorageTier(item.storage_tier)
+        for key in (item.storage_key, item.thumbnail_key):
+            if not key:
+                continue
+            try:
+                storage.delete(tier=tier, key=key)
+                objects_removed += 1
+            except Exception:
+                # A missing object is fine; the row still goes.
+                logger.warning(
+                    "media_object_delete_failed",
+                    extra={"media_id": str(item.id), "key": key},
+                )
+        db.delete(item)
+        purged += 1
+
+    if purged:
+        db.commit()
+    return {"rows_purged": purged, "objects_removed": objects_removed}
 
 
 def _copy_object(item: MediaItem, *, target_tier: StorageTier) -> None:

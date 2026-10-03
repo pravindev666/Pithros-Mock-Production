@@ -18,12 +18,14 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({ onNavigate }) => {
   const [supportDetails, setSupportDetails] = useState('');
   const [supportSubmitting, setSupportSubmitting] = useState(false);
   const [supportSuccess, setSupportSuccess] = useState(false);
+  const [supportError, setSupportError] = useState<string | null>(null);
 
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supportEmail.trim() || !supportDetails.trim()) return;
 
     setSupportSubmitting(true);
+    setSupportError(null);
     try {
       await api.submitReport({
         targetType: 'media',
@@ -41,7 +43,9 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({ onNavigate }) => {
         setSupportDetails('');
       }, 2500);
     } catch {
-      // ignore
+      setSupportError(
+        'Reporting is not available yet — your report was not recorded. Please email the Trust Desk directly.',
+      );
     } finally {
       setSupportSubmitting(false);
     }
@@ -355,6 +359,10 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({ onNavigate }) => {
                     }`}
                   />
                 </div>
+
+                {supportError && (
+                  <p className="text-[11px] leading-relaxed text-[#B91C1C]">{supportError}</p>
+                )}
 
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-inherit">
                   <button

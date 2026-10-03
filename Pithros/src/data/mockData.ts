@@ -49,7 +49,7 @@ export const demoMemorials: Memorial[] = [
     completenessPercent: 85,
     stewardId: '0930f64b-5f51-40ea-9234-fcb4703ced7f',
     stewardName: 'Pravin Dev',
-    stewardEmail: 'pravindev666@gmail.com',
+    stewardEmail: 'steward@example.com',
     createdAt: '2021-08-20T10:00:00Z',
     updatedAt: '2026-03-30T10:00:00Z',
     timeline: [
@@ -97,7 +97,7 @@ export const demoMemorials: Memorial[] = [
     completenessPercent: 92,
     stewardId: '0930f64b-5f51-40ea-9234-fcb4703ced7f',
     stewardName: 'Pravin Dev',
-    stewardEmail: 'pravindev666@gmail.com',
+    stewardEmail: 'steward@example.com',
     createdAt: '2023-04-15T10:00:00Z',
     updatedAt: '2026-03-30T10:00:00Z',
     timeline: [
@@ -156,7 +156,7 @@ export const demoMemorials: Memorial[] = [
     completenessPercent: 95,
     stewardId: '0930f64b-5f51-40ea-9234-fcb4703ced7f',
     stewardName: 'Pravin Dev',
-    stewardEmail: 'pravindev666@gmail.com',
+    stewardEmail: 'steward@example.com',
     createdAt: '2022-10-08T10:00:00Z',
     updatedAt: '2026-03-30T10:00:00Z',
     timeline: [
@@ -215,7 +215,7 @@ export const demoMemorials: Memorial[] = [
     completenessPercent: 98,
     stewardId: '0930f64b-5f51-40ea-9234-fcb4703ced7f',
     stewardName: 'Pravin Dev',
-    stewardEmail: 'pravindev666@gmail.com',
+    stewardEmail: 'steward@example.com',
     createdAt: '2020-07-25T10:00:00Z',
     updatedAt: '2026-03-30T10:00:00Z',
     timeline: [

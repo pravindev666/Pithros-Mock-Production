@@ -42,23 +42,17 @@ def _order(db_session, user, **kwargs):
 
 
 def _payment(db_session, order_id: str) -> Payment:
-    return db_session.scalars(
-        select(Payment).where(Payment.internal_order_id == order_id)
-    ).one()
+    return db_session.scalars(select(Payment).where(Payment.internal_order_id == order_id)).one()
 
 
 def _subscriptions(db_session, payment: Payment) -> list[Subscription]:
     return list(
-        db_session.scalars(
-            select(Subscription).where(Subscription.id == payment.subscription_id)
-        )
+        db_session.scalars(select(Subscription).where(Subscription.id == payment.subscription_id))
     )
 
 
 def _invoices(db_session, payment: Payment) -> list[Invoice]:
-    return list(
-        db_session.scalars(select(Invoice).where(Invoice.payment_id == payment.id))
-    )
+    return list(db_session.scalars(select(Invoice).where(Invoice.payment_id == payment.id)))
 
 
 def _webhook_payload(order_id: str) -> bytes:
@@ -172,9 +166,7 @@ def test_signed_webhook_activates_with_no_browser_present(
     assert len(_invoices(db_session, payment)) == 1
 
 
-def test_unsigned_and_badly_signed_webhooks_are_refused(
-    client, db_session, make_user, gateway_sim
-):
+def test_unsigned_and_badly_signed_webhooks_are_refused(client, db_session, make_user, gateway_sim):
     user = make_user(name="Payer")
     order = _order(db_session, user)
     body = _webhook_payload(order.internal_order_id)
@@ -214,12 +206,8 @@ def test_duplicate_webhook_does_not_double_activate(client, db_session, make_use
         "x-webhook-id": "evt_duplicate",
     }
 
-    first = client.post(
-        "/api/v1/billing/webhooks/cashfree", content=body, headers=headers
-    )
-    second = client.post(
-        "/api/v1/billing/webhooks/cashfree", content=body, headers=headers
-    )
+    first = client.post("/api/v1/billing/webhooks/cashfree", content=body, headers=headers)
+    second = client.post("/api/v1/billing/webhooks/cashfree", content=body, headers=headers)
 
     assert first.status_code == 200
     assert second.status_code == 200
@@ -353,3 +341,107 @@ def test_live_sandbox_order_and_status_check(db_session, make_user):
     gateway_order = client.get_order(order.internal_order_id)
     assert gateway_order.order_id == order.internal_order_id
     assert gateway_order.amount_minor == order.amount_minor
+
+
+# ─── Billing authorization: a plan may only bind the caller's own memorials ───
+
+
+def test_a_family_cannot_buy_a_plan_for_another_familys_memorial(
+    db_session, make_user, make_memorial
+):
+    from app.core.errors import NotFoundError
+
+    owner = make_user(name="Owner")
+    intruder = make_user(name="Intruder")
+    victims_memorial = make_memorial(steward=owner)
+
+    with pytest.raises(NotFoundError):
+        _order(db_session, intruder, memorial_id=victims_memorial.id)
+
+
+def test_a_sponsorship_link_requires_stewardship(db_session, make_user, make_memorial):
+    from app.billing.schemas import CreateSponsorshipRequest
+    from app.core.errors import NotFoundError
+
+    owner = make_user(name="Owner")
+    intruder = make_user(name="Intruder")
+    victims_memorial = make_memorial(steward=owner)
+
+    with pytest.raises(NotFoundError):
+        service.create_family_sponsorship_link(
+            intruder,
+            CreateSponsorshipRequest(
+                planPriceId="memorial_care_annual_v1", memorialId=victims_memorial.id
+            ),
+            db_session,
+        )
+
+
+def test_stewardship_change_before_the_webhook_skips_the_slot_but_still_activates(
+    client, db_session, make_user, make_memorial, gateway_sim
+):
+    """Money is real: if stewardship moved after the order, do not bind another
+    family's memorial — activate the subscription with no slot instead."""
+    from app.billing.models import MemorialEntitlement
+    from app.memorials.models import MemorialSteward
+
+    buyer = make_user(name="Buyer")
+    successor = make_user(name="Successor")
+    memorial = make_memorial(steward=buyer, premium=False)
+    order = _order(db_session, buyer, memorial_id=memorial.id)
+
+    steward_row = db_session.scalars(
+        select(MemorialSteward).where(
+            MemorialSteward.memorial_id == memorial.id,
+            MemorialSteward.user_id == buyer.id,
+        )
+    ).one()
+    steward_row.user_id = successor.id
+    db_session.flush()
+
+    _activate_via_webhook(client, order.internal_order_id, "evt_stewardship_moved")
+
+    payment = _payment(db_session, order.internal_order_id)
+    assert payment.status == PaymentStatus.SUCCESS.value
+    assert payment.subscription_id is not None
+    # The new subscription must not have bound the memorial to a slot.
+    assert (
+        db_session.scalars(
+            select(MemorialEntitlement).where(
+                MemorialEntitlement.subscription_id == payment.subscription_id,
+                MemorialEntitlement.memorial_id == memorial.id,
+            )
+        ).all()
+        == []
+    )
+
+
+def test_memorial_entitlements_are_steward_scoped(client, make_user, make_memorial, auth):
+    owner = make_user(name="Owner")
+    intruder = make_user(name="Intruder")
+    memorial = make_memorial(steward=owner)
+    url = f"/api/v1/billing/memorials/{memorial.id}/entitlements"
+
+    anonymous = client.get(url)
+    assert anonymous.status_code == 401
+
+    foreign = client.get(url, headers=auth(intruder))
+    assert foreign.status_code == 404
+
+    own = client.get(url, headers=auth(owner))
+    assert own.status_code == 200, own.text
+    assert "permissions" in own.json()
+
+
+def test_recording_a_duplicate_webhook_event_is_race_safe(db_session):
+    """The unique constraint, not the initial lookup, is the concurrency guard."""
+    from app.billing.router import _record_webhook_event
+
+    first = _record_webhook_event(
+        db_session, event_id="evt_race", event_type="X", payload_hash="h", data={}
+    )
+    second = _record_webhook_event(
+        db_session, event_id="evt_race", event_type="X", payload_hash="h", data={}
+    )
+
+    assert second.id == first.id

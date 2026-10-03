@@ -19,7 +19,8 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
   onClose,
 }) => {
   const { isDark } = useTheme();
-  const { settings, isSaving, updateSettings, toggleOptOut } = useAnniversaries(memorial.id);
+  const { settings, isSaving, isUnavailable, updateSettings, toggleOptOut } =
+    useAnniversaries(memorial.id);
 
   const [birthdayEnabled, setBirthdayEnabled] = useState(true);
   const [deathAnniversaryEnabled, setDeathAnniversaryEnabled] = useState(true);
@@ -46,7 +47,7 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateSettings({
+    const saved = await updateSettings({
       birthday: birthdayEnabled,
       deathAnniversary: deathAnniversaryEnabled,
       memorialCreation: memorialCreationEnabled,
@@ -58,6 +59,8 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
         push: false,
       },
     });
+    // Never claim a schedule was preserved when the server did not store it.
+    if (!saved) return;
     setIsSavedNotice(true);
     setTimeout(() => {
       setIsSavedNotice(false);
@@ -129,7 +132,26 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
             </button>
           </div>
 
-          {isSavedNotice ? (
+          {isUnavailable ? (
+            <div className="py-10 text-center space-y-3">
+              <ShieldCheck
+                className={`w-12 h-12 mx-auto ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}
+              />
+              <h4
+                className={`text-lg font-serif ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}
+              >
+                Remembrance Reminders Are Not Available Yet
+              </h4>
+              <p
+                className={`text-xs max-w-sm mx-auto leading-relaxed ${
+                  isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
+                }`}
+              >
+                Saving anniversary reminders to the server is not implemented yet, so nothing was
+                changed. Your memorial and its content are safe and unaffected.
+              </p>
+            </div>
+          ) : isSavedNotice ? (
             <div className="py-10 text-center space-y-3">
               <CheckCircle2
                 className={`w-12 h-12 mx-auto ${

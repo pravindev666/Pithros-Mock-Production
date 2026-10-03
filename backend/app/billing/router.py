@@ -11,6 +11,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser, require_admin_role
@@ -214,9 +215,15 @@ def resume_subscription(
 @router.get("/memorials/{memorial_id}/entitlements", summary="Memorial capability and usage report")
 def get_memorial_entitlements(
     memorial_id: uuid.UUID,
+    current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    """Inspect effective limits, current media usage, and allowed actions for a memorial."""
+    """Inspect effective limits, current media usage, and allowed actions for a memorial.
+
+    Steward-scoped: an anonymous or unrelated caller gets a 404, so plan and
+    usage details for another family's memorial are never disclosed.
+    """
+    service.require_memorial_stewardship(current_user, memorial_id, db)
     report = resolve_memorial_entitlements(memorial_id, db)
     return {
         "memorialId": str(report.memorial_id),
@@ -383,19 +390,20 @@ async def cashfree_webhook(
         logger.info("webhook_duplicate_ignored", extra={"event_id": event_id})
         return {"status": "already_processed"}
 
-    # 2. Record incoming webhook event — the signature really was verified above.
+    # 2. Record the incoming webhook event — the signature really was verified
+    #    above. Recording is race-safe: the unique constraint on event_id is the
+    #    concurrency guard, so two identical deliveries cannot both insert.
     if not existing_event:
-        existing_event = WebhookEvent(
-            gateway="cashfree",
+        existing_event = _record_webhook_event(
+            db,
             event_id=event_id,
             event_type=event_type,
             payload_hash=payload_hash,
-            payload_json=data,
-            signature_valid=True,
-            processing_status=WebhookProcessingStatus.RECEIVED,
+            data=data,
         )
-        db.add(existing_event)
-        db.flush()
+        if existing_event.processing_status == WebhookProcessingStatus.PROCESSED:
+            logger.info("webhook_duplicate_ignored", extra={"event_id": event_id})
+            return {"status": "already_processed"}
 
     # 3. Handle event types
     order_data = data.get("data", {}).get("order", {})
@@ -440,6 +448,40 @@ async def cashfree_webhook(
     db.commit()
 
     return {"status": "ok"}
+
+
+def _record_webhook_event(
+    db: Session,
+    *,
+    event_id: str,
+    event_type: str,
+    payload_hash: str,
+    data: dict[str, Any],
+) -> WebhookEvent:
+    """Insert a verified webhook event, or return the existing row on a race.
+
+    The unique constraint on ``event_id`` is the concurrency guard: two identical
+    deliveries that both pass the initial lookup cannot both insert. The loser
+    rolls back only its own savepoint and returns the winner's committed row —
+    never a 500.
+    """
+    event = WebhookEvent(
+        gateway="cashfree",
+        event_id=event_id,
+        event_type=event_type,
+        payload_hash=payload_hash,
+        payload_json=data,
+        signature_valid=True,
+        processing_status=WebhookProcessingStatus.RECEIVED,
+    )
+    try:
+        with db.begin_nested():
+            db.add(event)
+    except IntegrityError:
+        return db.execute(
+            select(WebhookEvent).where(WebhookEvent.event_id == event_id)
+        ).scalar_one()
+    return event
 
 
 AdminUserDep = Annotated[

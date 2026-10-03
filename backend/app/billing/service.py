@@ -67,7 +67,7 @@ from app.core.enums import (
     SubscriptionStatus,
 )
 from app.core.errors import ConflictError, NotFoundError
-from app.memorials.models import Memorial
+from app.memorials.models import Memorial, MemorialSteward
 from app.users.models import User
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,33 @@ def get_or_create_billing_account(user: User, db: Session) -> BillingAccount:
         logger.info("billing_account_created", extra={"user_id": str(user.id)})
 
     return account
+
+
+def is_memorial_steward(user: User, memorial_id: uuid.UUID, db: Session) -> bool:
+    """True when the user is a steward of a live (non-deleted) memorial."""
+    memorial_exists = db.execute(
+        select(Memorial.id).where(Memorial.id == memorial_id, Memorial.deleted_at.is_(None))
+    ).scalar_one_or_none()
+    if memorial_exists is None:
+        return False
+    membership = db.execute(
+        select(MemorialSteward.id).where(
+            MemorialSteward.memorial_id == memorial_id,
+            MemorialSteward.user_id == user.id,
+        )
+    ).scalar_one_or_none()
+    return membership is not None
+
+
+def require_memorial_stewardship(user: User, memorial_id: uuid.UUID, db: Session) -> None:
+    """404 unless the caller stewards a live memorial.
+
+    Billing must never bind entitlements to — or disclose plan usage for — a
+    memorial the caller does not own. Returning 404 rather than 403 keeps the
+    existence of another family's memorial unobservable.
+    """
+    if not is_memorial_steward(user, memorial_id, db):
+        raise NotFoundError("Memorial not found.")
 
 
 def get_pricing_catalog(db: Session) -> PricingCatalogResponse:
@@ -157,13 +184,11 @@ def create_order(user: User, req: CreateOrderRequest, db: Session) -> CreateOrde
     if not price:
         raise NotFoundError("The selected pricing plan is unavailable.")
 
-    # 2. Validate memorial if supplied
+    # 2. A memorial, if supplied, must belong to the caller's family. Without this
+    #    check a caller could buy a plan and bind premium entitlements to another
+    #    family's memorial.
     if req.memorial_id:
-        memorial = db.execute(
-            select(Memorial).where(Memorial.id == req.memorial_id, Memorial.deleted_at.is_(None))
-        ).scalar_one_or_none()
-        if not memorial:
-            raise NotFoundError("Memorial not found.")
+        require_memorial_stewardship(user, req.memorial_id, db)
 
     # 3. Generate unique order ID
     now_ts = int(datetime.now(UTC).timestamp())
@@ -371,9 +396,12 @@ def verify_and_activate_payment(
 
     payment.subscription_id = subscription.id
 
-    # 4. Slot Allocation: If a memorial was specified, assign to an open slot
+    # 4. Slot Allocation: if a memorial was specified *and* the payer still
+    #    stewards it, assign it to an open slot. If stewardship changed after the
+    #    order was created we skip the binding rather than strand a captured
+    #    payment — the money is real, so the subscription still activates.
     assigned_memorial_id = None
-    if payment.memorial_id:
+    if payment.memorial_id and is_memorial_steward(user, payment.memorial_id, db):
         existing_slot = db.execute(
             select(MemorialEntitlement).where(
                 MemorialEntitlement.subscription_id == subscription.id,
@@ -423,6 +451,11 @@ def verify_and_activate_payment(
                         db.add(new_slot)
                     assigned_memorial_id = payment.memorial_id
                     break
+    elif payment.memorial_id:
+        logger.warning(
+            "checkout_slot_not_assigned_non_steward",
+            extra={"payment_id": str(payment.id), "memorial_id": str(payment.memorial_id)},
+        )
 
     # 5. Generate immutable Invoice
     invoice_number = f"PITH-INV-{now.strftime('%Y%m')}-{secrets.token_hex(3).upper()}"
@@ -504,21 +537,9 @@ def assign_memorial_slot(
 
     # The memorial must belong to this family. Without this check a user could bind
     # another family's memorial to their own plan and inherit premium entitlements
-    # on a memorial they do not steward.
-    from app.memorials.models import Memorial, MemorialSteward
-
-    memorial_exists = db.execute(
-        select(Memorial.id).where(Memorial.id == memorial_id, Memorial.deleted_at.is_(None))
-    ).scalar_one_or_none()
-    membership = db.execute(
-        select(MemorialSteward.id).where(
-            MemorialSteward.memorial_id == memorial_id,
-            MemorialSteward.user_id == user.id,
-        )
-    ).scalar_one_or_none()
-    if memorial_exists is None or membership is None:
-        # 404 rather than 403: whether that memorial exists is not the caller's business.
-        raise NotFoundError("Memorial not found.")
+    # on a memorial they do not steward. 404 rather than 403 so memorial existence
+    # is not observable.
+    require_memorial_stewardship(user, memorial_id, db)
 
     # Check if already assigned
     existing = db.execute(
@@ -683,16 +704,53 @@ def resume_subscription(user: User, subscription_id: uuid.UUID, db: Session) -> 
     return sub
 
 
+def expire_due_subscriptions(db: Session, *, grace_days: int = 7) -> int:
+    """Move subscriptions whose paid period ended into EXPIRED_READ_ONLY.
+
+    This enforces the zero-deletion invariant: only billing access changes. The
+    family's memorials, media, tributes and timelines are never touched, and a
+    later successful payment moves the subscription back to ACTIVE through the
+    normal verify/renewal path. Runs on a schedule (Celery beat).
+    """
+    cutoff = datetime.now(UTC) - timedelta(days=grace_days)
+    due = (
+        db.execute(
+            select(Subscription).where(
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.PAST_DUE,
+                        SubscriptionStatus.GRACE,
+                    ]
+                ),
+                Subscription.current_period_end <= cutoff,
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    expired = 0
+    for sub in due:
+        transition_subscription_state(
+            sub,
+            SubscriptionStatus.EXPIRED_READ_ONLY,
+            reason="Billing period ended",
+            db=db,
+        )
+        expired += 1
+
+    if expired:
+        db.commit()
+    return expired
+
+
 def create_family_sponsorship_link(
     user: User, req: CreateSponsorshipRequest, db: Session
 ) -> SponsorshipResponse:
     """Generate a shareable family sponsorship link for any relative to pay for Memorial Care."""
-    memorial = db.execute(
-        select(Memorial).where(Memorial.id == req.memorial_id, Memorial.deleted_at.is_(None))
-    ).scalar_one_or_none()
-
-    if not memorial:
-        raise NotFoundError("Memorial not found.")
+    # Only a steward of the memorial may mint a funding link for it.
+    require_memorial_stewardship(user, req.memorial_id, db)
 
     price = db.execute(
         select(PlanPrice).where(PlanPrice.id == req.plan_price_id, PlanPrice.active.is_(True))
@@ -705,7 +763,7 @@ def create_family_sponsorship_link(
     expires_at = datetime.now(UTC) + timedelta(days=30)
 
     link = SponsorshipLink(
-        memorial_id=memorial.id,
+        memorial_id=req.memorial_id,
         created_by_user_id=user.id,
         plan_price_id=price.id,
         token=token,
@@ -719,7 +777,7 @@ def create_family_sponsorship_link(
         db,
         action=AuditAction.SPONSORSHIP_CREATED,
         entity="memorial",
-        entity_id=memorial.id,
+        entity_id=req.memorial_id,
         actor=user,
         result=AuditResult.SUCCESS,
         detail={"token": token, "price_id": price.id},
@@ -728,7 +786,7 @@ def create_family_sponsorship_link(
     return SponsorshipResponse(
         token=token,
         shareable_url=f"{settings.frontend_base_url}/sponsor/{token}",
-        memorial_id=memorial.id,
+        memorial_id=req.memorial_id,
         plan_name=price.plan.name,
         amount_minor=price.amount_minor,
         currency=price.currency,

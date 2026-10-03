@@ -28,6 +28,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
   const [evidenceTitle, setEvidenceTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -36,34 +37,41 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
     if (!claimantName.trim() || !claimantEmail.trim() || !summary.trim()) return;
 
     setSubmitting(true);
-    await submitDisputeClaim({
-      memorialId: memorial.id,
-      memorialName: memorial.fullName,
-      claimantName: claimantName.trim(),
-      claimantEmail: claimantEmail.trim(),
-      claimantRelation: claimantRelation.trim() || 'Immediate Family Member',
-      respondentName: `${memorial.stewardName} (Current Steward)`,
-      disputeSummary: summary.trim(),
-      evidence: evidenceTitle
-        ? [
-            {
-              id: `ev_${Date.now()}`,
-              title: evidenceTitle.trim(),
-              documentType: 'Legal Relationship Record',
-              fileUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
-              submittedAt: new Date().toISOString(),
-              notes: 'Uploaded by claimant for review by Trust & Safety Desk.',
-            },
-          ]
-        : [],
-    });
-
-    setSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 2400);
+    setError(null);
+    try {
+      await submitDisputeClaim({
+        memorialId: memorial.id,
+        memorialName: memorial.fullName,
+        claimantName: claimantName.trim(),
+        claimantEmail: claimantEmail.trim(),
+        claimantRelation: claimantRelation.trim() || 'Immediate Family Member',
+        respondentName: `${memorial.stewardName} (Current Steward)`,
+        disputeSummary: summary.trim(),
+        evidence: evidenceTitle
+          ? [
+              {
+                id: `ev_${Date.now()}`,
+                title: evidenceTitle.trim(),
+                documentType: 'Legal Relationship Record',
+                fileUrl: '',
+                submittedAt: new Date().toISOString(),
+                notes: 'Uploaded by claimant for review by Trust & Safety Desk.',
+              },
+            ]
+          : [],
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        onClose();
+      }, 2400);
+    } catch {
+      setError(
+        'Filing a claim is not available yet — your claim was not recorded. Please contact the Trust Desk directly.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -286,6 +294,10 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
                   />
                 </div>
               </div>
+
+              {error && (
+                <p className="text-[11px] leading-relaxed text-[#B91C1C]">{error}</p>
+              )}
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-inherit">
                 <Button variant="outline" size="sm" type="button" onClick={onClose}>

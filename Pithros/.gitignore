@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Ad-hoc exploratory Playwright scripts (superseded by backend/tests/e2e).
+# Untracked, several held hardcoded credentials — never commit.
+e2e/

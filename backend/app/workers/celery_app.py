@@ -20,6 +20,7 @@ celery_app = Celery(
     include=[
         "app.workers.tasks.media_tasks",
         "app.workers.tasks.maintenance_tasks",
+        "app.workers.tasks.lifecycle_tasks",
         "app.verification.tasks",
         "app.workers.tasks.archive_tasks",
     ],
@@ -48,6 +49,18 @@ celery_app.conf.update(
         "purge-expired-idempotency-keys": {
             "task": "app.workers.tasks.maintenance_tasks.purge_expired_idempotency_keys",
             "schedule": crontab(hour=3, minute=45),
+        },
+        "expire-due-subscriptions": {
+            "task": "app.workers.tasks.lifecycle_tasks.expire_due_subscriptions",
+            "schedule": crontab(hour=2, minute=30),
+        },
+        "execute-due-account-deletions": {
+            "task": "app.workers.tasks.lifecycle_tasks.execute_due_account_deletions",
+            "schedule": crontab(hour=2, minute=45),
+        },
+        "purge-soft-deleted-media": {
+            "task": "app.workers.tasks.lifecycle_tasks.purge_soft_deleted_media",
+            "schedule": crontab(hour=3, minute=0),
         },
     },
 )

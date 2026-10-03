@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.auth.dependencies import CurrentUser, require_role
 from app.core.database import get_db, transaction
@@ -73,10 +73,24 @@ def list_admin_users(
     admin_user: Annotated[User, Depends(require_role(UserRole.ADMIN))],
     db: DbSession,
     query: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
 ) -> list[dict[str, Any]]:
-    stmt = select(User).where(User.deleted_at.is_(None)).order_by(User.created_at.desc())
+    # Bounded and eager-loaded: the old version loaded every user row and issued
+    # one query per user for the steward count (`len(u.stewardships)`).
+    stmt = (
+        select(User)
+        .options(selectinload(User.stewardships))
+        .where(User.deleted_at.is_(None))
+        .order_by(User.created_at.desc())
+        .limit(limit)
+    )
     if query:
-        stmt = stmt.where((User.email.ilike(f"%{query}%")) | (User.name.ilike(f"%{query}%")))
+        # Escape LIKE metacharacters so a search for "100%" is not a wildcard.
+        escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        stmt = stmt.where(
+            User.email.ilike(pattern, escape="\\") | User.name.ilike(pattern, escape="\\")
+        )
     users = db.execute(stmt).scalars().all()
     out = []
     for u in users:

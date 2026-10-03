@@ -42,6 +42,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -50,20 +51,28 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     if (!email.trim() || !details.trim()) return;
 
     setSubmitting(true);
-    await api.submitReport({
-      targetType,
-      targetId,
-      targetTitle,
-      reason,
-      details: details.trim(),
-      reporterEmail: email.trim(),
-    });
-    setSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 2000);
+    setError(null);
+    try {
+      await api.submitReport({
+        targetType,
+        targetId,
+        targetTitle,
+        reason,
+        details: details.trim(),
+        reporterEmail: email.trim(),
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        onClose();
+      }, 2000);
+    } catch {
+      setError(
+        'Reporting is not available yet — your report was not recorded. Please contact the Trust Desk directly.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const targetLabel = {
@@ -244,6 +253,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                   }`}
                 />
               </div>
+
+              {error && (
+                <p className="text-[11px] leading-relaxed text-[#B91C1C]">{error}</p>
+              )}
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button variant="outline" size="sm" type="button" onClick={onClose}>

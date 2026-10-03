@@ -5,7 +5,6 @@ import { VerificationBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useLocale } from '../context/LocaleContext';
-import { api } from '../services/api';
 import { memorialsApi } from '../services/api/memorials';
 import type { ApiSearchResult } from '../services/api/mappers';
 
@@ -64,18 +63,12 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
           }));
           setActiveList(mapped);
         } else {
-          api.getMemorials().then((list) => {
-            if (list && list.length > 0) {
-              setActiveList(list);
-            }
-          }).catch(() => {});
+          // No public results. Never fall back to the signed-in user's own
+          // memorials — this is a public explore page.
+          setActiveList([]);
         }
       }).catch(() => {
-        api.getMemorials().then((list) => {
-          if (list && list.length > 0) {
-            setActiveList(list);
-          }
-        }).catch(() => {});
+        setActiveList([]);
       });
     }
   }, [memorials]);

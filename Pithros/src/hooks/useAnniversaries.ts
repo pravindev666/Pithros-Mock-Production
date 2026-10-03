@@ -5,11 +5,20 @@ import { api } from '../services/api';
 export const useAnniversaries = (memorialId: string) => {
   const [settings, setSettings] = useState<AnniversaryNotificationConfig | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
 
   const fetchSettings = useCallback(async () => {
     if (!memorialId) return;
-    const data = await api.getAnniversarySettings(memorialId);
-    setSettings(data);
+    try {
+      const data = await api.getAnniversarySettings(memorialId);
+      setSettings(data);
+      setIsUnavailable(false);
+    } catch {
+      // Anniversary reminders are not persisted server-side yet. Never pretend
+      // a reminder was saved on the server when it was not.
+      setSettings(null);
+      setIsUnavailable(true);
+    }
   }, [memorialId]);
 
   useEffect(() => {
@@ -32,6 +41,9 @@ export const useAnniversaries = (memorialId: string) => {
         const saved = await api.saveAnniversarySettings(memorialId, merged);
         setSettings(saved);
         return saved;
+      } catch {
+        setIsUnavailable(true);
+        return null;
       } finally {
         setIsSaving(false);
       }
@@ -47,6 +59,7 @@ export const useAnniversaries = (memorialId: string) => {
   return {
     settings,
     isSaving,
+    isUnavailable,
     updateSettings,
     toggleOptOut,
   };

@@ -171,12 +171,14 @@ def run():
     db: Session = SessionLocal()
 
     # 1. CREATE ADMIN USER
-    admin_email = "pravindev666@gmail.com"
+    admin_email = os.getenv("SEED_ADMIN_EMAIL")
     admin_pass = os.getenv("SEED_ADMIN_PASSWORD")
-    if not admin_pass:
+    if not admin_email or not admin_pass:
         raise SystemExit(
-            "SEED_ADMIN_PASSWORD is required so no credential lives in the repository."
+            "SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD are required so no account or "
+            "credential lives in the repository."
         )
+    admin_name = os.getenv("SEED_ADMIN_NAME", "Pithros Admin")
     print(f"\n1. Ensuring Firebase Admin user: {admin_email}...")
 
     try:
@@ -188,7 +190,7 @@ def run():
             fb_user.uid,
             password=admin_pass,
             email_verified=True,
-            display_name="Pravin Dev (Admin)",
+            display_name=admin_name,
         )
     except fb_auth.UserNotFoundError:
         print("   Creating new user in Google Firebase Auth...")
@@ -196,7 +198,7 @@ def run():
             email=admin_email,
             password=admin_pass,
             email_verified=True,
-            display_name="Pravin Dev (Admin)",
+            display_name=admin_name,
         )
         print(f"   Firebase user created! UID: {fb_user.uid}")
 
@@ -211,7 +213,7 @@ def run():
         admin_user = User(
             firebase_uid=fb_user.uid,
             email=admin_email,
-            name="Pravin Dev",
+            name=admin_name,
             role=UserRole.ADMIN.value,
             admin_subrole="super_admin",
             email_verified=True,
@@ -239,7 +241,7 @@ def run():
         billing_account = BillingAccount(
             owner_user_id=admin_user.id,
             billing_email=admin_email,
-            billing_name="Pravin Dev",
+            billing_name=admin_name,
             country="IN",
             currency="INR",
         )

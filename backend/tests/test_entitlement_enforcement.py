@@ -62,26 +62,17 @@ def test_premium_themes_are_available_on_a_paid_memorial(db_session, make_user, 
     assert assert_can_use_premium_theme(memorial.id, "candlelight", db_session)[0] is True
 
 
-def test_a_free_steward_cannot_start_with_a_premium_theme(
-    db_session, make_user, make_memorial
-):
+def test_a_free_steward_cannot_start_with_a_premium_theme(db_session, make_user, make_memorial):
     """Creation-time path: the family's own plan decides, not the new memorial's."""
     from app.billing.entitlements import assert_steward_can_use_premium_theme
 
     free_owner = make_user(name="Free Owner")
-    assert (
-        assert_steward_can_use_premium_theme(free_owner.id, "classic", db_session)[0] is True
-    )
-    allowed, reason = assert_steward_can_use_premium_theme(
-        free_owner.id, "midnight", db_session
-    )
+    assert assert_steward_can_use_premium_theme(free_owner.id, "classic", db_session)[0] is True
+    allowed, reason = assert_steward_can_use_premium_theme(free_owner.id, "midnight", db_session)
     assert allowed is False
     assert reason
 
     # A family with a paid plan may start a new memorial on a premium theme.
     paying_owner = make_user(name="Paying Owner")
     make_memorial(steward=paying_owner, premium=True)
-    assert (
-        assert_steward_can_use_premium_theme(paying_owner.id, "midnight", db_session)[0]
-        is True
-    )
+    assert assert_steward_can_use_premium_theme(paying_owner.id, "midnight", db_session)[0] is True

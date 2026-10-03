@@ -39,6 +39,13 @@ firebase-service-account*.json
 *.db-journal
 dump.rdb
 
+# ─── Generated / legacy test artifacts ──────────────────────────────────────
+# The authoritative full-stack suite is backend/tests/e2e (pytest-playwright).
+# The old ad-hoc Node scripts and their fixtures live on disk but are not part
+# of the product, and several carried hardcoded credentials.
+e2e_assets/
+backend/e2e_temp.py
+
 # ─── Editors / OS ──────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

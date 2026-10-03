@@ -25,7 +25,6 @@ import {
   toProviderLead,
   toServiceProvider,
 } from './providers';
-import { demoApi } from '../demo/demoApi';
 import type * as demoModule from '../demo/demoApi';
 import type {
   BillingInvoice,
@@ -48,7 +47,7 @@ export const liveApi = {
   // ─── Media ──────────────────────────────────────────────────────────────
   // Uploaded through the presigned-URL pipeline rather than by posting a
   // data/blob URL to this method. `mediaApi.uploadFile` is the entry point.
-  addMedia: demoApi.addMedia.bind(demoApi),
+  addMedia: pending<'addMedia'>('Attaching media by URL'),
 
   // ─── Memorials ──────────────────────────────────────────────────────────
   getMemorials: memorialsApi.listMine,
@@ -250,13 +249,13 @@ export const liveApi = {
   },
   getAuditLogs: auditApi.listLegacy,
   logSensitiveDocAccess: auditApi.logSensitiveDocAccess,
-  getReports: demoApi.getReports.bind(demoApi),
-  submitReport: demoApi.submitReport.bind(demoApi),
-  updateReportStatus: demoApi.updateReportStatus.bind(demoApi),
-  getDisputes: demoApi.getDisputes.bind(demoApi),
-  submitDisputeClaim: demoApi.submitDisputeClaim.bind(demoApi),
-  addDisputeNote: demoApi.addDisputeNote.bind(demoApi),
-  updateDisputeStatus: demoApi.updateDisputeStatus.bind(demoApi),
+  getReports: pending<'getReports'>('Moderation reports'),
+  submitReport: pending<'submitReport'>('Content reports'),
+  updateReportStatus: pending<'updateReportStatus'>('Moderation actions'),
+  getDisputes: pending<'getDisputes'>('Stewardship disputes'),
+  submitDisputeClaim: pending<'submitDisputeClaim'>('Stewardship claims'),
+  addDisputeNote: pending<'addDisputeNote'>('Dispute notes'),
+  updateDisputeStatus: pending<'updateDisputeStatus'>('Dispute decisions'),
   getBillingInvoices: async (): Promise<BillingInvoice[]> => {
     try {
       const invoices = await billingApi.getInvoices();
@@ -279,9 +278,9 @@ export const liveApi = {
       return [];
     }
   },
-  createBillingInvoice: demoApi.createBillingInvoice.bind(demoApi),
-  getAnniversarySettings: demoApi.getAnniversarySettings.bind(demoApi),
-  saveAnniversarySettings: demoApi.saveAnniversarySettings.bind(demoApi),
+  createBillingInvoice: pending<'createBillingInvoice'>('Client-created invoices'),
+  getAnniversarySettings: pending<'getAnniversarySettings'>('Anniversary reminders'),
+  saveAnniversarySettings: pending<'saveAnniversarySettings'>('Anniversary reminders'),
   async getNotifications() {
     const { notifications } = await notificationsApi.list();
     return notifications.map(toLegacyNotificationItem);

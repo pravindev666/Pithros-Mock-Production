@@ -7,6 +7,13 @@ import {
   ProcessGatewayRefundParams,
   GatewayRefundResult,
 } from './types';
+import { DEMO_MODE } from '../../lib/config';
+
+function assertDemoOnly(): void {
+  if (!DEMO_MODE) {
+    throw new Error('Razorpay is a demo-only gateway; live checkout uses Cashfree.');
+  }
+}
 
 // Helper to compute HMAC-SHA256 using standard Web Crypto API
 async function computeHmacSha256(message: string, secret: string): Promise<string> {
@@ -33,6 +40,7 @@ export class RazorpayGateway implements PaymentGateway {
   private readonly dummySecret = 'rzp_sec_pithros_server_vault_2026';
 
   async createOrder(params: CreateGatewayOrderParams): Promise<GatewayOrderResult> {
+    assertDemoOnly();
     // Generate authoritative server-side gateway order reference
     const timestamp = Date.now().toString().slice(-6);
     const gatewayOrderId = `order_rzp_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
@@ -47,6 +55,7 @@ export class RazorpayGateway implements PaymentGateway {
   }
 
   async verifyPayment(params: VerifyGatewayPaymentParams): Promise<VerifyPaymentResult> {
+    assertDemoOnly();
     const { gatewayOrderId, gatewayPaymentId, gatewaySignature } = params;
 
     if (!gatewayPaymentId || !gatewayOrderId) {
@@ -83,6 +92,7 @@ export class RazorpayGateway implements PaymentGateway {
   }
 
   async processRefund(params: ProcessGatewayRefundParams): Promise<GatewayRefundResult> {
+    assertDemoOnly();
     const refundId = `rfnd_rzp_${Date.now().toString().slice(-6)}`;
     return {
       success: true,

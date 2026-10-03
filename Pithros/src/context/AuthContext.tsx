@@ -378,8 +378,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyMfaStep = async (pin: string): Promise<boolean> => {
+    // Demo-only stand-in. In live mode elevation is never granted from a
+    // client-side PIN — it must come from the server / Firebase. Returning false
+    // here removes the '1234' bypass from any production build.
+    if (!DEMO_MODE) {
+      return false;
+    }
     await new Promise((r) => setTimeout(r, 400));
-    // For admin elevated action PIN verification
     if (pin === '1234' || pin.length === 6) {
       setIsMfaVerified(true);
       return true;

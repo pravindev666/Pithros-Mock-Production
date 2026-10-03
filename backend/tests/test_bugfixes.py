@@ -124,9 +124,7 @@ def test_media_worker_ignores_a_soft_deleted_row(db_session, make_user, make_mem
     assert found is None, "the worker would still have processed this row"
 
 
-def test_a_pending_upload_does_not_consume_the_photo_limit(
-    db_session, make_user, make_memorial
-):
+def test_a_pending_upload_does_not_consume_the_photo_limit(db_session, make_user, make_memorial):
     """The usage counter counted PENDING rows, so the last allowed free photo was
     rejected at `/complete` — after its bytes had already reached storage — because
     the upload's own pending row pushed the count over the limit.

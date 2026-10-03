@@ -92,6 +92,27 @@ import { AdminPaymentDisputesView } from './views/admin/AdminPaymentDisputesView
 import { DashboardBillingInvoicesView } from './views/dashboard/DashboardBillingInvoicesView';
 import { DashboardPaymentDetailView } from './views/dashboard/DashboardPaymentDetailView';
 
+/** Routes the public shell knows how to render (everything else is a 404). */
+const KNOWN_PUBLIC_ROUTES = new Set([
+  '/',
+  '/memorials',
+  '/search',
+  '/create-memorial',
+  '/how-it-works',
+  '/pricing',
+  '/forbidden',
+]);
+
+const KNOWN_PUBLIC_PREFIXES = ['/farewell', '/invite', '/checkout', '/payment/receipt'];
+
+function isKnownPublicRoute(route: string): boolean {
+  if (KNOWN_PUBLIC_ROUTES.has(route)) return true;
+  return KNOWN_PUBLIC_PREFIXES.some(
+    (prefix) =>
+      route === prefix || route.startsWith(`${prefix}/`) || route.startsWith(`${prefix}?`),
+  );
+}
+
 export default function App() {
   const { isDark } = useTheme();
   const {
@@ -667,6 +688,37 @@ export default function App() {
 
             {/* Access Control & Fallbacks */}
             {currentRoute === '/forbidden' && <ForbiddenView onNavigate={navigate} />}
+
+            {!isKnownPublicRoute(currentRoute) && (
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-20">
+                <span
+                  className={`text-[10px] font-mono uppercase tracking-[0.2em] ${
+                    isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+                  }`}
+                >
+                  404
+                </span>
+                <h1
+                  className={`mt-3 text-2xl sm:text-3xl font-serif ${
+                    isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
+                  }`}
+                >
+                  This page could not be found
+                </h1>
+                <p
+                  className={`mt-3 text-sm max-w-md leading-relaxed ${
+                    isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'
+                  }`}
+                >
+                  The link may be outdated, or the memorial may have been made private or removed.
+                </p>
+                <div className="mt-6">
+                  <Button variant="primary" onClick={() => navigate('/')}>
+                    Return home
+                  </Button>
+                </div>
+              </div>
+            )}
           </PageTransition>
         </AnimatePresence>
       </PublicShell>

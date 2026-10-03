@@ -28,9 +28,7 @@ def _mailpit_up() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(
-    not _mailpit_up(), reason="Mailpit not running on 127.0.0.1:8025"
-)
+pytestmark = pytest.mark.skipif(not _mailpit_up(), reason="Mailpit not running on 127.0.0.1:8025")
 
 
 @pytest.fixture(autouse=True)

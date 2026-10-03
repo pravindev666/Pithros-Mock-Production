@@ -5,12 +5,18 @@ import { api } from '../services/api';
 export const useDisputes = () => {
   const [disputes, setDisputes] = useState<AdminDispute[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
 
   const fetchDisputes = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await api.getDisputes();
       setDisputes(data);
+      setIsUnavailable(false);
+    } catch {
+      // The dispute backend is not built yet. Never show invented claims.
+      setDisputes([]);
+      setIsUnavailable(true);
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +55,7 @@ export const useDisputes = () => {
   return {
     disputes,
     isLoading,
+    isUnavailable,
     refetch: fetchDisputes,
     submitDisputeClaim,
     addNote,

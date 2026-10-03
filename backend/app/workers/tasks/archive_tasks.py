@@ -18,7 +18,7 @@ from app.memorials.pdf_export import generate_memorial_pdf
 from app.memorials.qr import build_memorial_url, generate_qr_code
 from app.tributes.models import Tribute
 from app.users.models import User
-from app.workers.base import RecordedTask
+from app.workers.base import RETRY_POLICY, RecordedTask
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
     name="app.workers.tasks.archive_tasks.generate_memorial_pdf_export",
     base=RecordedTask,
     bind=True,
-    max_retries=3,
+    **RETRY_POLICY,
 )
 def generate_memorial_pdf_export(
     self: Any,

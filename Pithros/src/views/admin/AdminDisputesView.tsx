@@ -19,7 +19,7 @@ import { api } from '../../services/api';
 
 export const AdminDisputesView: React.FC = () => {
   const { isDark } = useTheme();
-  const { disputes, isLoading, addNote, updateStatus } = useDisputes();
+  const { disputes, isLoading, isUnavailable, addNote, updateStatus } = useDisputes();
   const [selectedDispute, setSelectedDispute] = useState<AdminDispute | null>(null);
   const [newNoteText, setNewNoteText] = useState<string>('');
   const [resolutionSummary, setResolutionSummary] = useState<string>('');
@@ -121,6 +121,13 @@ export const AdminDisputesView: React.FC = () => {
           >
             Active Claims ({disputes.length})
           </span>
+
+          {isUnavailable && (
+            <p className={`text-[11px] italic leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Ownership disputes are not available yet — the server does not store claims. Nothing is
+              listed here rather than showing invented claims.
+            </p>
+          )}
 
           <div className="space-y-2.5">
             {disputes.map((d) => {

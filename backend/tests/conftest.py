@@ -213,9 +213,7 @@ def make_memorial(db_session):
             seed_pricing_catalog(db_session)
             order = create_order(
                 steward,
-                CreateOrderRequest(
-                    planPriceId="memorial_care_annual_v1", memorialId=memorial.id
-                ),
+                CreateOrderRequest(planPriceId="memorial_care_annual_v1", memorialId=memorial.id),
                 db_session,
             )
             verify_and_activate_payment(

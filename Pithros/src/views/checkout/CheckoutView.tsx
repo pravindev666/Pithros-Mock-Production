@@ -928,7 +928,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     variant="primary"
                     size="lg"
                     className="w-full"
-                    onClick={() => onNavigate(`/m/${activeMemorial?.slug || 'arun-krishnan'}`)}
+                    onClick={() =>
+                      onNavigate(activeMemorial ? `/m/${activeMemorial.slug}` : '/dashboard/memorials')
+                    }
                   >
                     <Heart className="w-4 h-4 mr-2" />
                     View Memorial
@@ -1134,7 +1136,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => onNavigate(`/m/${activeMemorial?.slug || 'arun-krishnan'}`)}
+                    onClick={() =>
+                      onNavigate(activeMemorial ? `/m/${activeMemorial.slug}` : '/dashboard/memorials')
+                    }
                   >
                     Back to Memorial
                   </Button>

@@ -219,16 +219,16 @@ def test_farewell_network_marketplace(
         # The visitor's own context may still be serving the previous payload from
         # the PWA service-worker cache, so the propagation check uses a fresh
         # browser context — which is also exactly how a new family arrives.
-        profile_url = (
-            f"{e2e_stack.frontend_url}/farewell/providers/mathew-e2e-serene-transitions"
-        )
+        profile_url = f"{e2e_stack.frontend_url}/farewell/providers/mathew-e2e-serene-transitions"
         fresh_context = browser.new_context()
         try:
             fresh_page = fresh_context.new_page()
             fresh_page.goto(profile_url, wait_until="domcontentloaded")
             _wait_for(
-                lambda: fresh_page.get_by_text(SERVICE_NAME, exact=False).count() > 0
-                or fresh_page.get_by_text("Services (1)", exact=False).count() > 0,
+                lambda: (
+                    fresh_page.get_by_text(SERVICE_NAME, exact=False).count() > 0
+                    or fresh_page.get_by_text("Services (1)", exact=False).count() > 0
+                ),
                 timeout=30,
                 message="the public profile page never rendered the new service",
             )
@@ -238,10 +238,12 @@ def test_farewell_network_marketplace(
         # Hiding it in the console removes it from the public page again.
         partner_page.get_by_role("button", name="Published").first.click()
         _wait_for(
-            lambda: database.fetch_one(
-                "SELECT active FROM provider_services WHERE name = %s", (SERVICE_NAME,)
-            )[0]
-            is False,
+            lambda: (
+                database.fetch_one(
+                    "SELECT active FROM provider_services WHERE name = %s", (SERVICE_NAME,)
+                )[0]
+                is False
+            ),
             timeout=20,
             message="hiding the service was never persisted",
         )
@@ -250,8 +252,10 @@ def test_farewell_network_marketplace(
             hidden_page = hidden_context.new_page()
             hidden_page.goto(profile_url, wait_until="domcontentloaded")
             _wait_for(
-                lambda: hidden_page.get_by_text(SERVICE_NAME, exact=False).count() == 0
-                and hidden_page.get_by_text("Services (1)", exact=False).count() == 0,
+                lambda: (
+                    hidden_page.get_by_text(SERVICE_NAME, exact=False).count() == 0
+                    and hidden_page.get_by_text("Services (1)", exact=False).count() == 0
+                ),
                 timeout=30,
                 message="a hidden service was still visible on the public profile",
             )
@@ -289,10 +293,12 @@ def test_farewell_network_marketplace(
         # modal's action buttons.
         partner_page.get_by_role("button", name="contacted").last.click()
         _wait_for(
-            lambda: database.fetch_one(
-                "SELECT status FROM farewell_leads WHERE contact_name = %s", (FAMILY_NAME,)
-            )[0]
-            == "contacted",
+            lambda: (
+                database.fetch_one(
+                    "SELECT status FROM farewell_leads WHERE contact_name = %s", (FAMILY_NAME,)
+                )[0]
+                == "contacted"
+            ),
             timeout=20,
             message="the partner's status change was never persisted",
         )
@@ -320,9 +326,7 @@ def test_farewell_network_marketplace(
 
         suspended_audit = [
             r[0]
-            for r in database.fetch_all(
-                "SELECT action FROM audit_logs WHERE entity = 'providers'"
-            )
+            for r in database.fetch_all("SELECT action FROM audit_logs WHERE entity = 'providers'")
         ]
         assert "PROVIDER_SUSPENDED" in suspended_audit
         lead_audit = [

@@ -12,6 +12,15 @@ import {
 } from '../../types';
 import { pricingPlans, demoBillingInvoices } from '../../data/mockData';
 import { api } from '../api';
+import { DEMO_MODE } from '../../lib/config';
+
+function assertDemoOnly(): void {
+  if (!DEMO_MODE) {
+    throw new Error(
+      'The in-browser payment ledger is demo-only and is never used in live mode.',
+    );
+  }
+}
 
 const STORAGE_KEY_PAYMENTS = 'pithros_payment_records';
 const STORAGE_KEY_INVOICES = 'pithros_billing_invoices';
@@ -20,6 +29,7 @@ const STORAGE_KEY_DISPUTES = 'pithros_payment_disputes';
 const STORAGE_KEY_PROCESSED_WEBHOOKS = 'pithros_processed_webhooks';
 
 function getStored<T>(key: string, fallback: T): T {
+  assertDemoOnly();
   try {
     const val = localStorage.getItem(key);
     return val ? JSON.parse(val) : fallback;
@@ -29,6 +39,7 @@ function getStored<T>(key: string, fallback: T): T {
 }
 
 function setStored<T>(key: string, val: T): void {
+  assertDemoOnly();
   try {
     localStorage.setItem(key, JSON.stringify(val));
   } catch {
