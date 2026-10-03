@@ -42,8 +42,6 @@ services:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
-    volumes:
-      - ./runtime/secrets:/run/secrets:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -74,8 +72,6 @@ services:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
-    volumes:
-      - ./runtime/secrets:/run/secrets:ro
     depends_on:
       redis:
         condition: service_healthy

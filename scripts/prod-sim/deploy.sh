@@ -19,7 +19,8 @@ COMPOSE="docker compose --env-file ${ENV_FILE} -f ${APP_DIR}/docker-compose.sim.
 echo "==> Deploying revision: $(git -C "${APP_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"
 
 [ -f "${ENV_FILE}" ] || { echo "FATAL: missing ${ENV_FILE} (see scripts/prod-sim/env.template)"; exit 1; }
-[ -f "${APP_DIR}/runtime/secrets/firebase-service-account.json" ] || { echo "FATAL: missing runtime/secrets/firebase-service-account.json"; exit 1; }
+grep -qE '^FIREBASE_CLIENT_EMAIL=.+' "${ENV_FILE}" || { echo "FATAL: ${ENV_FILE} is missing Firebase credentials"; exit 1; }
+grep -qE '^FIREBASE_PRIVATE_KEY=.+' "${ENV_FILE}" || { echo "FATAL: ${ENV_FILE} is missing Firebase credentials"; exit 1; }
 
 echo "==> Building images"
 ${COMPOSE} build

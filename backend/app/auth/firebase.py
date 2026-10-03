@@ -144,12 +144,22 @@ class FirebaseTokenVerifier:
         if path is not None:
             return credentials.Certificate(str(path))
         if settings.firebase_client_email and settings.firebase_private_key:
+            # google-auth requires the complete service-account field set; a dict
+            # with only project_id/client_email/private_key raises
+            # "missing fields token_uri". Supply the standard defaults so the
+            # documented env-var credential path actually works.
             return credentials.Certificate(
                 {
-                    "project_id": settings.firebase_project_id,
-                    "client_email": settings.firebase_client_email,
-                    "private_key": settings.firebase_private_key,
                     "type": "service_account",
+                    "project_id": settings.firebase_project_id,
+                    "private_key_id": "",
+                    "private_key": settings.firebase_private_key,
+                    "client_email": settings.firebase_client_email,
+                    "client_id": "",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_x509_cert_url": "",
                 }
             )
         return None

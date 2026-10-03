@@ -144,3 +144,33 @@ def test_classify_maps_sdk_exceptions_to_categories():
     assert (
         _classify_failure(ValueError("no project id")) is AuthFailureCategory.CONFIGURATION_FAILURE
     )
+
+
+def test_env_var_credentials_build_a_complete_service_account(monkeypatch):
+    """Regression: the client-email/private-key path previously built an incomplete
+    service-account dict and failed with 'missing fields token_uri'."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode()
+
+    monkeypatch.setattr(auth_firebase.settings, "firebase_service_account_file", "")
+    monkeypatch.setattr(
+        auth_firebase.settings, "firebase_client_email", "svc@pithros-dev.iam.gserviceaccount.com"
+    )
+    monkeypatch.setattr(auth_firebase.settings, "firebase_private_key", pem)
+
+    credential = FirebaseTokenVerifier()._credential()
+    assert credential is not None
+
+
+def test_env_var_credentials_absent_yield_none(monkeypatch):
+    monkeypatch.setattr(auth_firebase.settings, "firebase_service_account_file", "")
+    monkeypatch.setattr(auth_firebase.settings, "firebase_client_email", "")
+    monkeypatch.setattr(auth_firebase.settings, "firebase_private_key", "")
+    assert FirebaseTokenVerifier()._credential() is None
