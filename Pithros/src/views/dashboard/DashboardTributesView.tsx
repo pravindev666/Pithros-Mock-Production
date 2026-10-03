@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Flame,
@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import { Memorial } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../components/ui/Toast';
 import { Button } from '../../components/ui/Button';
+import { tributesApi, type ModerationTribute } from '../../services/api/tributes';
 import {
   DoveSymbol,
   FlowerSymbol,
@@ -46,81 +48,49 @@ interface TributeItem {
   isFamilyVerified?: boolean;
 }
 
+function toTributeItem(row: ModerationTribute): TributeItem {
+  return {
+    id: row.id,
+    author: row.authorName,
+    relationship: row.relationship || 'Family & Friend',
+    date: row.date,
+    gesture: 'memory',
+    gestureLabel: 'Remembrance',
+    content: row.message,
+    status: row.isPinned ? 'pinned' : row.status === 'pending_moderation' ? 'pending' : 'approved',
+    isFamilyVerified: false,
+  };
+}
+
 export const DashboardTributesView: React.FC<DashboardTributesViewProps> = ({
   memorial,
 }) => {
   const { isDark } = useTheme();
+  const { showToast } = useToast();
 
-  const [tributes, setTributes] = useState<TributeItem[]>([
-    {
-      id: 'trib-1',
-      author: 'Dr. Sunita Rao',
-      relationship: 'Former Colleague & Researcher',
-      date: 'March 14, 2026',
-      gesture: 'flower',
-      gestureLabel: 'Floral Offering',
-      content:
-        'Arun’s dedication to cataloging the high-altitude orchids of the Nilgiris shaped my entire academic journey. His patience was legendary. May his memory continue to bloom in the hills he loved so deeply.',
-      status: 'pinned',
-      isFamilyVerified: true,
-    },
-    {
-      id: 'trib-2',
-      author: 'Rohan Mehra',
-      relationship: 'Student, Batch of 2012',
-      date: 'March 10, 2026',
-      gesture: 'light',
-      gestureLabel: 'Sanctuary Light',
-      content:
-        'A guiding beacon for all of us during our field research in Agumbe. He taught us to listen to the forest before taking notes. Lighting an eternal lamp in his honor.',
-      status: 'approved',
-    },
-    {
-      id: 'trib-3',
-      author: 'Ananya & Ramesh Krishnan',
-      relationship: 'Cousins',
-      date: 'February 28, 2026',
-      gesture: 'heart',
-      gestureLabel: 'Enduring Love',
-      content:
-        'Always remembered with love and laughter. Our childhood vacations in Wayanad remain among our most cherished memories. Rest gently, dear Arun.',
-      status: 'approved',
-      isFamilyVerified: true,
-    },
-    {
-      id: 'trib-4',
-      author: 'Father Thomas Kurian',
-      relationship: 'Family Friend',
-      date: 'February 22, 2026',
-      gesture: 'hands',
-      gestureLabel: 'Folded Hands in Prayer',
-      content:
-        'Praying for peace and comfort for the entire family. Arun lived a life of supreme grace, integrity, and quiet generosity.',
-      status: 'approved',
-    },
-    {
-      id: 'trib-5',
-      author: 'Meenakshi Sundaram',
-      relationship: 'Botanical Society Member',
-      date: 'Today at 09:15 AM',
-      gesture: 'dove',
-      gestureLabel: 'Peaceful Dove',
-      content:
-        'Deepest condolences to Anita and Vikram. Arun sir’s monographs remain the gold standard in Indian biodiversity literature.',
-      status: 'pending',
-    },
-    {
-      id: 'trib-6',
-      author: 'Devika Pillai',
-      relationship: 'Neighbour in Malleshwaram',
-      date: 'Yesterday at 04:30 PM',
-      gesture: 'memory',
-      gestureLabel: 'Life Story Memory',
-      content:
-        'Remembering his morning walks with his notebooks and binoculars, always ready with a warm greeting for everyone on 8th Cross.',
-      status: 'pending',
-    },
-  ]);
+  const [tributes, setTributes] = useState<TributeItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadTributes = async () => {
+    try {
+      const rows = await tributesApi.listForModeration(memorial.id);
+      // The moderation queue returns every status; only live ones are shown.
+      const visible = rows.filter(
+        (row) => row.status === 'pending_moderation' || row.status === 'approved',
+      );
+      setTributes(visible.map(toTributeItem));
+    } catch {
+      showToast('The tributes could not be loaded. Please try again.', { type: 'warning' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTributes();
+    // Reload whenever the steward switches to a different memorial.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memorial.id]);
 
   const [filterGesture, setFilterGesture] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -150,24 +120,35 @@ export const DashboardTributesView: React.FC<DashboardTributesViewProps> = ({
     }
   };
 
-  const handleApprove = (id: string) => {
-    setTributes((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: 'approved' as const } : t))
-    );
+  const handleApprove = async (id: string) => {
+    try {
+      await tributesApi.moderate(memorial.id, id, { status: 'approved' });
+      await loadTributes();
+    } catch {
+      showToast('That tribute could not be approved. Please try again.', { type: 'warning' });
+    }
   };
 
-  const handlePin = (id: string) => {
-    setTributes((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, status: t.status === 'pinned' ? ('approved' as const) : ('pinned' as const) }
-          : t
-      )
-    );
+  const handlePin = async (id: string) => {
+    const item = tributes.find((t) => t.id === id);
+    try {
+      await tributesApi.moderate(memorial.id, id, {
+        status: 'approved',
+        isPinned: item?.status !== 'pinned',
+      });
+      await loadTributes();
+    } catch {
+      showToast('That tribute could not be updated. Please try again.', { type: 'warning' });
+    }
   };
 
-  const handleRemove = (id: string) => {
-    setTributes((prev) => prev.filter((t) => t.id !== id));
+  const handleRemove = async (id: string) => {
+    try {
+      await tributesApi.remove(memorial.id, id);
+      await loadTributes();
+    } catch {
+      showToast('That tribute could not be removed. Please try again.', { type: 'warning' });
+    }
   };
 
   const filtered = tributes.filter((item) => {
@@ -309,7 +290,15 @@ export const DashboardTributesView: React.FC<DashboardTributesViewProps> = ({
 
       {/* Tributes List */}
       <div className="space-y-3">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div
+            className={`p-10 text-center rounded-2xl border ${
+              isDark ? 'border-[#202C40] bg-[#182337]' : 'border-[#E5DED2] bg-[#FCFAF5]'
+            }`}
+          >
+            <p className={isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}>Loading tributes…</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div
             className={`p-10 text-center rounded-2xl border ${
               isDark ? 'border-[#202C40] bg-[#182337]' : 'border-[#E5DED2] bg-[#FCFAF5]'

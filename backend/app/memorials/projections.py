@@ -280,6 +280,7 @@ def tribute_out(tribute: Tribute) -> TributeOut:
         date=_relative_time(tribute.created_at),
         avatar_url=tribute.avatar_url,
         photo_url=tribute.photo_url,
+        status=tribute.status,
         is_approved=tribute.status == TributeStatus.APPROVED.value,
         is_pinned=tribute.is_pinned,
     )

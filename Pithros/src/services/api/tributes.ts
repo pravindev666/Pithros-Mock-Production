@@ -45,6 +45,17 @@ function toTribute(api: ApiTribute): Tribute {
   };
 }
 
+export interface ModerationTribute {
+  id: string;
+  authorName: string;
+  relationship?: string | null;
+  message: string;
+  date: string;
+  status: string;
+  isApproved: boolean;
+  isPinned: boolean;
+}
+
 export const tributesApi = {
   async addTribute(
     memorialIdOrSlug: string,
@@ -65,6 +76,23 @@ export const tributesApi = {
     const slug = await resolveSlug(memorialIdOrSlug);
     const tributes = await http.get<ApiTribute[]>(`/public/memorials/${slug}/tributes`);
     return tributes.map(toTribute);
+  },
+
+  /** The steward's moderation queue: every status, not just approved. */
+  async listForModeration(memorialId: string): Promise<ModerationTribute[]> {
+    return http.get<ModerationTribute[]>(`/memorials/${memorialId}/tributes`);
+  },
+
+  async moderate(
+    memorialId: string,
+    tributeId: string,
+    updates: { status: string; isPinned?: boolean; reason?: string },
+  ): Promise<ModerationTribute> {
+    return http.patch<ModerationTribute>(`/memorials/${memorialId}/tributes/${tributeId}`, updates);
+  },
+
+  async remove(memorialId: string, tributeId: string): Promise<void> {
+    await http.delete<void>(`/memorials/${memorialId}/tributes/${tributeId}`);
   },
 };
 

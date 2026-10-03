@@ -144,6 +144,7 @@ class TributeOut(CamelModel):
     date: str
     avatar_url: str | None = None
     photo_url: str | None = None
+    status: str
     is_approved: bool = False
     is_pinned: bool = False
 

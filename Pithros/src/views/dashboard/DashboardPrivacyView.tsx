@@ -17,6 +17,7 @@ import {
 import { Memorial, PrivacyLevel } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import { memorialsApi } from '../../services/api/memorials';
 
 interface DashboardPrivacyViewProps {
   memorial: Memorial;
@@ -25,6 +26,7 @@ interface DashboardPrivacyViewProps {
 
 export const DashboardPrivacyView: React.FC<DashboardPrivacyViewProps> = ({
   memorial,
+  onUpdate,
 }) => {
   const { isDark } = useTheme();
 
@@ -38,6 +40,7 @@ export const DashboardPrivacyView: React.FC<DashboardPrivacyViewProps> = ({
   const [passcodeHint, setPasscodeHint] = useState('');
   const [showPasscode, setShowPasscode] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const handleCopyLink = () => {
@@ -50,10 +53,26 @@ export const DashboardPrivacyView: React.FC<DashboardPrivacyViewProps> = ({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setIsSaving(true);
+    try {
+      // Persist the chosen visibility, then publish (or cancel publication).
+      if (accessMode !== memorial.privacy) {
+        await memorialsApi.update(memorial.id, { privacy: accessMode });
+      }
+      // A public/unlisted sanctuary is published so visitors can reach it; a
+      // private vault stays internal.
+      await memorialsApi.setPublication(
+        memorial.id,
+        accessMode === 'private' ? 'draft' : 'published',
+      );
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      onUpdate?.();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const securityLogs = [
@@ -415,7 +434,7 @@ export const DashboardPrivacyView: React.FC<DashboardPrivacyViewProps> = ({
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" isLoading={isSaving}>
             Save Privacy Settings
           </Button>
         </div>

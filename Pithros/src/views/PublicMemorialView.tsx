@@ -148,7 +148,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
   const photoMedia = memorial.media.filter((m) => m.type === 'photo');
 
   const handleOfferingSubmit = async (offering: Omit<RemembranceOffering, 'id' | 'timestamp'>) => {
-    await api.addOffering(memorial.id, offering);
+    await api.addOffering(memorial.slug, offering);
     onRefreshMemorial?.();
   };
 
@@ -157,7 +157,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
     if (!tributeAuthor.trim() || !tributeMessage.trim()) return;
 
     setTributeSubmitting(true);
-    await api.addTribute(memorial.id, {
+    await api.addTribute(memorial.slug, {
       authorName: tributeAuthor.trim(),
       relationship: tributeRelation.trim() || 'Family & Friend',
       message: tributeMessage.trim(),

@@ -221,7 +221,17 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origins_list,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Request-ID",
+            # Conditional writes (memorial update/publication, media visibility)
+            # send If-Match; without it here the browser's CORS preflight rejects
+            # the request before it is ever sent.
+            "If-Match",
+            # Supported by the idempotency layer for retryable writes.
+            "Idempotency-Key",
+        ],
         expose_headers=["X-Request-ID", "X-RateLimit-Remaining", "X-RateLimit-Limit"],
         max_age=600,
     )
