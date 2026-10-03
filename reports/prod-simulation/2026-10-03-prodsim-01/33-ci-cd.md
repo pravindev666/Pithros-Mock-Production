@@ -1,23 +1,44 @@
 # 33 — CI/CD (REAL RUN) · PITHROS PRODUCTION SIMULATION
 
-**RUN_ID:** `2026-10-03-prodsim-01` · **Tested SHA:** `c050b2f` · **Pushed:** `46d7f43`
+**RUN_ID:** `2026-10-03-prodsim-01` · **Fix commit:** `7f62f7b` · **Date:** 2026-10-03
 
-## Actual GitHub Actions result — **FAILED**
+## Original failure — run #1 (`46d7f43`) → FAILED
+Frontend ✅ · Backend ❌ (pytest step) · Secret scan (gitleaks) ❌.
 
-Run **#1** (`id 37154237901`, trigger `push`, repo **public**) executed for real after the approved push.
+## Root cause (evidence-backed)
+**Backend pytest failed only on the Linux runner.** `tests/test_verification_ai.py` renders its
+OCR fixtures with `arial.ttf` (a Windows font that does not exist on the runner). The fallback,
+`ImageFont.load_default()` (fixed-size, pre-3.10 bitmap), renders the digits too small, so **Tesseract
+misread them** — reproduced directly: with the fallback, `15/03/2026` is read as **`15/03/2028`** and
+`…08129` as `…08128`, so the exact-value OCR assertions fail. On Windows (`arial.ttf`) the same fixture
+reads correctly, which is why it passed locally.
+
+**Python version was NOT the cause:** the full suite passes under an isolated **Python 3.12.13** venv
+(267 passed), and also with `.env*` files removed. (`uv` was used to create the 3.12 env.)
+
+## Fix (`7f62f7b`) — smallest root cause
+`test_verification_ai.py`: fall back to the **size-aware** `ImageFont.load_default(size=22/26)`
+(Pillow ≥ 10.1, repo pins `Pillow>=11.0`) so the glyphs are legible on any platform. No assertion was
+loosened; no test was skipped.
+
+## gitleaks finding
+The leaked value was the **public Firebase Web API key hardcoded as a default in `load/k6/*.js`**
+(not in `.env.development`, which is gitignored and untracked). It matches gitleaks's `google-api-key`
+rule. It is a **public client-side identifier**, not a server secret.
+
+**Fix:** stop hardcoding it — the scripts now require `FIREBASE_API_KEY` — and add a **narrowly scoped**
+`.gitleaks.toml` allowlist (exact value, only `^load/k6/.*\.js$`) covering the historical commit. The
+default rule set stays enabled; nothing broad is ignored. The key was **not** revoked.
+
+## Verified locally before pushing
+pytest 267 passed / 1 skipped · ruff + format + mypy clean · tsc + check:live + build clean.
+
+## Authoritative result — run #2 (`7f62f7b`) → **SUCCESS**
 
 | Job | Result |
 |---|---|
 | Frontend (types, guard, build) | **✅ success** |
-| Backend (lint, types, tests, migrations) | **❌ failure** — failing step: **Tests (pytest)**; ruff/format/mypy/migration-drift **passed** |
-| Secret scan (gitleaks) | **❌ failure** |
+| Backend (lint, types, tests, migrations) | **✅ success** |
+| Secret scan (gitleaks) | **✅ success** |
 
-**Log access:** job logs require GitHub auth; the step-level conclusions were read from the public API. The exact pytest assertion output and the gitleaks rule were **not** retrieved (no token).
-
-## Assessment
-
-- **Backend pytest fails in CI but passes locally** (258 passed locally). Difference: CI runs on **Python 3.12** with fresh Postgres/Redis services and no Mailpit/Tesseract-optional deps; local venv differs. **Root cause not yet identified** — needs the CI log (or a Python-3.12 local repro). **Diagnose → fix → re-run** loop is open.
-- **gitleaks failure:** most likely the **public Firebase web API key** committed in `Pithros/.env.development` (`AIza…` matches the `google-api-key` rule). That key is a **public client key by design**; the correct fix is a scoped `.gitleaks.toml` allowlist (with justification), **not** removing the key. Not yet confirmed from the log.
-
-## Verdict
-**Stage 10 CI/CD: FAILED (real run).** The pipeline executes and catches real issues; two failures are open and require the CI logs / a fix. Do **not** treat this as green.
+**Stage 10 CI/CD: PASS (real GitHub Actions run is green).**
