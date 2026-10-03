@@ -29,7 +29,9 @@ pytestmark = pytest.mark.e2e
 MEMORIAL_NAME = "Mathew E2E Media Lifecycle"
 VOICE_MEMORIAL_NAME = "Mathew E2E Voice Memorial"
 THREE_PHOTOS_NAME = "Mathew E2E Photo Collection"
+CROSS_USER_NAME = "Mathew E2E Private Album"
 ADMIN_EMAIL = "pithros.e2e.admin@gmail.com"
+INTRUDER_EMAIL = "pithros.e2e.intruder@gmail.com"
 VOICE_TITLE = "A Spoken Memory"
 
 
@@ -89,6 +91,24 @@ def admin_credentials(firebase_app):
         {"role": "admin", "admin_subrole": "super_admin"},
     )
     return TestCredentials(email=ADMIN_EMAIL, password=password)
+
+
+@pytest.fixture(scope="module")
+def intruder_credentials(firebase_app):
+    """A second, unrelated real user — a verified steward with no ties to A."""
+    from firebase_admin import auth as fb_auth
+
+    password = secrets.token_urlsafe(18)
+    firebase_tools.delete_user_if_exists(INTRUDER_EMAIL)
+    firebase_tools.with_timeout(
+        "create_intruder_user",
+        fb_auth.create_user,
+        email=INTRUDER_EMAIL,
+        password=password,
+        email_verified=True,
+        display_name="Mathew E2E Intruder",
+    )
+    return TestCredentials(email=INTRUDER_EMAIL, password=password)
 
 
 def _create_memorial(page, stack, *, name: str) -> None:
@@ -539,5 +559,100 @@ def test_three_photos_delete_one_keeps_the_others(
         assert int(deleted[0]) == 1
 
         assert not page_errors, f"uncaught page errors during the journey: {page_errors}"
+    finally:
+        context.close()
+
+
+def test_another_user_cannot_touch_a_stewards_media(
+    browser,
+    e2e_stack,
+    frontend_config,
+    steward_credentials,
+    intruder_credentials,
+    assets,
+    r2_client,
+):
+    """A second real user must not be able to read, download, or delete A's media."""
+    context = browser.new_context()
+    page = context.new_page()
+    try:
+        # ── Steward A uploads one private photograph ────────────────────────
+        _login(page, e2e_stack, steward_credentials, landing=lambda url: "/dashboard" in url)
+        _create_memorial(page, e2e_stack, name=CROSS_USER_NAME)
+        memorial_id = _memorial_id(CROSS_USER_NAME)
+        _open_media_view(page, e2e_stack)
+        page.locator('input[type="file"]').first.set_input_files(str(assets.photos[0]))
+        row = _wait_for(
+            lambda: _ready_photo(memorial_id),
+            timeout=60,
+            message="the photograph never became ready",
+        )
+        media_id, _status, _privacy, tier, bucket, key, _thumb, _deleted = row
+        assert tier == "private" and bucket == r2_client.private_bucket
+
+        token_a = firebase_tools.sign_in_with_password(
+            frontend_config["VITE_FIREBASE_API_KEY"],
+            steward_credentials.email,
+            steward_credentials.password,
+        )
+        owns = httpx.get(
+            f"{e2e_stack.backend_url}/api/v1/memorials/{memorial_id}/media",
+            headers={"Authorization": f"Bearer {token_a}"},
+            timeout=20,
+        )
+        assert owns.status_code == 200, owns.text
+        assert any(item["id"] == media_id for item in owns.json())
+
+        # ── User B (a different real user) is refused on every media route ──
+        token_b = firebase_tools.sign_in_with_password(
+            frontend_config["VITE_FIREBASE_API_KEY"],
+            intruder_credentials.email,
+            intruder_credentials.password,
+        )
+        headers_b = {"Authorization": f"Bearer {token_b}"}
+        attempts = [
+            ("GET", f"/api/v1/memorials/{memorial_id}/media", None),
+            ("DELETE", f"/api/v1/memorials/{memorial_id}/media/{media_id}", None),
+            ("PATCH", f"/api/v1/memorials/{memorial_id}/media/{media_id}", {"title": "hijacked"}),
+            (
+                "POST",
+                f"/api/v1/memorials/{memorial_id}/media/upload-intent",
+                {
+                    "filename": "intruder.jpg",
+                    "contentType": "image/jpeg",
+                    "sizeBytes": 1024,
+                    "kind": "photo",
+                    "title": "intruder",
+                },
+            ),
+        ]
+        for method, path, body in attempts:
+            response = httpx.request(
+                method,
+                f"{e2e_stack.backend_url}{path}",
+                headers=headers_b,
+                json=body,
+                timeout=20,
+            )
+            assert response.status_code in (403, 404), (
+                f"intruder {method} {path} returned {response.status_code}: {response.text[:200]}"
+            )
+
+        # ── A's media is wholly untouched ───────────────────────────────────
+        after = _photo_row(memorial_id)
+        assert after[1] == "ready" and after[7] is None
+        assert after[5] == key
+        assert r2_client.exists(r2_client.private_bucket, key)
+
+        # ── And B's own dashboard never shows A's memorial ──────────────────
+        b_context = browser.new_context()
+        try:
+            b_page = b_context.new_page()
+            _sign_in_again(b_page, e2e_stack, intruder_credentials, console=[], failed=[])
+            b_page.get_by_text("You have not created a memorial yet.", exact=False).wait_for(
+                timeout=20_000
+            )
+        finally:
+            b_context.close()
     finally:
         context.close()
