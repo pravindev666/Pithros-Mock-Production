@@ -1,0 +1,21 @@
+# Pithros gitleaks configuration.
+#
+# The Firebase Web API key is a PUBLIC client-side identifier, not a server
+# secret: it is embedded in the browser bundle by design, and access is enforced
+# by Firebase security rules and by the Pithros backend — never by hiding it.
+# Google documents it as safe to expose.
+#
+# This is the ONLY allowlist entry, and it is deliberately narrow: it matches the
+# exact key value AND only within the k6 load-test scripts, where it historically
+# appeared as a convenience default. Nothing else is ignored; the default rules
+# remain fully active.
+title = "Pithros gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public Firebase Web API key (client-side, not a secret) in k6 load scripts"
+regexTarget = "match"
+regexes = ['''AIzaSyCHLZnQqgalKjzioZs682ozMSoX6XuW5ds''']
+paths = ['''^load/k6/.*\.js$''']

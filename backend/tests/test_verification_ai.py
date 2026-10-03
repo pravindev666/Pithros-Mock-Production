@@ -51,8 +51,11 @@ def _make_certificate_image(
         font = ImageFont.truetype("arial.ttf", 22)
         font_large = ImageFont.truetype("arial.ttf", 26)
     except OSError:
-        font = ImageFont.load_default()
-        font_large = font
+        # Linux CI has no arial.ttf. A fixed-size bitmap default renders the digits
+        # too small for Tesseract (observed: 2026 read as 2028); the size-aware
+        # default keeps the glyphs large enough to be read correctly everywhere.
+        font = ImageFont.load_default(size=22)
+        font_large = ImageFont.load_default(size=26)
 
     draw.text((220, 40), title, fill=(0, 0, 0), font=font_large)
     draw.text((60, 110), "Municipal Corporation of Bangalore", fill=(0, 0, 0), font=font)

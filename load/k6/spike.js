@@ -6,7 +6,7 @@ import { check, sleep } from 'k6';
 
 const BASE = __ENV.BASE_URL || 'http://10.153.175.57';
 const V1 = `${BASE}/api/v1`;
-const API_KEY = __ENV.FIREBASE_API_KEY || 'AIzaSyCHLZnQqgalKjzioZs682ozMSoX6XuW5ds';
+const API_KEY = __ENV.FIREBASE_API_KEY;
 const BASE_VUS = Number(__ENV.BASE_VUS || 40);
 const SPIKE_VUS = Number(__ENV.SPIKE_VUS || 200);
 
@@ -32,6 +32,9 @@ export const options = {
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 export function setup() {
+  if (!API_KEY) {
+    throw new Error('FIREBASE_API_KEY is required (public Firebase web key)');
+  }
   const email = `k6.spike.${Date.now()}@gmail.com`;
   const signup = http.post(
     `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
