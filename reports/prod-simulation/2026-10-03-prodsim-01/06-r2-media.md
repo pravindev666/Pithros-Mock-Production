@@ -64,7 +64,11 @@ Owner applied a CORS rule to the buckets. Verified against the deployed stack:
 - The R2 credentials in `.env` **cannot manage CORS** — `GetBucketCors`/`PutBucketCors` return `AccessDenied`; a token with bucket-config permission (or the Cloudflare dashboard) is required.
 - `scripts/prod-sim/r2-cors-policy.json` already carries the correct sim origin; its `AllowedHeaders` should be `["content-type"]` (only what the browser sends) rather than `*` — not changed yet.
 
-## 4. Verdict
+## 4. Verdict — RESOLVED
 
-**Stage 4c: PASS (server path) / BLOCKED (browser upload — external CORS origin mismatch).**
-Code-controlled defects: 0. External blocks: applied R2 CORS origins ≠ deployed frontend origin.
+**Owner added `http://10.153.175.57` to the `pithros-private` bucket CORS (PUT/GET/HEAD).**
+Re-verified: `OPTIONS` with `Origin: http://10.153.175.57` → **204**, `ACAO=http://10.153.175.57`, `ACAM=PUT, GET, HEAD`, `ACAH=content-type`.
+
+**Real Chromium browser upload — PASS (6/6):** from page origin `http://10.153.175.57`, `fetch(PUT presignedUrl)` returned **200** with `access-control-allow-origin: http://10.153.175.57` → `upload-complete` **200** → media listed → retrievable (200) → still present on re-read. No filesystem fallback.
+
+**Stage 4c: PASS — browser-to-R2 path proven end-to-end.** The earlier origin mismatch is closed.

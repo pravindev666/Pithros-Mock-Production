@@ -12,11 +12,11 @@
 
 ## Findings (not code defects)
 
-| ID | Class | Sev | Description |
-|----|-------|-----|-------------|
-| F1 | **External** | P1 | **R2 CORS origin mismatch** — browser media upload blocked (`http://10.153.175.57` not in bucket origins). Not changed; owner action. |
-| F2 | **External** | P1 | **Cashfree credentials unavailable** — billing/receipt E2E BLOCKED. |
-| F3 | **Product gap** | P2 | **Invitations are never emailed** (`send_email` used only by receipts). Steward must share the returned link. |
+| ID | Class | Sev | Description | Status |
+|----|-------|-----|-------------|--------|
+| F1 | **External** | P1 | **R2 CORS origin mismatch** — browser media upload blocked | **FIXED** — owner added `http://10.153.175.57`; real Chromium upload **6/6 PASS** |
+| F2 | **External** | P1 | **Cashfree credentials unavailable** — billing/receipt E2E BLOCKED. | Open (external) |
+| F3 | **Product gap** | P2 | **Invitations are never emailed** (`send_email` used only by receipts). | **FIXED** (`cb09a5a`) — invitation email implemented + verified E2E (11/11) |
 | F4 | **Capacity** | P1 | **CPU + remote-DB latency** saturate at ~100–200 concurrent; 8–21 % errors, p99 10–43 s. Not a clean production pass. |
 | F5 | **Ops** | P2 | No `sysstat`/metrics/DLQ surface; host firewall unset (awaiting approval). |
 | F6 | **Observability** | P3 | No metrics endpoint / error aggregator. |
