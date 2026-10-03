@@ -648,6 +648,7 @@ export default function App() {
                 currentRoute={currentRoute}
                 onNavigate={navigate}
                 memorials={memorials}
+                onAccepted={loadMemorials}
               />
             )}
             {currentRoute.startsWith('/checkout') && (

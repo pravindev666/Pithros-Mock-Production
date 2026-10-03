@@ -23,6 +23,7 @@ interface AcceptInvitationViewProps {
   currentRoute: string;
   onNavigate: (route: string) => void;
   memorials?: Memorial[];
+  onAccepted?: () => void | Promise<void>;
 }
 
 const ROLE_DETAILS: Record<
@@ -77,6 +78,7 @@ export const AcceptInvitationView: React.FC<AcceptInvitationViewProps> = ({
   currentRoute,
   onNavigate,
   memorials = [],
+  onAccepted,
 }) => {
   const { isDark } = useTheme();
   const { currentUser, setReturnUrl, switchRole } = useAuth();
@@ -155,6 +157,9 @@ export const AcceptInvitationView: React.FC<AcceptInvitationViewProps> = ({
       // The server records the contributor relationship; nothing about access is
       // decided by the client.
       await api.acceptInvitation(token);
+      // The new membership must be reflected before the dashboard renders —
+      // otherwise the contributor lands on an empty "no memorial yet" console.
+      await onAccepted?.();
       setIsAccepted(true);
       showToast(`Welcome to the family circle as ${roleInfo.title}.`, { type: 'success' });
       setTimeout(() => {
