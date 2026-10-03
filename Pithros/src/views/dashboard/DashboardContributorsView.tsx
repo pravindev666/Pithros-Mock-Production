@@ -23,6 +23,7 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
   const [relationship, setRelationship] = useState('');
   const [role, setRole] = useState<FamilyContributorRole>('contributor');
   const [invitedSuccess, setInvitedSuccess] = useState(false);
+  const [inviteTokens, setInviteTokens] = useState<Record<string, string>>({});
   const [copiedMemberId, setCopiedMemberId] = useState<string | null>(null);
 
   const roleLabels: Record<FamilyContributorRole, string> = {
@@ -51,7 +52,15 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
     };
 
     try {
-      await api.inviteFamilyMember(memorial.id, newMember);
+      const { member: invited, invitationToken } = await api.inviteFamilyMember(
+        memorial.id,
+        newMember,
+      );
+      // Hold the token so the copy-link button can hand the invitee a real
+      // acceptance credential (the list endpoint never exposes tokens).
+      if (invitationToken && invited?.id) {
+        setInviteTokens((prev) => ({ ...prev, [invited.id]: invitationToken }));
+      }
     } catch {
       // In offline/demo fallback
       try {
@@ -339,7 +348,8 @@ export const DashboardContributorsView: React.FC<DashboardContributorsViewProps>
                   <button
                     type="button"
                     onClick={() => {
-                      const inviteUrl = `${window.location.origin}/invite/${memorial.id}?role=${member.role}&memberId=${member.id}`;
+                      const token = inviteTokens[member.id];
+                      const inviteUrl = `${window.location.origin}/invite/${memorial.id}?role=${member.role}&memberId=${member.id}${token ? `&token=${token}` : ''}`;
                       navigator.clipboard.writeText(inviteUrl);
                       setCopiedMemberId(member.id);
                       setTimeout(() => setCopiedMemberId(null), 2000);

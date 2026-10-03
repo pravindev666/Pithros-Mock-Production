@@ -84,6 +84,7 @@ export const AcceptInvitationView: React.FC<AcceptInvitationViewProps> = ({
 
   const [memorial, setMemorial] = useState<Memorial | null>(null);
   const [role, setRole] = useState<FamilyContributorRole>('contributor');
+  const [token, setToken] = useState<string | null>(null);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,6 +100,10 @@ export const AcceptInvitationView: React.FC<AcceptInvitationViewProps> = ({
       const qRole = searchParams.get('role') as FamilyContributorRole;
       if (qRole && ROLE_DETAILS[qRole]) {
         setRole(qRole);
+      }
+      const qToken = searchParams.get('token');
+      if (qToken) {
+        setToken(qToken);
       }
 
       // Find in existing memorials or fetch from API
@@ -137,24 +142,19 @@ export const AcceptInvitationView: React.FC<AcceptInvitationViewProps> = ({
       return;
     }
 
+    if (!token) {
+      showToast(
+        'This invitation link is incomplete. Ask the steward to resend the invitation.',
+        { type: 'warning' },
+      );
+      return;
+    }
+
     setIsAccepting(true);
     try {
-      if (memorial) {
-        // Activate member in memorial circle
-        const existingFamily = memorial.family || [];
-        const updatedFamily = existingFamily.map((m) =>
-          m.email === currentUser.email || m.name.toLowerCase() === (currentUser.displayName || '').toLowerCase()
-            ? { ...m, status: 'active' as const }
-            : m
-        );
-        try {
-          await api.updateMemorial(memorial.id, { family: updatedFamily } as any);
-        } catch {
-          // fallback
-        }
-      }
-
-      switchRole('family_contributor');
+      // The server records the contributor relationship; nothing about access is
+      // decided by the client.
+      await api.acceptInvitation(token);
       setIsAccepted(true);
       showToast(`Welcome to the family circle as ${roleInfo.title}.`, { type: 'success' });
       setTimeout(() => {

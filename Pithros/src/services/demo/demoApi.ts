@@ -248,7 +248,7 @@ export const demoApi = {
   async inviteFamilyMember(
     memorialId: string,
     member: Omit<FamilyMember, 'id' | 'status'>
-  ): Promise<FamilyMember> {
+  ): Promise<{ member: FamilyMember; invitationToken?: string | null }> {
     const list = await this.getMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newMember: FamilyMember = {
@@ -260,7 +260,23 @@ export const demoApi = {
       list[idx].family.push(newMember);
       setStored('memorials', list);
     }
-    return newMember;
+    return { member: newMember, invitationToken: `demo-token-${newMember.id}` };
+  },
+
+  async acceptInvitation(_token: string): Promise<FamilyMember> {
+    const list = await this.getMemorials();
+    const member = list.flatMap((m) => m.family).find((f) => f.status === 'invited');
+    if (member) {
+      member.status = 'active';
+      setStored('memorials', list);
+      return member;
+    }
+    return {
+      id: 'fam_demo',
+      name: 'Family Contributor',
+      role: 'contributor',
+      status: 'active',
+    } as FamilyMember;
   },
 
   // Media

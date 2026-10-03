@@ -99,7 +99,7 @@ export const liveApi = {
   async inviteFamilyMember(
     memorialId: string,
     member: Omit<FamilyMember, 'id' | 'status'>,
-  ): Promise<FamilyMember> {
+  ): Promise<{ member: FamilyMember; invitationToken?: string | null }> {
     const email = member.email || member.invitedEmail;
     if (!email) {
       throw new ValidationFailedError(
@@ -107,13 +107,17 @@ export const liveApi = {
       );
     }
 
-    const { member: invited } = await contributorsApi.invite(memorialId, {
+    const invited = await contributorsApi.invite(memorialId, {
       email,
       role: member.role,
       relationship: member.relationship,
       displayName: member.name,
     });
-    return invited;
+    return { member: invited.member, invitationToken: invited.invitationToken ?? null };
+  },
+
+  async acceptInvitation(token: string): Promise<FamilyMember> {
+    return contributorsApi.accept(token);
   },
 
   // ─── Farewell Network & Provider Leads ──────────────────────────────────
