@@ -1,18 +1,19 @@
-# 15 — ROLLBACK · PITHROS PRODUCTION SIMULATION
+# 15 — ROLLBACK (DRILL) · PITHROS PRODUCTION SIMULATION
 
-**RUN_ID:** `2026-10-03-prodsim-01` · **Tested app SHA:** `c050b2f` · **Date:** 2026-10-03
+**RUN_ID:** `2026-10-03-prodsim-01` · **Deployed SHA:** `c050b2f` · **Date:** 2026-10-03
 
-## Procedure (defined, repo-native)
+## Drill executed — **PASS**
 
-1. Exact revisions are delivered by **git bundle** and checked out by SHA on the VM (`git checkout <sha>`), so any prior commit can be restored deterministically.
-2. Rollback = `git checkout <known-good-sha>` → `scripts/prod-sim/deploy.sh` (rebuild + `alembic upgrade head` + seed + `up -d`) → `scripts/prod-sim/smoke.sh`.
-3. Migrations are **additive** in this project (no destructive migrations in the chain), so a code rollback does not require a schema rollback.
+| Step | Result |
+|---|---|
+| 1. Known-good state | `/health` 200, `/ready` 200 |
+| 2. Controlled bad config applied (`CORS_ORIGINS=*`, violates production boot guard) | applied |
+| 3. **Detected** | `/health` → **502**; backend health `starting` (guard refuses boot) |
+| 4. Rollback (restore `app.env` + recreate) | — |
+| 5. **Recovered** | `/health` 200, `/ready` 200; backend/beat/redis/worker/caddy/frontend/mailpit all up |
 
-## Status: PARTIAL
-
-- The **forward deploy** path (checkout → deploy.sh → smoke) was exercised repeatedly this session (commits `c34ef29`, `c050b2f`) and each time the stack returned healthy — i.e., the deploy/verify loop works.
-- A **deliberate bad-build injection + detection + rollback** cycle was **not** executed this pass (time + to avoid destabilising the environment). Marked **PENDING**.
-- The **DB is never destructively migrated**, satisfying the "no destructive production migrations" rule.
+- No destructive database migration was used; the schema was untouched.
+- The mechanism (exact-SHA git bundle + `deploy.sh` + smoke) is the same one used for the forward deploys this session.
 
 ## Verdict
-**Stage 8 rollback: PARTIAL** — mechanism defined and deploy-side verified; a full bad→detect→rollback drill is **PENDING**.
+**Stage 8 rollback: PASS.** Detection and recovery verified end-to-end with a non-destructive bad config.

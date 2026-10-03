@@ -1,23 +1,25 @@
-# 18 — CONTAINER SECURITY
+# 18 — CONTAINER SECURITY (Trivy) · PITHROS PRODUCTION SIMULATION
 
-**RUN_ID:** `2026-10-03-prodsim-01` · **Deployed SHA:** `c050b2f`
+**RUN_ID:** `2026-10-03-prodsim-01` · **Deployed SHA:** `c050b2f` · **Date:** 2026-10-03
+**Scanner:** `aquasec/trivy` (image scan, `HIGH,CRITICAL`) run on the VM against the deployed images.
 
-## Static review (verified)
+## Findings — `pithros-backend:sim`
 
-| Image | Base | User | Healthcheck | Ports | Notes |
-|---|---|---|---|---|---|
-| `pithros-backend:sim` | `python:3.14-slim` (multi-stage) | **non-root `pithros` uid 1001** | compose healthcheck on `/health` | 8000 (internal) | `pg_dump` + `tesseract-ocr` installed; **no secrets baked**; `/app` chowned to `pithros` |
-| `pithros-frontend:sim` | `node:22-alpine` build → `caddy:2-alpine` | caddy (non-root) | image HEALTHCHECK | 80 (internal) | only build args (public VITE_*); `.dockerignore` present |
-| `redis` | `redis:7-alpine` | redis | `redis-cli ping` | internal | `noeviction`, appendonly |
-| `caddy` | `caddy:2-alpine` | caddy | — | **:80 published** | single door |
-| `mailpit` | `axllent/mailpit:latest` | non-root | — | :8025 published | sim-only |
+| Target | Type | Vulns | Sev |
+|---|---|---|---|
+| `pithros-backend:sim` (debian 13.7) | debian | **85** | 84 HIGH, **1 CRITICAL** |
+| Python (`/opt/venv`) | python-pkg | **4** | 4 HIGH |
+| `/app/app/auth/firebase.py` | secret | **1** | 1 CRITICAL — **FALSE POSITIVE** |
 
-- **No container runs as root.**
-- **No container publishes a database/redis/broker port.**
-- Secrets live in `runtime/` (mode 600) and are injected as env — never in the image (verified: `/app` contains no `.env`).
+- **CRITICAL debian:** `libxml2` (CVE-2026-6653 DoS) + util-linux (bsdutils CVE-2026-76642 HIGH) etc. These are **base-image OS packages** (`python:3.14-slim`, Debian 13) — mostly `affected`/no-fix. Class: **base-image hygiene**, fix = rebuild on a patched base, not a code change.
+- **Python HIGH x4:** includes `msgpack` GHSA-6v7p-g79w-8964 (fixed in 1.2.1; image has 1.1.2) → **actionable** dependency bump.
+- **Secret CRITICAL — FALSE POSITIVE:** the GCP-service-account rule matched the **shape** of the credentials dict in `app/auth/firebase.py` (the D3 fix builds `{"type":"service_account","private_key":settings.firebase_private_key,...}`). **No credential value is present** — it's a template read from env. Recommended: a Trivy secret-rule exclusion / `.trivyignore`, or restructure the literal. **Not a leak.**
 
-## Not run
-- **Trivy / CVE image + dependency scan — PENDING** (not executed this pass). Recommend `aquasec/trivy image pithros-backend:sim` on the VM.
-- Base-image pinning beyond tags (digest pinning) — not applied.
+## Image structure (verified)
 
-**Verdict: PARTIAL.** Structural hardening verified; vulnerability scanning **PENDING**.
+Non-root users; no DB/Redis/broker ports published; secrets injected as env from `runtime/` (600), not baked; `/app` owned by `pithros`; frontend is Caddy serving static assets.
+
+## Frontend image
+Scan was still running when this report was finalized → **PENDING**.
+
+**Verdict: FAILED (actionable) + PARTIAL.** Base-image CVE backlog + one actionable Python dep (`msgpack`); one false-positive secret. No mass upgrades performed.

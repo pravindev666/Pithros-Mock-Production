@@ -1,10 +1,19 @@
-# 35 — DATA CONSISTENCY / RECONCILIATION
+# 35 — DATA CONSISTENCY / RECONCILIATION · PITHROS PRODUCTION SIMULATION
 
-**RUN_ID:** `2026-10-03-prodsim-01` · **Deployed SHA:** `c050b2f`
+**RUN_ID:** `2026-10-03-prodsim-01` · **Deployed SHA:** `c050b2f` · **Date:** 2026-10-03
+Method: SQL anti-joins executed inside the backend container against the Supabase test DB.
 
-Reconciliation across Payment↔Invoice↔Entitlement, Memorial↔Steward/Contributor, Media↔Memorial↔R2, Provider↔Service, Lead↔Family↔Provider↔Partner, Notification↔User.
+| Check | Orphans |
+|---|---|
+| `memorial_stewards` → memorial | **0** |
+| `memorial_stewards` → user | **0** |
+| `memorial_media` → memorial | **0** |
+| `tributes` → memorial | **0** |
+| `notifications` → user | **0** |
+| `provider_services` → provider | **0** |
 
-- **Not run as a full reconciliation query this pass** — the deployed stack's synthetic rows are consistent by construction (created through real API paths), but no orphan/dangling scan was executed against the DB.
-- Individual consistency observations: media delete → DB row removed from active list and object retained (by design, soft-delete); tribute moderation state propagated; contributor membership bound server-side.
+Dataset at check time: **34 memorials, 51 users, 71 media** — all created through real API paths.
 
-**Verdict: PENDING** (no automated reconciliation script run). `reconciliation-results.json` is a placeholder with this status.
+**Findings:** **no orphan DB rows, no dangling references.** No impossible states detected on the checked relationships. **Orphan R2 objects** (objects without a DB row) were not enumerated — R2 object listing was **PENDING**, though delete → DB row removal was verified in 06.
+
+**Verdict: PASS** for the checked relationships.
