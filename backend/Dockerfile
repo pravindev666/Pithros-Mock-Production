@@ -35,7 +35,8 @@ COPY --from=builder /opt/venv /opt/venv
 WORKDIR /app
 COPY --chown=pithros:pithros . .
 
-RUN chmod +x /app/scripts/*.sh 2>/dev/null || true
+RUN chown pithros:pithros /app \
+    && (chmod +x /app/scripts/*.sh 2>/dev/null || true)
 
 USER pithros
 EXPOSE 8000
