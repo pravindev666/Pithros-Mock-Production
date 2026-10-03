@@ -184,6 +184,19 @@ def invite(
         )
 
     db.refresh(contributor)
+
+    # Deliver the invitation after the row is committed, so the recipient can
+    # never receive a link to an invitation that was rolled back. Enqueue is
+    # best-effort: a broker outage must not fail the invite.
+    from app.workers.celery_app import enqueue
+    from app.workers.tasks.email_tasks import send_contributor_invitation_email
+
+    enqueue(
+        send_contributor_invitation_email,
+        contributor_id=str(contributor.id),
+        token=token,
+    )
+
     return contributor, token
 
 

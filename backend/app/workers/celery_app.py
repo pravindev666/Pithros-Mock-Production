@@ -21,6 +21,7 @@ celery_app = Celery(
         "app.workers.tasks.media_tasks",
         "app.workers.tasks.maintenance_tasks",
         "app.workers.tasks.lifecycle_tasks",
+        "app.workers.tasks.email_tasks",
         "app.verification.tasks",
         "app.workers.tasks.archive_tasks",
     ],
