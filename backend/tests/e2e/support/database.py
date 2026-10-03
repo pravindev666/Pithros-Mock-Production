@@ -18,6 +18,10 @@ E2E_DATABASE_URL = f"postgresql+psycopg://pithros:pithros@localhost:5432/{E2E_DB
 E2E_DSN = f"postgresql://pithros:pithros@localhost:5432/{E2E_DB_NAME}"
 ADMIN_DSN = "postgresql://pithros:pithros@localhost:5432/postgres"
 
+# Reference data: never created by a migration, and shared by every journey.
+# Production seeds the same catalog with scripts/seed_production_profiles.py.
+PRESERVED_TABLES = {"alembic_version", "plans", "plan_prices"}
+
 
 def ensure_database() -> None:
     with psycopg.connect(ADMIN_DSN, autocommit=True) as conn:
@@ -44,15 +48,45 @@ def run_alembic(project_root: Path) -> None:
         raise RuntimeError(f"alembic upgrade head failed:\n{completed.stdout}\n{completed.stderr}")
 
 
+def seed_reference_data() -> None:
+    """Seed the authoritative pricing catalog into the E2E database.
+
+    Alembic creates the billing tables but no migration inserts the catalog, so a
+    freshly migrated database has no plans and any billing journey would 404.
+    Reuses the application's own idempotent ``seed_pricing_catalog`` rather than
+    duplicating the catalog here.
+    """
+    backend_dir = Path(__file__).resolve().parents[3]
+    python = backend_dir / ".venv" / "Scripts" / "python.exe"
+    code = (
+        "from app.core.database import SessionLocal;"
+        "from app.billing.catalog import seed_pricing_catalog;"
+        "db = SessionLocal();"
+        "seed_pricing_catalog(db);"
+        "db.close()"
+    )
+    completed = subprocess.run(
+        [str(python), "-c", code],
+        cwd=str(backend_dir),
+        env={**os.environ.copy(), "DATABASE_URL": E2E_DATABASE_URL},
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"seeding the E2E pricing catalog failed:\n{completed.stdout}\n{completed.stderr}"
+        )
+
+
 def truncate_all() -> None:
     with psycopg.connect(E2E_DSN, autocommit=True) as conn:
         rows = conn.execute(
-            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' "
-            "AND tablename <> 'alembic_version'"
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
         ).fetchall()
-        if not rows:
+        tables = ", ".join(f'"{row[0]}"' for row in rows if row[0] not in PRESERVED_TABLES)
+        if not tables:
             return
-        tables = ", ".join(f'"{row[0]}"' for row in rows)
         conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE")
 
 

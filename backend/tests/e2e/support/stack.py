@@ -123,6 +123,7 @@ class StackManager:
 
         database.ensure_database()
         database.run_alembic(self.project_root)
+        database.seed_reference_data()
 
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
         env = {

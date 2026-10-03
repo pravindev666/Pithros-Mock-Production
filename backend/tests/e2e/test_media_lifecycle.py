@@ -13,6 +13,7 @@ synthetic E2E database; no journey ever writes business state directly.
 from __future__ import annotations
 
 import re
+import secrets
 import time
 
 import httpx
@@ -26,6 +27,9 @@ from .test_verification_chain import _login, _wait_for
 pytestmark = pytest.mark.e2e
 
 MEMORIAL_NAME = "Mathew E2E Media Lifecycle"
+VOICE_MEMORIAL_NAME = "Mathew E2E Voice Memorial"
+ADMIN_EMAIL = "pithros.e2e.admin@gmail.com"
+VOICE_TITLE = "A Spoken Memory"
 
 
 @pytest.fixture(scope="module")
@@ -50,6 +54,40 @@ def steward_credentials(firebase_app, steward_password):
         display_name="Mathew E2E Steward",
     )
     return TestCredentials(email=TEST_STEWARD_EMAIL, password=steward_password.password)
+
+
+@pytest.fixture(scope="module")
+def admin_credentials(firebase_app):
+    """The same fixture-owned synthetic admin the other E2E modules use.
+
+    Fixtures do not cross test modules, so this module declares its own. The
+    admin then authenticates for real; the backend copies the role from the
+    verified claims exactly as it does for every administrator.
+    """
+    from firebase_admin import auth as fb_auth
+
+    password = secrets.token_urlsafe(18)
+    try:
+        existing = firebase_tools.with_timeout("get_user", fb_auth.get_user_by_email, ADMIN_EMAIL)
+        firebase_tools.with_timeout("delete_user", fb_auth.delete_user, existing.uid)
+    except fb_auth.UserNotFoundError:
+        pass
+
+    created = firebase_tools.with_timeout(
+        "create_admin_user",
+        fb_auth.create_user,
+        email=ADMIN_EMAIL,
+        password=password,
+        email_verified=True,
+        display_name="Pithros E2E Admin",
+    )
+    firebase_tools.with_timeout(
+        "set_admin_claims",
+        fb_auth.set_custom_user_claims,
+        created.uid,
+        {"role": "admin", "admin_subrole": "super_admin"},
+    )
+    return TestCredentials(email=ADMIN_EMAIL, password=password)
 
 
 def _create_memorial(page, stack, *, name: str) -> None:
@@ -143,6 +181,151 @@ def _thumb_ready(memorial_id: str):
 def _deleted_photo(memorial_id: str):
     row = _photo_row(memorial_id)
     return row if row and row[7] is not None and row[1] == "rejected" else None
+
+
+def _voice_row(memorial_id: str):
+    return database.fetch_one(
+        "SELECT id::text, status, privacy, storage_tier, storage_bucket, storage_key, "
+        "thumbnail_key, deleted_at, size_bytes FROM memorial_media "
+        "WHERE memorial_id = %s::uuid AND kind = 'voice' "
+        "ORDER BY created_at DESC LIMIT 1",
+        (memorial_id,),
+    )
+
+
+def _ready_voice(memorial_id: str):
+    row = _voice_row(memorial_id)
+    return row if row and row[1] == "ready" else None
+
+
+def _open_voice_form(page) -> None:
+    page.get_by_role("button", name=re.compile("Voice Memories")).click()
+    page.get_by_role("button", name="Add Voice Memory").click()
+    page.get_by_placeholder("e.g. Explaining the Monsoon Winds (1998)").wait_for(timeout=20_000)
+
+
+def _submit_voice(page, *, title: str, audio_path) -> None:
+    page.get_by_placeholder("e.g. Explaining the Monsoon Winds (1998)").fill(title)
+    page.locator('input[type="file"]').first.set_input_files(str(audio_path))
+    page.get_by_role("button", name="Save Voice Memory").click()
+
+
+def _grant_memorial_care(*, stack, frontend_config, admin_credentials, steward_email, memorial_id):
+    """A real, audited admin grant (the endpoint's own contract).
+
+    This is the supported complimentary-preservation path — it records an
+    ``admin_grant`` subscription and a $0 invoice, never a fabricated payment.
+    """
+    admin_token = firebase_tools.sign_in_with_password(
+        frontend_config["VITE_FIREBASE_API_KEY"],
+        admin_credentials.email,
+        admin_credentials.password,
+    )
+    response = httpx.post(
+        f"{stack.backend_url}/api/v1/billing/admin/grant",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "targetUserEmail": steward_email.lower(),
+            "planCode": "MEMORIAL_CARE",
+            "durationMonths": 12,
+            "reason": "E2E media verification: complimentary preservation grant",
+            "memorialId": memorial_id,
+        },
+        timeout=30,
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def test_voice_memory_is_gated_then_uploads_on_a_grant(
+    browser, e2e_stack, frontend_config, steward_credentials, admin_credentials, assets, r2_client
+):
+    context = browser.new_context()
+    page = context.new_page()
+    page_errors: list[str] = []
+    try:
+        _login(page, e2e_stack, steward_credentials, landing=lambda url: "/dashboard" in url)
+        _create_memorial(page, e2e_stack, name=VOICE_MEMORIAL_NAME)
+        memorial_id = _memorial_id(VOICE_MEMORIAL_NAME)
+
+        # ── 1. A Free memorial refuses voice memory (the real gate) ─────────
+        _open_media_view(page, e2e_stack)
+        _open_voice_form(page)
+        _submit_voice(page, title=VOICE_TITLE, audio_path=assets.voice)
+        page.get_by_text(
+            "Voice memories are preserved with PITHROS Memorial Care", exact=False
+        ).first.wait_for(timeout=30_000)
+        assert _voice_row(memorial_id) is None, "a gated upload still created a media row"
+
+        # ── 2. A real admin grant makes this memorial premium ───────────────
+        granted = _grant_memorial_care(
+            stack=e2e_stack,
+            frontend_config=frontend_config,
+            admin_credentials=admin_credentials,
+            steward_email=steward_credentials.email,
+            memorial_id=memorial_id,
+        )
+        assert granted["planCode"] == "MEMORIAL_CARE"
+
+        steward_token = firebase_tools.sign_in_with_password(
+            frontend_config["VITE_FIREBASE_API_KEY"],
+            steward_credentials.email,
+            steward_credentials.password,
+        )
+        entitlements = httpx.get(
+            f"{e2e_stack.backend_url}/api/v1/billing/memorials/{memorial_id}/entitlements",
+            headers={"Authorization": f"Bearer {steward_token}"},
+            timeout=20,
+        )
+        assert entitlements.status_code == 200, entitlements.text
+        assert entitlements.json()["permissions"]["canUploadVoice"] is True
+
+        # ── 3. The audio uploads through the real UI to R2 ──────────────────
+        page.reload(wait_until="domcontentloaded")
+        _open_media_view(page, e2e_stack)
+        _open_voice_form(page)
+        _submit_voice(page, title=VOICE_TITLE, audio_path=assets.voice)
+
+        row = _wait_for(
+            lambda: _ready_voice(memorial_id),
+            timeout=60,
+            message="the voice memory never reached the ready state",
+        )
+        _media_id, status, privacy, tier, bucket, key, _thumb, deleted_at, _size = row
+        assert status == "ready"
+        assert privacy == "private"
+        assert tier == "private"
+        assert bucket == r2_client.private_bucket
+        assert key.startswith(f"memorials/{memorial_id}/voice/")
+        assert deleted_at is None
+
+        assert r2_client.exists(r2_client.private_bucket, key)
+        raw = r2_client.get(r2_client.private_bucket, key)
+        assert raw[:4] == b"RIFF" and raw[8:12] == b"WAVE", (
+            "the stored object is not the uploaded WAV"
+        )
+
+        # ── 4. It is visible, and survives a refresh ────────────────────────
+        # The memorials refetch after upload leaves the view on the Photos
+        # sub-tab; the tab count proves the voice memory was recorded.
+        page.get_by_text(re.compile(r"Voice Memories \(1\)")).first.wait_for(timeout=20_000)
+
+        # A fresh load shows it in the voice list, and it survives the refresh.
+        page.reload(wait_until="domcontentloaded")
+        _open_media_view(page, e2e_stack)
+        page.get_by_role("button", name=re.compile("Voice Memories")).click()
+        page.get_by_role("button", name="Add Voice Memory").wait_for(timeout=20_000)
+        try:
+            page.get_by_text(VOICE_TITLE, exact=False).first.wait_for(timeout=20_000)
+        except Exception as exc:
+            body = page.locator("body").inner_text()[:1500]
+            raise AssertionError(
+                f"the voice memory is not visible in the UI (url={page.url}).\nBODY={body!r}"
+            ) from exc
+
+        assert not page_errors, f"uncaught page errors during the journey: {page_errors}"
+    finally:
+        context.close()
 
 
 def test_photo_upload_persists_and_delete_removes_it(
