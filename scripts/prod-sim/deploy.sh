@@ -13,13 +13,13 @@
 set -eu
 
 APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-ENV_FILE="${PITHROS_ENV_FILE:-/opt/pithros/env/app.env}"
+ENV_FILE="${PITHROS_ENV_FILE:-$APP_DIR/runtime/app.env}"
 COMPOSE="docker compose --env-file ${ENV_FILE} -f ${APP_DIR}/docker-compose.sim.yml"
 
 echo "==> Deploying revision: $(git -C "${APP_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"
 
 [ -f "${ENV_FILE}" ] || { echo "FATAL: missing ${ENV_FILE} (see scripts/prod-sim/env.template)"; exit 1; }
-[ -f "${APP_DIR}/backend/secrets/firebase-service-account.json" ] || { echo "FATAL: missing backend/secrets/firebase-service-account.json"; exit 1; }
+[ -f "${APP_DIR}/runtime/secrets/firebase-service-account.json" ] || { echo "FATAL: missing runtime/secrets/firebase-service-account.json"; exit 1; }
 
 echo "==> Building images"
 ${COMPOSE} build

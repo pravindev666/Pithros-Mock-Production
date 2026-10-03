@@ -24,6 +24,7 @@ htmlcov/
 .env.local
 .env.production
 backend/secrets/
+runtime/
 *.pem
 *.key
 firebase-service-account*.json

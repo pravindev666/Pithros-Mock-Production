@@ -1,6 +1,6 @@
 # Pithros — production-simulation stack (standalone, one application server).
 #
-#   docker compose --env-file /opt/pithros/env/app.env -f docker-compose.sim.yml up -d
+#   docker compose --env-file runtime/app.env -f docker-compose.sim.yml up -d
 #
 # This is the VirtualBox-VM simulation topology. It is intentionally separate from
 # docker-compose.yml (local dev infra) and docker-compose.prod.yml (the real
@@ -10,6 +10,8 @@
 # Internal to the VM:         redis · backend · worker · beat · frontend · caddy · mailpit.
 # There is NO local Postgres in this stack — business truth lives in Supabase.
 # A disposable Postgres is available under the `drill` profile for backup/restore tests only.
+#
+# Env + secrets live in ./runtime/ (gitignored, mode 600), owned by the deploy user.
 
 name: pithros-sim
 
@@ -32,7 +34,7 @@ services:
     image: pithros-backend:sim
     restart: unless-stopped
     env_file:
-      - /opt/pithros/env/app.env
+      - ./runtime/app.env
     environment:
       ENVIRONMENT: production
       DEMO_MODE: "false"
@@ -41,7 +43,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
     volumes:
-      - ./backend/secrets:/run/secrets:ro
+      - ./runtime/secrets:/run/secrets:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -65,7 +67,7 @@ services:
     restart: unless-stopped
     command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=4"]
     env_file:
-      - /opt/pithros/env/app.env
+      - ./runtime/app.env
     environment:
       ENVIRONMENT: production
       DEMO_MODE: "false"
@@ -73,7 +75,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
     volumes:
-      - ./backend/secrets:/run/secrets:ro
+      - ./runtime/secrets:/run/secrets:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -89,7 +91,7 @@ services:
     restart: unless-stopped
     command: ["celery", "-A", "app.workers.celery_app:celery_app", "beat", "--loglevel=INFO"]
     env_file:
-      - /opt/pithros/env/app.env
+      - ./runtime/app.env
     environment:
       ENVIRONMENT: production
       DEMO_MODE: "false"
