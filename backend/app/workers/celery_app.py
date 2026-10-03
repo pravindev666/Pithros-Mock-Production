@@ -8,6 +8,7 @@ from typing import Any
 from celery import Celery
 from celery.schedules import crontab
 
+import app.models_registry  # noqa: F401  (registers every table on Base.metadata)
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
