@@ -1,0 +1,46 @@
+# Pithros — simulation ingress router (single LAN door).
+#
+# The VM is private; there is no ACME/Let's Encrypt and no Cloudflare Tunnel in the
+# simulation, so TLS is off and Caddy listens on plain :80 for the LAN only.
+# Only this container publishes a host port; FastAPI/Redis/Celery/Mailpit stay on
+# the Docker network. API, health and readiness are routed to FastAPI; everything
+# else is served by the SPA.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	encode gzip zstd
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(self), geolocation=(), payment=()"
+		-Server
+	}
+
+	# Webhook + API traffic must reach FastAPI byte-for-byte (no buffering).
+	handle /api/* {
+		reverse_proxy backend:8000 {
+			flush_interval -1
+		}
+	}
+	handle /health {
+		reverse_proxy backend:8000
+	}
+	handle /ready {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else: the built SPA (with client-side routing fallback).
+	handle {
+		reverse_proxy frontend:80
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

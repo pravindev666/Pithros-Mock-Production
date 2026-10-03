@@ -1,0 +1,172 @@
+# Pithros — production-simulation stack (standalone, one application server).
+#
+#   docker compose --env-file /opt/pithros/env/app.env -f docker-compose.sim.yml up -d
+#
+# This is the VirtualBox-VM simulation topology. It is intentionally separate from
+# docker-compose.yml (local dev infra) and docker-compose.prod.yml (the real
+# Cloudflare Tunnel / Dokploy deploy) so the merge semantics stay predictable.
+#
+# External managed services:  Supabase PostgreSQL (test/staging) · Cloudflare R2 · Firebase.
+# Internal to the VM:         redis · backend · worker · beat · frontend · caddy · mailpit.
+# There is NO local Postgres in this stack — business truth lives in Supabase.
+# A disposable Postgres is available under the `drill` profile for backup/restore tests only.
+
+name: pithros-sim
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    image: pithros-backend:sim
+    restart: unless-stopped
+    env_file:
+      - /opt/pithros/env/app.env
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "false"
+      # External Supabase + internal Redis + external R2 must win over any base defaults.
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
+    volumes:
+      - ./backend/secrets:/run/secrets:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+
+  worker:
+    build:
+      context: ./backend
+    image: pithros-backend:sim
+    restart: unless-stopped
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=4"]
+    env_file:
+      - /opt/pithros/env/app.env
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "false"
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
+    volumes:
+      - ./backend/secrets:/run/secrets:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+
+  beat:
+    build:
+      context: ./backend
+    image: pithros-backend:sim
+    restart: unless-stopped
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "beat", "--loglevel=INFO"]
+    env_file:
+      - /opt/pithros/env/app.env
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "false"
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:?R2_ENDPOINT_URL is required}
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 320m
+
+  frontend:
+    build:
+      context: ./Pithros
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}
+        VITE_DEMO_MODE: "false"
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
+    image: pithros-frontend:sim
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile.sim:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+
+  # Transactional email sink — SMTP 1025 (internal), web UI 8025 (LAN).
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: "500"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+
+  # Disposable local Postgres for backup/restore/DR drills ONLY.
+  # Never the source of truth. Start with: --profile drill
+  pg-drill:
+    image: postgres:16-alpine
+    profiles: ["drill"]
+    restart: "no"
+    environment:
+      POSTGRES_USER: pithros
+      POSTGRES_PASSWORD: drill
+      POSTGRES_DB: pithros_drill
+    volumes:
+      - pgdrilldata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pithros"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  redisdata:
+  caddydata:
+  caddyconfig:
+  pgdrilldata:

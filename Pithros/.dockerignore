@@ -1,0 +1,15 @@
+# Keep the frontend build context small and free of secrets.
+# Vite configuration is supplied as build args (VITE_*), never via .env files.
+node_modules
+dist
+build
+coverage
+.git
+.gitignore
+*.log
+
+# Never bake environment files or local tooling into the image.
+.env
+.env.*
+!.env.example
+e2e
