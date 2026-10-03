@@ -28,6 +28,7 @@ pytestmark = pytest.mark.e2e
 
 MEMORIAL_NAME = "Mathew E2E Media Lifecycle"
 VOICE_MEMORIAL_NAME = "Mathew E2E Voice Memorial"
+THREE_PHOTOS_NAME = "Mathew E2E Photo Collection"
 ADMIN_EMAIL = "pithros.e2e.admin@gmail.com"
 VOICE_TITLE = "A Spoken Memory"
 
@@ -449,6 +450,93 @@ def test_photo_upload_persists_and_delete_removes_it(
         assert r2_client.exists(r2_client.private_bucket, key), (
             "the R2 object was purged on delete; the retention behaviour changed"
         )
+
+        assert not page_errors, f"uncaught page errors during the journey: {page_errors}"
+    finally:
+        context.close()
+
+
+def _ready_photo_count(memorial_id: str) -> int:
+    row = database.fetch_one(
+        "SELECT count(*) FROM memorial_media "
+        "WHERE memorial_id = %s::uuid AND kind = 'photo' "
+        "AND status = 'ready' AND deleted_at IS NULL",
+        (memorial_id,),
+    )
+    return int(row[0]) if row else 0
+
+
+def test_three_photos_delete_one_keeps_the_others(
+    browser, e2e_stack, steward_credentials, assets, r2_client
+):
+    """Uploading three photographs, deleting one, must not touch the other two."""
+    context = browser.new_context()
+    page = context.new_page()
+    page_errors: list[str] = []
+    console: list[str] = []
+    media_traffic: list[str] = []
+    page.on("pageerror", lambda error: page_errors.append(str(error)))
+    page.on("console", lambda message: console.append(f"{message.type}: {message.text}"))
+    page.on(
+        "response",
+        lambda response: (
+            media_traffic.append(f"{response.status} {response.request.method} {response.url}")
+            if "/media/" in response.url or "cloudflarestorage" in response.url
+            else None
+        ),
+    )
+    try:
+        _login(page, e2e_stack, steward_credentials, landing=lambda url: "/dashboard" in url)
+        _create_memorial(page, e2e_stack, name=THREE_PHOTOS_NAME)
+        memorial_id = _memorial_id(THREE_PHOTOS_NAME)
+
+        for index, photo in enumerate(assets.photos, start=1):
+            # A fresh view each time: the uploader swaps to a success panel and
+            # hides its file input after a completed upload.
+            _open_media_view(page, e2e_stack)
+            page.locator('input[type="file"]').first.set_input_files(str(photo))
+            try:
+                _wait_for(
+                    lambda idx=index: _ready_photo_count(memorial_id) == idx,
+                    timeout=60,
+                    message=f"photograph {index} never became ready",
+                )
+            except Exception as exc:
+                body = page.locator("body").inner_text()[:1200]
+                raise AssertionError(
+                    f"photograph {index} upload failed (url={page.url}).\n"
+                    f"BODY={body!r}\nCONSOLE={console[-15:]!r}\nTRAFFIC={media_traffic[-15:]!r}"
+                ) from exc
+
+        rows = database.fetch_all(
+            "SELECT id::text, title, status, storage_bucket, storage_key FROM memorial_media "
+            "WHERE memorial_id = %s::uuid AND kind = 'photo' ORDER BY created_at",
+            (memorial_id,),
+        )
+        assert len(rows) == 3, f"expected 3 photographs, found {len(rows)}"
+        assert all(row[2] == "ready" for row in rows)
+        for _id, _title, _status, bucket, key in rows:
+            assert bucket == r2_client.private_bucket
+            assert r2_client.exists(r2_client.private_bucket, key)
+
+        for title in ("photo_1", "photo_2", "photo_3"):
+            page.get_by_text(title, exact=False).first.wait_for(timeout=20_000)
+
+        # Delete the middle photograph, targeting its own card's delete button.
+        card = page.locator("div.group").filter(has_text="photo_2").first
+        card.locator('button[title="Delete photo"]').click()
+        page.get_by_text("photo_2", exact=False).first.wait_for(state="detached", timeout=20_000)
+
+        # The other two are untouched, in the UI and in the database.
+        page.get_by_text("photo_1", exact=False).first.wait_for(timeout=20_000)
+        page.get_by_text("photo_3", exact=False).first.wait_for(timeout=20_000)
+        assert _ready_photo_count(memorial_id) == 2
+        deleted = database.fetch_one(
+            "SELECT count(*) FROM memorial_media WHERE memorial_id = %s::uuid "
+            "AND kind = 'photo' AND deleted_at IS NOT NULL",
+            (memorial_id,),
+        )
+        assert int(deleted[0]) == 1
 
         assert not page_errors, f"uncaught page errors during the journey: {page_errors}"
     finally:

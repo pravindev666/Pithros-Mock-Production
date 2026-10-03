@@ -124,6 +124,63 @@ def test_media_worker_ignores_a_soft_deleted_row(db_session, make_user, make_mem
     assert found is None, "the worker would still have processed this row"
 
 
+def test_a_pending_upload_does_not_consume_the_photo_limit(
+    db_session, make_user, make_memorial
+):
+    """The usage counter counted PENDING rows, so the last allowed free photo was
+    rejected at `/complete` — after its bytes had already reached storage — because
+    the upload's own pending row pushed the count over the limit.
+    """
+    from sqlalchemy import select
+
+    from app.billing.entitlements import assert_can_upload_media
+    from app.core.enums import MediaKind, MediaStatus
+    from app.media.models import MediaItem
+
+    user = make_user()
+    memorial = make_memorial(steward=user, full_name="Pending Limit", premium=False)
+
+    def add(status: str, index: int) -> None:
+        db_session.add(
+            MediaItem(
+                memorial_id=memorial.id,
+                kind=MediaKind.PHOTO.value,
+                status=status,
+                privacy="private",
+                storage_tier="private",
+                storage_bucket="pithros-private",
+                storage_key=f"memorials/{memorial.id}/photo_{index}.jpg",
+                original_filename=f"photo_{index}.jpg",
+                mime_type="image/jpeg",
+                size_bytes=1024,
+                uploaded_by_id=user.id,
+            )
+        )
+
+    # Two finished photographs, plus the third still in flight.
+    add(MediaStatus.READY.value, 0)
+    add(MediaStatus.READY.value, 1)
+    add(MediaStatus.PENDING.value, 2)
+    db_session.flush()
+
+    allowed, reason = assert_can_upload_media(memorial.id, MediaKind.PHOTO, 1024, db_session)
+    assert allowed is True, reason
+
+    # Once all three are ready, the fourth is correctly refused.
+    pending = db_session.scalar(
+        select(MediaItem).where(
+            MediaItem.memorial_id == memorial.id,
+            MediaItem.status == MediaStatus.PENDING.value,
+        )
+    )
+    pending.status = MediaStatus.READY.value
+    db_session.flush()
+
+    refused, message = assert_can_upload_media(memorial.id, MediaKind.PHOTO, 1024, db_session)
+    assert refused is False
+    assert "Free Memorial includes 3 photographs" in message
+
+
 def test_unhandled_errors_still_return_the_error_envelope(client):
     """A plain exception used to escape the handlers and return Starlette's bare
     'Internal Server Error', which the frontend cannot parse."""

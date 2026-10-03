@@ -24,6 +24,7 @@ from app.billing.models import (
 )
 from app.core.enums import (
     MediaKind,
+    MediaStatus,
     MemorialEntitlementStatus,
     SubscriptionStatus,
 )
@@ -144,6 +145,7 @@ def resolve_memorial_entitlements(
             select(func.count(MediaItem.id)).where(
                 MediaItem.memorial_id == memorial_id,
                 MediaItem.kind == MediaKind.PHOTO,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
@@ -156,6 +158,7 @@ def resolve_memorial_entitlements(
             select(func.coalesce(func.sum(MediaItem.size_bytes), 0)).where(
                 MediaItem.memorial_id == memorial_id,
                 MediaItem.kind == MediaKind.PHOTO,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
@@ -168,6 +171,7 @@ def resolve_memorial_entitlements(
             select(func.coalesce(func.sum(MediaItem.size_bytes), 0)).where(
                 MediaItem.memorial_id == memorial_id,
                 MediaItem.kind == MediaKind.VOICE,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
@@ -180,6 +184,7 @@ def resolve_memorial_entitlements(
             select(func.coalesce(func.sum(MediaItem.size_bytes), 0)).where(
                 MediaItem.memorial_id == memorial_id,
                 MediaItem.kind == MediaKind.VIDEO,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
@@ -191,6 +196,7 @@ def resolve_memorial_entitlements(
         db.execute(
             select(func.coalesce(func.sum(MediaItem.size_bytes), 0)).where(
                 MediaItem.memorial_id == memorial_id,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
@@ -203,6 +209,7 @@ def resolve_memorial_entitlements(
             select(func.count(MediaItem.id)).where(
                 MediaItem.memorial_id == memorial_id,
                 MediaItem.kind == MediaKind.DOCUMENT,
+                MediaItem.status == MediaStatus.READY.value,
                 MediaItem.deleted_at.is_(None),
             )
         ).scalar()
