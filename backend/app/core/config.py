@@ -115,6 +115,18 @@ class Settings(BaseSettings):
 
     invite_token_ttl_hours: int = Field(default=168, ge=1)
 
+    # Outbound email. Disabled by default and configured entirely through the
+    # environment (never source). Production points this at a real provider;
+    # local/E2E points it at a Mailpit sink (127.0.0.1:1025).
+    email_enabled: bool = False
+    smtp_host: str = "127.0.0.1"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    email_from_address: str = "no-reply@pithros.in"
+    email_from_name: str = "Pithros"
+
     # Account-deletion lifecycle. The grace period is a Pithros safety control
     # (not a statutory deadline); tests accelerate it by setting it to 0.
     account_deletion_grace_days: int = Field(default=7, ge=0)

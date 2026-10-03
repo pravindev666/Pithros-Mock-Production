@@ -458,6 +458,21 @@ def verify_and_activate_payment(
 
     db.commit()
 
+    # 7. Receipt email — best effort, after the ledger is durable. The idempotent
+    # early-return at the top of this function means a repeated verify (or a
+    # duplicate webhook) never re-sends a receipt.
+    from app.email.receipts import send_payment_receipt
+
+    send_payment_receipt(
+        recipient=billing_account.billing_email or user.email,
+        customer_name=billing_account.billing_name or user.name,
+        plan_name=plan.name,
+        amount_minor=invoice.total_minor,
+        currency=invoice.currency,
+        invoice_number=invoice_number,
+        paid_at=now,
+    )
+
     return VerifyPaymentResponse(
         success=True,
         subscription_id=subscription.id,
