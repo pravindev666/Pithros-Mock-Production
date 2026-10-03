@@ -1,0 +1,79 @@
+{
+  "deployed_sha": "c050b2f",
+  "soak_40vu_30min": {
+    "samples": 181,
+    "segments": {
+      "start": {
+        "load1_max": 2.53,
+        "mem_used_max_gb": 2.46,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 40.0,
+        "backend_mem_max_mb": 422,
+        "redis_mem_avg_kb": 1905941,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 426
+      },
+      "middle": {
+        "load1_max": 3.95,
+        "mem_used_max_gb": 2.46,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 41.4,
+        "backend_mem_max_mb": 428,
+        "redis_mem_avg_kb": 1908743,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 380
+      },
+      "end": {
+        "load1_max": 2.62,
+        "mem_used_max_gb": 2.46,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 37.4,
+        "backend_mem_max_mb": 428,
+        "redis_mem_avg_kb": 1898818,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 779
+      }
+    }
+  },
+  "spike_40to200": {
+    "samples": 30,
+    "segments": {
+      "start": {
+        "load1_max": 0.77,
+        "mem_used_max_gb": 2.52,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 24.3,
+        "backend_mem_max_mb": 472,
+        "redis_mem_avg_kb": 1877162,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 811
+      },
+      "middle": {
+        "load1_max": 2.91,
+        "mem_used_max_gb": 2.51,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 90.2,
+        "backend_mem_max_mb": 440,
+        "redis_mem_avg_kb": 1925221,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 3055
+      },
+      "end": {
+        "load1_max": 4.08,
+        "mem_used_max_gb": 2.5,
+        "swap_used_max_gb": 0.0,
+        "backend_cpu_avg_pct": 44.6,
+        "backend_mem_max_mb": 454,
+        "redis_mem_avg_kb": 1885674,
+        "celery_qlen_max": 0.0,
+        "db_conns_max": 28.0,
+        "plans_ms_avg": 685
+      }
+    }
+  }
+}

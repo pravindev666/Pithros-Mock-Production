@@ -1,0 +1,19 @@
+{
+  "deployed_sha": "c050b2f",
+  "journeys": {
+    "passed": 17,
+    "total": 17
+  },
+  "security": {
+    "passed": 15,
+    "total": 15
+  },
+  "anonymous_boundary_matrix": {
+    "refused": 10,
+    "total": 10
+  },
+  "r2_server_roundtrip": "PASS",
+  "r2_browser_upload": "BLOCKED_external_cors_origin_mismatch",
+  "billing_receipt_e2e": "BLOCKED_cashfree_credentials_unavailable",
+  "email_smtp_transport": "PASS"
+}
