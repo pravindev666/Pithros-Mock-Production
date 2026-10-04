@@ -56,11 +56,10 @@
 - **ACTUAL:** Pune starts at x=410 and Chennai ends at x=543 while a 320–390 px viewport is globally clipped
 - **ROOT CAUSE:** The inner `overflow-x-auto` flex row has no bounded width/min-width rule inside a wrapping justify-between parent, so it expands to max content width
 - **AFFECTED CSS/COMPONENT:** `views/ExploreMemorialsView.tsx`
-- **WHY THIS IS REAL:** Controls cannot be reached visually or by touch at required phone widths
-- **EVIDENCE:** `03-targeted-probe.json` lines 15–37, 336–359, 657–679; screenshots
-- **FIX:** Bound the chip scroller (`min-w-0`, responsive width/flex basis) and keep scoped horizontal scrolling
-- **REGRESSION TEST:** First and last chips are reachable at all phone widths without page overflow; desktop remains unchanged
-- **STATUS:** VERIFIED
+- **WHY THIS WAS REPORTED:** The raw out-of-bounds detector flagged chip buttons beyond the viewport — which is also exactly how the off-screen children of a horizontal scroll container appear
+- **EVIDENCE:** `13-registry-prefix-scroll-probe.json` (pre-fix) — the chip container was already `overflow-x: auto` with `clientWidth 288 / scrollWidth 527` at 320 px; setting `scrollLeft` brought Chennai fully into view (right 543→304) while page `scrollWidth` stayed 320. `12-registry-scroll-probe.json` (post-fix) matches.
+- **CORRECTION:** **NOT REPRODUCIBLE.** The chip row was already a bounded, horizontally scrollable container with no page overflow; there is no clipping defect. The `min-w-0`/`w-full` change is retained only as defensive hardening and is **not** claimed as a fix.
+- **STATUS:** NOT REPRODUCIBLE
 
 ### FE-003
 
@@ -272,14 +271,14 @@
 
 ## Frozen totals
 
-- Total confirmed defects: **12**
+- Total confirmed defects: **11** (after reclassifying FE-002 as not reproducible)
 - P0: **0**
 - P1: **3** (`FE-001`, `FE-005`, `FE-007`)
-- P2: **9**
+- P2: **8**
 - P3: **0**
-- Fixed: **0**
-- Remaining: **12**
-- Not reproducible: **1**
+- Fixed: **0** at freeze time (see `08-fix-log.md` for current status)
+- Remaining: **11** at freeze time
+- Not reproducible: **2** (`FE-002`, and the `/signup?role=partner` suspicion)
 - Blocked/partially unverified domains: authenticated VM matrix, Firefox, WebKit, cross-user cache isolation, full performance measurements
 
 ## Fix queue
@@ -287,7 +286,7 @@
 1. FE-001 verification truth
 2. FE-005/FE-006 account routing and fallback
 3. FE-007 shared modal accessibility
-4. FE-002/FE-003/FE-011 registry responsiveness and semantics
+4. FE-003/FE-011 registry responsiveness and semantics
 5. FE-004 pricing table scrolling
 6. FE-008/FE-012 accessible controls
 7. FE-009/FE-010 SEO metadata

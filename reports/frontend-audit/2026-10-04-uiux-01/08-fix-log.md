@@ -42,13 +42,23 @@
 - **Second-order check:** shared `Modal` consumers inherit the behavior without per-modal changes; Escape handling was consolidated into the hook (the old standalone listener was removed to avoid double-close).
 - **STATUS:** FIXED / VERIFIED (Chromium). Firefox/WebKit NOT TESTED.
 
+## Fix 4 — FE-003 / FE-011 registry filters and cards (+ FE-002 correction)
+
+- **Files:** `views/ExploreMemorialsView.tsx`
+- **Change:** the filter bar becomes a column on mobile and a wrapped row from `sm` up; the search input and both selects gained accessible names; memorial cards are now keyboard-operable (`role="button"`, `tabIndex=0`, Enter/Space handler, visible focus ring).
+- **Regression evidence:**
+  - `11-registry-fix-probe.json` — unlabeled controls 3 → 0
+  - `14-registry-selects-probe.json` — verification select right edge 407 px → 207 px at 320/360/390; both selects side-by-side at 1440; page `scrollWidth == innerWidth` at every width
+  - `15-card-keyboard-probe.json` — card exposes `role=button`, receives focus, and Enter navigates to `/m/kb-test`
+- **CORRECTION — FE-002 is NOT REPRODUCIBLE.** `13-registry-prefix-scroll-probe.json` measured the pre-fix chip container and it was already `overflow-x: auto` and scrollable (client 288 / scroll 527 at 320 px; Chennai reachable at right 304 after scroll; page scrollWidth 320). The chip row was never clipped. The extra `min-w-0`/`w-full` is defensive hardening only; FE-002 is withdrawn, not fixed.
+- **STATUS:** FE-003 FIXED / VERIFIED; FE-011 FIXED / VERIFIED; FE-002 NOT REPRODUCIBLE (Chromium).
+
 ## Still open (next queue)
 
-1. FE-002 / FE-003 / FE-011 — registry chip scroller, filter wrapping, labelled controls, keyboard-operable cards
-2. FE-004 — pricing table component-scoped scrolling
-3. FE-008 — accessible password visibility controls
-4. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
-5. Re-run focused Chromium checks per fix, then final regression.
+1. FE-004 — pricing table component-scoped scrolling
+2. FE-008 — accessible password visibility controls
+3. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
+4. Re-run focused Chromium checks per fix, then final regression.
 
 ## Blockers / limitations
 

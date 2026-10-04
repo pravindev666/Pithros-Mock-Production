@@ -1,0 +1,68 @@
+﻿[
+  {
+    "viewport": "320x568",
+    "pageScrollWidth": 320,
+    "innerWidth": 320,
+    "boxClientWidth": 288,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 217,
+    "chennaiRightBefore": 521,
+    "chennaiRightAfterScroll": 304
+  },
+  {
+    "viewport": "360x800",
+    "pageScrollWidth": 360,
+    "innerWidth": 360,
+    "boxClientWidth": 328,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 177,
+    "chennaiRightBefore": 521,
+    "chennaiRightAfterScroll": 344
+  },
+  {
+    "viewport": "390x844",
+    "pageScrollWidth": 390,
+    "innerWidth": 390,
+    "boxClientWidth": 358,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 147,
+    "chennaiRightBefore": 521,
+    "chennaiRightAfterScroll": 374
+  },
+  {
+    "viewport": "412x915",
+    "pageScrollWidth": 412,
+    "innerWidth": 412,
+    "boxClientWidth": 380,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 125,
+    "chennaiRightBefore": 521,
+    "chennaiRightAfterScroll": 396
+  },
+  {
+    "viewport": "768x1024",
+    "pageScrollWidth": 768,
+    "innerWidth": 768,
+    "boxClientWidth": 505,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 0,
+    "chennaiRightBefore": 529,
+    "chennaiRightAfterScroll": 529
+  },
+  {
+    "viewport": "1440x900",
+    "pageScrollWidth": 1440,
+    "innerWidth": 1440,
+    "boxClientWidth": 505,
+    "boxScrollWidth": 505,
+    "boxOverflowX": "auto",
+    "scrolled": 0,
+    "chennaiRightBefore": 841,
+    "chennaiRightAfterScroll": 841
+  }
+]

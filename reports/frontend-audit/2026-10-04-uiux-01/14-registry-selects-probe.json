@@ -1,0 +1,97 @@
+﻿[
+  {
+    "viewport": "320x568",
+    "pageScrollWidth": 320,
+    "innerWidth": 320,
+    "selects": [
+      {
+        "label": "Sort memorials",
+        "left": 16,
+        "right": 208
+      },
+      {
+        "label": "Filter by verification",
+        "left": 16,
+        "right": 207
+      }
+    ],
+    "unlabeled": 0,
+    "cardsKeyboard": 0
+  },
+  {
+    "viewport": "360x800",
+    "pageScrollWidth": 360,
+    "innerWidth": 360,
+    "selects": [
+      {
+        "label": "Sort memorials",
+        "left": 16,
+        "right": 208
+      },
+      {
+        "label": "Filter by verification",
+        "left": 16,
+        "right": 207
+      }
+    ],
+    "unlabeled": 0,
+    "cardsKeyboard": 0
+  },
+  {
+    "viewport": "390x844",
+    "pageScrollWidth": 390,
+    "innerWidth": 390,
+    "selects": [
+      {
+        "label": "Sort memorials",
+        "left": 16,
+        "right": 208
+      },
+      {
+        "label": "Filter by verification",
+        "left": 16,
+        "right": 207
+      }
+    ],
+    "unlabeled": 0,
+    "cardsKeyboard": 0
+  },
+  {
+    "viewport": "412x915",
+    "pageScrollWidth": 412,
+    "innerWidth": 412,
+    "selects": [
+      {
+        "label": "Sort memorials",
+        "left": 16,
+        "right": 208
+      },
+      {
+        "label": "Filter by verification",
+        "left": 16,
+        "right": 207
+      }
+    ],
+    "unlabeled": 0,
+    "cardsKeyboard": 0
+  },
+  {
+    "viewport": "1440x900",
+    "pageScrollWidth": 1440,
+    "innerWidth": 1440,
+    "selects": [
+      {
+        "label": "Sort memorials",
+        "left": 336,
+        "right": 528
+      },
+      {
+        "label": "Filter by verification",
+        "left": 536,
+        "right": 727
+      }
+    ],
+    "unlabeled": 0,
+    "cardsKeyboard": 0
+  }
+]

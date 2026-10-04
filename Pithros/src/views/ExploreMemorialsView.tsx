@@ -149,6 +149,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             />
             <input
               type="text"
+              aria-label="Search memorials"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, life quote, or city..."
@@ -172,8 +173,8 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
           </div>
 
           {/* Quick Filter Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <div className="flex flex-col gap-3 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto no-scrollbar py-1 sm:w-auto">
               <span className={`mr-1 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                 City:
               </span>
@@ -210,8 +211,9 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
+                aria-label="Sort memorials"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className={`px-3 py-1.5 rounded-xl border text-xs focus:outline-none ${
@@ -228,6 +230,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
               </select>
 
               <select
+                aria-label="Filter by verification"
                 value={verificationFilter}
                 onChange={(e) => setVerificationFilter(e.target.value)}
                 className={`px-3 py-1.5 rounded-xl border text-xs focus:outline-none ${
@@ -285,10 +288,19 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             {filtered.map((m) => (
               <div
                 key={m.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open memorial for ${m.fullName}`}
                 onClick={() => onOpenMemorial(m.slug)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onOpenMemorial(m.slug);
+                  }
+                }}
                 data-ui-component="card"
                 style={{ fontFamily: metadata.uiFontFamily }}
-                className={`group rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between ${
+                className={`group rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B99452] ${
                   isDark
                     ? 'border-[#202C40] bg-[#182337] hover:border-[#B99452]/40'
                     : 'border-[#E5DED2] bg-[#FCFAF5] hover:border-[#23324A]/50'
