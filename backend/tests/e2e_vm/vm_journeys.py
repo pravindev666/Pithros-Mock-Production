@@ -16,12 +16,14 @@ when PITHROS_VM_RUN_ID is set (otherwise prints to stdout only).
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import contextlib
 import json
 import os
 import re
 import secrets
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -118,6 +120,14 @@ def ensure_persona(email: str, password: str, name: str, claims: dict | None = N
     if claims:
         fb_auth.set_custom_user_claims(user.uid, claims)
     return user.uid
+
+
+def _ensure_persona_reuse(email: str, password: str, name: str) -> None:
+    """Create the persona only if missing, so it is reused across burst runs."""
+    try:
+        fb_auth.get_user_by_email(email)
+    except fb_auth.UserNotFoundError:
+        fb_auth.create_user(email=email, password=password, email_verified=True, display_name=name)
 
 
 def delete_persona(email: str) -> None:
@@ -616,12 +626,134 @@ def journey_evidence(browser) -> None:
         admin.close()
 
 
+def journey_burst(browser, burst_size: int = 40) -> None:
+    """Fire concurrent refusals while polling /health — the release-critical lock probe.
+
+    Reproduces the reported burst: many simultaneous authenticated requests that each
+    trigger a refusal audit. Before the fix the API blocked on the caller's own
+    users-row lock (`/health` unresponsive for minutes); after the fix the requests
+    and `/health` stay responsive.
+    """
+    name = "journey_burst"
+    pw_a = secrets.token_urlsafe(14)
+    ensure_persona(STEWARD_EMAIL, pw_a, "VM Burst A")
+
+    ctx = browser.new_context()
+    page = ctx.new_page()
+    seen: list[str] = []
+    created: dict = {}
+
+    def _cap(response):
+        if "/api/v1/memorials" in response.url:
+            seen.append(response.url)
+            with contextlib.suppress(Exception):
+                data = response.json()
+                if response.request.method == "POST" and data.get("id"):
+                    created.update(data)
+
+    page.on("response", _cap)
+    memorial_id = None
+    try:
+        ui_signin(page, STEWARD_EMAIL, pw_a)
+        page.goto(f"{BASE}/create-memorial", wait_until="domcontentloaded")
+        page.get_by_placeholder("Enter their full name").fill("VM Burst Memorial")
+        page.get_by_placeholder("e.g. 1954").fill("1950")
+        page.get_by_placeholder("e.g. 2024").fill("2025")
+        page.get_by_role("button", name="Continue", exact=True).click()
+        page.get_by_placeholder(
+            "e.g. A life lived with gentle kindness and quiet grace."
+        ).wait_for()
+        page.get_by_role("button", name="Continue", exact=True).click()
+        page.get_by_placeholder("Full Name (e.g. Vikram)").wait_for()
+        page.get_by_role("button", name="Continue", exact=True).click()
+        page.get_by_role("button", name=re.compile("Visitor")).first.wait_for()
+        page.get_by_role("button", name="Continue", exact=True).click()
+        page.get_by_text("Evidence of passing").wait_for()
+        page.get_by_role("button", name="Create Memorial", exact=True).last.click()
+        page.wait_for_url("**/m/**", timeout=60_000)
+        memorial_id = created.get("id")
+        if not memorial_id:
+            for entry in seen:
+                match = re.search(r"/api/v1/memorials/([0-9a-fA-F-]{36})", entry)
+                if match:
+                    memorial_id = match.group(1)
+                    break
+        record(name, "steward creates a memorial for the burst", "PASS" if memorial_id else "FAIL")
+    finally:
+        ctx.close()
+    if not memorial_id:
+        return
+
+    # Distinct actors, reused across runs so a stale `last_seen` survives between
+    # them: the burst's first request then updates the actor row (the lock the audit
+    # used to wait on) and refuses — reproducing the reported path on demand.
+    actor_tokens: list[str] = []
+    for index in range(burst_size):
+        actor_email = f"pithros.stale.burst{index}@gmail.com"
+        actor_pw = f"Pithros-Stale-Burst-{index}-pw"
+        _ensure_persona_reuse(actor_email, actor_pw, f"VM Stale Burst {index}")
+        actor_tokens.append(rest_token(actor_email, actor_pw))
+
+    health_samples: list[tuple[float, int]] = []
+    stop = threading.Event()
+
+    def poll_health() -> None:
+        while not stop.is_set():
+            started = time.perf_counter()
+            try:
+                code = httpx.get(f"{BASE}/health", timeout=10).status_code
+            except Exception:
+                code = 0
+            health_samples.append((round(time.perf_counter() - started, 3), code))
+            time.sleep(0.15)
+
+    poller = threading.Thread(target=poll_health, daemon=True)
+    poller.start()
+
+    latencies: list[tuple[float, int | str]] = []
+
+    def one(index: int) -> None:
+        started = time.perf_counter()
+        try:
+            code: int | str = api(
+                "GET", f"/memorials/{memorial_id}", actor_tokens[index]
+            ).status_code
+        except Exception as exc:
+            code = f"ERR {type(exc).__name__}"
+        latencies.append((round(time.perf_counter() - started, 3), code))
+
+    burst_started = time.perf_counter()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=burst_size) as pool:
+        list(pool.map(one, range(burst_size)))
+    burst_elapsed = round(time.perf_counter() - burst_started, 2)
+    stop.set()
+    poller.join(timeout=5)
+
+    denied = sum(1 for _lat, code in latencies if code in (403, 404))
+    max_latency = max((lat for lat, _code in latencies), default=0)
+    hung = [lat for lat, _code in latencies if lat > 60]
+    record(
+        name,
+        f"{burst_size} refusals in {burst_elapsed}s (max {max_latency}s, >60s {len(hung)})",
+        "PASS" if denied == burst_size and not hung else "FAIL",
+    )
+    health_failures = [sample for sample in health_samples if sample[1] != 200]
+    max_health = max((lat for lat, _code in health_samples), default=0)
+    record(
+        name,
+        f"/health responsive during burst ({len(health_samples)} samples, max {max_health}s)",
+        "PASS" if not health_failures else "FAIL",
+        f"failures={len(health_failures)}",
+    )
+
+
 JOURNEYS = {
     "signup": journey_signup,
     "cross_user": journey_cross_user,
     "anon": journey_anon,
     "mobile": journey_mobile,
     "evidence": journey_evidence,
+    "burst": journey_burst,
 }
 
 

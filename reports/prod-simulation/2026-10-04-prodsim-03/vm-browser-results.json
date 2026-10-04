@@ -1,0 +1,23 @@
+{
+  "base": "http://10.153.175.57",
+  "results": [
+    {
+      "journey": "journey_burst",
+      "step": "steward creates a memorial for the burst",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_burst",
+      "step": "40 refusals in 36.18s (max 26.823s, >60s 0)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_burst",
+      "step": "/health responsive during burst (3 samples, max 20.103s)",
+      "status": "PASS",
+      "detail": "failures=0"
+    }
+  ]
+}
