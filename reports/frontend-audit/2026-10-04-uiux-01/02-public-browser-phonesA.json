@@ -1,0 +1,4514 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "batch": "phonesA",
+  "results": [
+    {
+      "route": "/",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 664,
+            "cls": "absolute w-[600px] h-[450px] rounded-full blur-3xl transition-all duration-1000"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": -154,
+            "right": 160,
+            "cls": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[520px] max-w-[98vw] transit"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": -154,
+            "right": 160,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "g",
+            "text": "",
+            "left": -143,
+            "right": 150,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -143,
+            "right": 150,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -109,
+            "right": 116,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -75,
+            "right": 82,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": -105,
+            "right": -104,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -136,
+            "right": 143,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 664,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "fixed inset-0 pointer-events-none select-none overflow-hidden z-0 "
+          },
+          {
+            "tag": "div",
+            "text": "Shared RemembranceEveryone remembers differently.A daughter remembers ",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16"
+          },
+          {
+            "tag": "div",
+            "text": "StewardPrimary GuardianAnita (Daughter)BiographerStorytellerRamesh (Br",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+          },
+          {
+            "tag": "div",
+            "text": "Family Contribution StreamBiographer \u2022 Ramesh (Brother)StorytellerWhat",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "md:col-span-8"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 67,
+            "cw": 64,
+            "ox": "visible",
+            "cls": "relative w-16 h-16 flex items-center justify-center my-1"
+          },
+          {
+            "tag": "div",
+            "text": "Farewell NetworkWhen remembering also means taking care of what comes ",
+            "sw": 304,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-4xl mx-auto space-y-8 sm:space-y-10"
+          },
+          {
+            "tag": "div",
+            "text": "Explore Farewell Services & Partners",
+            "sw": 304,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "text-center pt-2"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 2,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/memorials",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/memorials",
+        "title": "Explore Memorials \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "Mumbai",
+            "left": 250,
+            "right": 323,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Amritsar",
+            "left": 329,
+            "right": 404,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Pune",
+            "left": 410,
+            "right": 465,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Chennai",
+            "left": 471,
+            "right": 543,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "div",
+            "text": "Sort: Most RecentSort: Name (A\u2013Z)Sort: Name (Z\u2013A)Sort: Birth Year (Ear",
+            "left": 16,
+            "right": 407,
+            "cls": "flex items-center gap-2"
+          },
+          {
+            "tag": "select",
+            "text": "All MemorialsDocument Reviewed OnlyFamily Managed Only",
+            "left": 216,
+            "right": 407,
+            "cls": "px-3 py-1.5 rounded-xl border text-xs focus:outline-none bg-[#FCFAF5] border-[#E5DED2] text-[#554F48"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen font-sans antialiased selection:bg-[#B99452]/20 selection:text-[#B99452] transition-col"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembranceMemorialsHow It WorksFarewell NetworkPricingEnglishS",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen flex flex-col justify-between transition-colors bg-[#F3EEE4]"
+          },
+          {
+            "tag": "main",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "flex-1"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors bg-[#F3EEE4] text-[#20242A]"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-7xl mx-auto"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-3xl mx-auto mb-12 space-y-4"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "flex flex-wrap items-center justify-between gap-3 text-xs"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 3,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/how-it-works",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/how-it-works",
+        "title": "How It Works \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/pricing",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/pricing",
+        "title": "Pricing & Plans \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "table",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "w-full text-left border-collapse text-xs"
+          },
+          {
+            "tag": "thead",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "tr",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "border-b border-[#E5DED2] bg-[#F2ECE1]"
+          },
+          {
+            "tag": "th",
+            "text": "Memorial Care (\u20b9999/yr)",
+            "left": 251,
+            "right": 375,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold text-[#8C5C0F]"
+          },
+          {
+            "tag": "th",
+            "text": "Family Archive (\u20b92,999/yr)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold"
+          },
+          {
+            "tag": "tbody",
+            "text": "Core Memorial & MediaMemorial Pages1 memorial1 memorialUp to 5 memoria",
+            "left": 17,
+            "right": 496,
+            "cls": "divide-y divide-current/10"
+          },
+          {
+            "tag": "tr",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "bg-[#EFE8DC]/70"
+          },
+          {
+            "tag": "td",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "py-2.5 px-6 font-mono text-[10px] uppercase font-bold tracking-widest text-[#23324A]"
+          },
+          {
+            "tag": "tr",
+            "text": "Memorial Pages1 memorial1 memorialUp to 5 memorials",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "1 memorial",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "Up to 5 memorials",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Photographs Allowed3 curated photos30 photographs150 photos total (sha",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "30 photographs",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "150 photos total (shared pool)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Total Media Allowance15 MB300 MB1.5 GB shared",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "300 MB",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "1.5 GB shared",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Per-Photo Size Ceiling5 MB max10 MB max10 MB max",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/farewell",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/farewell",
+        "title": "Farewell Network \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "All Services",
+            "left": -235,
+            "right": -130,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "All Services",
+            "left": -212,
+            "right": -145,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Coordination",
+            "left": -122,
+            "right": -10,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -98,
+            "right": -92,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "rect",
+            "text": "",
+            "left": -103,
+            "right": -87,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Coordination",
+            "left": -99,
+            "right": -25,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Organic Florals",
+            "left": 285,
+            "right": 408,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "span",
+            "text": "Organic Florals",
+            "left": 308,
+            "right": 393,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Memorial Plaques",
+            "left": 416,
+            "right": 555,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 433,
+            "right": 453,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 433,
+            "right": 437,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Memorial Plaques",
+            "left": 439,
+            "right": 540,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "4.8+",
+            "left": 292,
+            "right": 346,
+            "cls": "text-xs px-3 py-1 rounded-lg border transition-colors cursor-pointer flex items-center gap-1 border-"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 307,
+            "right": 327,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "4.8+",
+            "left": 309,
+            "right": 333,
+            "cls": ""
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 1,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signin",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signin",
+        "title": "Sign In \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 62,
+            "right": 450,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 450,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 450,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signup",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signup",
+        "title": "Create Account \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 63,
+            "right": 449,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 449,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forgot-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 62,
+            "right": 450,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 450,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceForgot your pas",
+            "sw": 450,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/reset-password",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/reset-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 63,
+            "right": 449,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceSet new passwor",
+            "sw": 449,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 1,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/verify-email",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/verify-email",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 61,
+            "right": 451,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 63,
+            "right": 451,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 65,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 402,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceVerify your ema",
+            "sw": 451,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 387,
+            "cw": 384,
+            "ox": "visible",
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/auth/phone",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/auth/phone",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 61,
+            "right": 451,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 63,
+            "right": 451,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 65,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 402,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "left": -15,
+            "right": 335,
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "left": -15,
+            "right": 335,
+            "cls": "min-h-[calc(100vh-80px)] flex items-center justify-center p-4 sm:p-6 transition-colors bg-[#F3EEE4] "
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembrancePhone sign-inSi",
+            "sw": 451,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 387,
+            "cw": 384,
+            "ox": "visible",
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "main",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "sw": 335,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-10"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forbidden",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forbidden",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/does-not-exist",
+      "viewport": "320x568",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/does-not-exist",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 664,
+            "cls": "absolute w-[600px] h-[450px] rounded-full blur-3xl transition-all duration-1000"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": -154,
+            "right": 160,
+            "cls": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[520px] max-w-[98vw] transit"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": -154,
+            "right": 160,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "g",
+            "text": "",
+            "left": -143,
+            "right": 150,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -143,
+            "right": 150,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -109,
+            "right": 116,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -75,
+            "right": 82,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": -105,
+            "right": -104,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -136,
+            "right": 143,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 664,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "fixed inset-0 pointer-events-none select-none overflow-hidden z-0 "
+          },
+          {
+            "tag": "div",
+            "text": "Shared RemembranceEveryone remembers differently.A daughter remembers ",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16"
+          },
+          {
+            "tag": "div",
+            "text": "StewardPrimary GuardianAnita (Daughter)BiographerStorytellerRamesh (Br",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+          },
+          {
+            "tag": "div",
+            "text": "Family Contribution StreamBiographer \u2022 Ramesh (Brother)StorytellerWhat",
+            "sw": 296,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "md:col-span-8"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 67,
+            "cw": 64,
+            "ox": "visible",
+            "cls": "relative w-16 h-16 flex items-center justify-center my-1"
+          },
+          {
+            "tag": "div",
+            "text": "Farewell NetworkWhen remembering also means taking care of what comes ",
+            "sw": 304,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-4xl mx-auto space-y-8 sm:space-y-10"
+          },
+          {
+            "tag": "div",
+            "text": "Explore Farewell Services & Partners",
+            "sw": 304,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "text-center pt-2"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 2,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/memorials",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/memorials",
+        "title": "Explore Memorials \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "Mumbai",
+            "left": 250,
+            "right": 323,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Amritsar",
+            "left": 329,
+            "right": 404,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Pune",
+            "left": 410,
+            "right": 465,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Chennai",
+            "left": 471,
+            "right": 543,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "div",
+            "text": "Sort: Most RecentSort: Name (A\u2013Z)Sort: Name (Z\u2013A)Sort: Birth Year (Ear",
+            "left": 16,
+            "right": 407,
+            "cls": "flex items-center gap-2"
+          },
+          {
+            "tag": "select",
+            "text": "All MemorialsDocument Reviewed OnlyFamily Managed Only",
+            "left": 216,
+            "right": 407,
+            "cls": "px-3 py-1.5 rounded-xl border text-xs focus:outline-none bg-[#FCFAF5] border-[#E5DED2] text-[#554F48"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen font-sans antialiased selection:bg-[#B99452]/20 selection:text-[#B99452] transition-col"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembranceMemorialsHow It WorksFarewell NetworkPricingEnglishS",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen flex flex-col justify-between transition-colors bg-[#F3EEE4]"
+          },
+          {
+            "tag": "main",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "flex-1"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors bg-[#F3EEE4] text-[#20242A]"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-7xl mx-auto"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "max-w-3xl mx-auto mb-12 space-y-4"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 288,
+            "ox": "visible",
+            "cls": "flex flex-wrap items-center justify-between gap-3 text-xs"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 3,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/how-it-works",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/how-it-works",
+        "title": "How It Works \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/pricing",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/pricing",
+        "title": "Pricing & Plans \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "table",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "w-full text-left border-collapse text-xs"
+          },
+          {
+            "tag": "thead",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "tr",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "border-b border-[#E5DED2] bg-[#F2ECE1]"
+          },
+          {
+            "tag": "th",
+            "text": "Memorial Care (\u20b9999/yr)",
+            "left": 251,
+            "right": 375,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold text-[#8C5C0F]"
+          },
+          {
+            "tag": "th",
+            "text": "Family Archive (\u20b92,999/yr)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold"
+          },
+          {
+            "tag": "tbody",
+            "text": "Core Memorial & MediaMemorial Pages1 memorial1 memorialUp to 5 memoria",
+            "left": 17,
+            "right": 496,
+            "cls": "divide-y divide-current/10"
+          },
+          {
+            "tag": "tr",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "bg-[#EFE8DC]/70"
+          },
+          {
+            "tag": "td",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "py-2.5 px-6 font-mono text-[10px] uppercase font-bold tracking-widest text-[#23324A]"
+          },
+          {
+            "tag": "tr",
+            "text": "Memorial Pages1 memorial1 memorialUp to 5 memorials",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "1 memorial",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "Up to 5 memorials",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Photographs Allowed3 curated photos30 photographs150 photos total (sha",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "30 photographs",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "150 photos total (shared pool)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Total Media Allowance15 MB300 MB1.5 GB shared",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "300 MB",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "1.5 GB shared",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Per-Photo Size Ceiling5 MB max10 MB max10 MB max",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/farewell",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/farewell",
+        "title": "Farewell Network \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "All Services",
+            "left": -235,
+            "right": -130,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -218,
+            "right": -198,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "All Services",
+            "left": -212,
+            "right": -145,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Coordination",
+            "left": -122,
+            "right": -10,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -98,
+            "right": -92,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "rect",
+            "text": "",
+            "left": -103,
+            "right": -87,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Coordination",
+            "left": -99,
+            "right": -25,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Organic Florals",
+            "left": 285,
+            "right": 408,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "span",
+            "text": "Organic Florals",
+            "left": 308,
+            "right": 393,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Memorial Plaques",
+            "left": 416,
+            "right": 555,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 433,
+            "right": 453,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 433,
+            "right": 437,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Memorial Plaques",
+            "left": 439,
+            "right": 540,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "4.8+",
+            "left": 292,
+            "right": 346,
+            "cls": "text-xs px-3 py-1 rounded-lg border transition-colors cursor-pointer flex items-center gap-1 border-"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 307,
+            "right": 327,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "4.8+",
+            "left": 309,
+            "right": 333,
+            "cls": ""
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 1,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signin",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signin",
+        "title": "Sign In \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 63,
+            "right": 449,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 449,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signup",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signup",
+        "title": "Create Account \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 62,
+            "right": 450,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 450,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 450,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forgot-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 62,
+            "right": 450,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 63,
+            "right": 450,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 402,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceForgot your pas",
+            "sw": 450,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/reset-password",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/reset-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 62,
+            "right": 450,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 450,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceSet new passwor",
+            "sw": 450,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 1,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/verify-email",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/verify-email",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 61,
+            "right": 451,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 63,
+            "right": 451,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 65,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 402,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 357,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceVerify your ema",
+            "sw": 451,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 387,
+            "cw": 384,
+            "ox": "visible",
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/auth/phone",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/auth/phone",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 64,
+            "right": 448,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 63,
+            "right": 449,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 64,
+            "right": 449,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 112,
+            "right": 401,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 356,
+            "right": 358,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "left": -15,
+            "right": 335,
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "left": -15,
+            "right": 335,
+            "cls": "min-h-[calc(100vh-80px)] flex items-center justify-center p-4 sm:p-6 transition-colors bg-[#F3EEE4] "
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembrancePhone sign-inSi",
+            "sw": 449,
+            "cw": 320,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          },
+          {
+            "tag": "main",
+            "text": "PithrosRemembrancePhone sign-inSign in securely with a one-time verifi",
+            "sw": 335,
+            "cw": 320,
+            "ox": "visible",
+            "cls": "relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-10"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forbidden",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forbidden",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/does-not-exist",
+      "viewport": "320x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/does-not-exist",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 320,
+        "innerWidth": 320,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 72,
+            "right": 672,
+            "cls": "absolute w-[600px] h-[450px] rounded-full blur-3xl transition-all duration-1000"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": -173,
+            "right": 180,
+            "cls": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[520px] max-w-[98vw] transit"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": -173,
+            "right": 180,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "g",
+            "text": "",
+            "left": -161,
+            "right": 168,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -161,
+            "right": 168,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -123,
+            "right": 130,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -85,
+            "right": 92,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": -119,
+            "right": -117,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -153,
+            "right": 160,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 672,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "fixed inset-0 pointer-events-none select-none overflow-hidden z-0 "
+          },
+          {
+            "tag": "div",
+            "text": "Shared RemembranceEveryone remembers differently.A daughter remembers ",
+            "sw": 336,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16"
+          },
+          {
+            "tag": "div",
+            "text": "StewardPrimary GuardianAnita (Daughter)BiographerStorytellerRamesh (Br",
+            "sw": 336,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+          },
+          {
+            "tag": "div",
+            "text": "Family Contribution StreamBiographer \u2022 Ramesh (Brother)StorytellerWhat",
+            "sw": 336,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "md:col-span-8"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 67,
+            "cw": 64,
+            "ox": "visible",
+            "cls": "relative w-16 h-16 flex items-center justify-center my-1"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 2,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/memorials",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/memorials",
+        "title": "Explore Memorials \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "Amritsar",
+            "left": 329,
+            "right": 404,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Pune",
+            "left": 410,
+            "right": 465,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Chennai",
+            "left": 471,
+            "right": 543,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "div",
+            "text": "Sort: Most RecentSort: Name (A\u2013Z)Sort: Name (Z\u2013A)Sort: Birth Year (Ear",
+            "left": 16,
+            "right": 407,
+            "cls": "flex items-center gap-2"
+          },
+          {
+            "tag": "select",
+            "text": "All MemorialsDocument Reviewed OnlyFamily Managed Only",
+            "left": 216,
+            "right": 407,
+            "cls": "px-3 py-1.5 rounded-xl border text-xs focus:outline-none bg-[#FCFAF5] border-[#E5DED2] text-[#554F48"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": "min-h-screen font-sans antialiased selection:bg-[#B99452]/20 selection:text-[#B99452] transition-col"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembranceMemorialsHow It WorksFarewell NetworkPricingEnglishS",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": "min-h-screen flex flex-col justify-between transition-colors bg-[#F3EEE4]"
+          },
+          {
+            "tag": "main",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": "flex-1"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 360,
+            "ox": "visible",
+            "cls": "min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors bg-[#F3EEE4] text-[#20242A]"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 391,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "max-w-7xl mx-auto"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "max-w-3xl mx-auto mb-12 space-y-4"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 328,
+            "ox": "visible",
+            "cls": "flex flex-wrap items-center justify-between gap-3 text-xs"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 3,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/how-it-works",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/how-it-works",
+        "title": "How It Works \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/pricing",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/pricing",
+        "title": "Pricing & Plans \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "table",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "w-full text-left border-collapse text-xs"
+          },
+          {
+            "tag": "thead",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "tr",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "border-b border-[#E5DED2] bg-[#F2ECE1]"
+          },
+          {
+            "tag": "th",
+            "text": "Memorial Care (\u20b9999/yr)",
+            "left": 251,
+            "right": 375,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold text-[#8C5C0F]"
+          },
+          {
+            "tag": "th",
+            "text": "Family Archive (\u20b92,999/yr)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold"
+          },
+          {
+            "tag": "tbody",
+            "text": "Core Memorial & MediaMemorial Pages1 memorial1 memorialUp to 5 memoria",
+            "left": 17,
+            "right": 496,
+            "cls": "divide-y divide-current/10"
+          },
+          {
+            "tag": "tr",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "bg-[#EFE8DC]/70"
+          },
+          {
+            "tag": "td",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "py-2.5 px-6 font-mono text-[10px] uppercase font-bold tracking-widest text-[#23324A]"
+          },
+          {
+            "tag": "tr",
+            "text": "Memorial Pages1 memorial1 memorialUp to 5 memorials",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "1 memorial",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "Up to 5 memorials",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Photographs Allowed3 curated photos30 photographs150 photos total (sha",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "30 photographs",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "150 photos total (shared pool)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Total Media Allowance15 MB300 MB1.5 GB shared",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "300 MB",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "1.5 GB shared",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Per-Photo Size Ceiling5 MB max10 MB max10 MB max",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 251,
+            "right": 375,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/farewell",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/farewell",
+        "title": "Farewell Network \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "All Services",
+            "left": -215,
+            "right": -110,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -198,
+            "right": -178,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -198,
+            "right": -178,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -198,
+            "right": -178,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "All Services",
+            "left": -192,
+            "right": -125,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Coordination",
+            "left": -102,
+            "right": 10,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -78,
+            "right": -72,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "rect",
+            "text": "",
+            "left": -83,
+            "right": -67,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Coordination",
+            "left": -79,
+            "right": -5,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Organic Florals",
+            "left": 305,
+            "right": 428,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "span",
+            "text": "Organic Florals",
+            "left": 328,
+            "right": 413,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Memorial Plaques",
+            "left": 436,
+            "right": 575,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 453,
+            "right": 473,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 453,
+            "right": 457,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Memorial Plaques",
+            "left": 459,
+            "right": 560,
+            "cls": ""
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 1,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signin",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signin",
+        "title": "Sign In \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 102,
+            "right": 490,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 104,
+            "right": 490,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 104,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 441,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 396,
+            "right": 398,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 490,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signup",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signup",
+        "title": "Create Account \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 102,
+            "right": 490,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 104,
+            "right": 490,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 104,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 441,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 396,
+            "right": 398,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 490,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forgot-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 102,
+            "right": 490,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 104,
+            "right": 490,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 104,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 442,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 396,
+            "right": 398,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceForgot your pas",
+            "sw": 490,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/reset-password",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/reset-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 102,
+            "right": 490,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 104,
+            "right": 490,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 104,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 441,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 396,
+            "right": 398,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceSet new passwor",
+            "sw": 490,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 1,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/verify-email",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/verify-email",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 102,
+            "right": 490,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 103,
+            "right": 490,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 104,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 442,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 396,
+            "right": 398,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceVerify your ema",
+            "sw": 490,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/auth/phone",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/auth/phone",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 104,
+            "right": 488,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 100,
+            "right": 492,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 103,
+            "right": 492,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 105,
+            "right": 489,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 152,
+            "right": 443,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 397,
+            "right": 399,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembrancePhone sign-inSi",
+            "sw": 492,
+            "cw": 360,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 388,
+            "cw": 384,
+            "ox": "visible",
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forbidden",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forbidden",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/does-not-exist",
+      "viewport": "360x800",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/does-not-exist",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 360,
+        "innerWidth": 360,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 75,
+            "right": 675,
+            "cls": "absolute w-[600px] h-[450px] rounded-full blur-3xl transition-all duration-1000"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": -180,
+            "right": 188,
+            "cls": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[520px] max-w-[98vw] transit"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": -180,
+            "right": 188,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "g",
+            "text": "",
+            "left": -168,
+            "right": 175,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -168,
+            "right": 175,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -128,
+            "right": 136,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": -88,
+            "right": 96,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": -123,
+            "right": -122,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -160,
+            "right": 167,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 675,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "fixed inset-0 pointer-events-none select-none overflow-hidden z-0 "
+          },
+          {
+            "tag": "div",
+            "text": "Shared RemembranceEveryone remembers differently.A daughter remembers ",
+            "sw": 351,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16"
+          },
+          {
+            "tag": "div",
+            "text": "StewardPrimary GuardianAnita (Daughter)BiographerStorytellerRamesh (Br",
+            "sw": 351,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+          },
+          {
+            "tag": "div",
+            "text": "Family Contribution StreamBiographer \u2022 Ramesh (Brother)StorytellerWhat",
+            "sw": 351,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "md:col-span-8"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "sw": 67,
+            "cw": 64,
+            "ox": "visible",
+            "cls": "relative w-16 h-16 flex items-center justify-center my-1"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 2,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/memorials",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/memorials",
+        "title": "Explore Memorials \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "Amritsar",
+            "left": 329,
+            "right": 404,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Pune",
+            "left": 410,
+            "right": 465,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "button",
+            "text": "Chennai",
+            "left": 471,
+            "right": 543,
+            "cls": "px-3 py-1 rounded-full border transition-colors cursor-pointer border-[#E5DED2] text-[#7D766D] hover"
+          },
+          {
+            "tag": "div",
+            "text": "Sort: Most RecentSort: Name (A\u2013Z)Sort: Name (Z\u2013A)Sort: Birth Year (Ear",
+            "left": 16,
+            "right": 407,
+            "cls": "flex items-center gap-2"
+          },
+          {
+            "tag": "select",
+            "text": "All MemorialsDocument Reviewed OnlyFamily Managed Only",
+            "left": 216,
+            "right": 407,
+            "cls": "px-3 py-1.5 rounded-xl border text-xs focus:outline-none bg-[#FCFAF5] border-[#E5DED2] text-[#554F48"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Pithros\",\"u",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": "min-h-screen font-sans antialiased selection:bg-[#B99452]/20 selection:text-[#B99452] transition-col"
+          },
+          {
+            "tag": "div",
+            "text": "PithrosRemembranceMemorialsHow It WorksFarewell NetworkPricingEnglishS",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": "min-h-screen flex flex-col justify-between transition-colors bg-[#F3EEE4]"
+          },
+          {
+            "tag": "main",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": "flex-1"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": ""
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 407,
+            "cw": 375,
+            "ox": "visible",
+            "cls": "min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors bg-[#F3EEE4] text-[#20242A]"
+          },
+          {
+            "tag": "div",
+            "text": "Memorial RegistryExplore Public MemorialsDiscover life stories, milest",
+            "sw": 391,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "max-w-7xl mx-auto"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "max-w-3xl mx-auto mb-12 space-y-4"
+          },
+          {
+            "tag": "div",
+            "text": "City:AllBengaluruKochiMumbaiAmritsarPuneChennaiSort: Most RecentSort: ",
+            "sw": 391,
+            "cw": 343,
+            "ox": "visible",
+            "cls": "flex flex-wrap items-center justify-between gap-3 text-xs"
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 3,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/how-it-works",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/how-it-works",
+        "title": "How It Works \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/pricing",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/pricing",
+        "title": "Pricing & Plans \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "table",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "w-full text-left border-collapse text-xs"
+          },
+          {
+            "tag": "thead",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "tr",
+            "text": "CapabilityFree MemorialMemorial Care (\u20b9999/yr)Family Archive (\u20b92,999/y",
+            "left": 17,
+            "right": 496,
+            "cls": "border-b border-[#E5DED2] bg-[#F2ECE1]"
+          },
+          {
+            "tag": "th",
+            "text": "Family Archive (\u20b92,999/yr)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-4 px-6 font-mono text-[11px] uppercase tracking-wider font-semibold"
+          },
+          {
+            "tag": "tbody",
+            "text": "Core Memorial & MediaMemorial Pages1 memorial1 memorialUp to 5 memoria",
+            "left": 17,
+            "right": 496,
+            "cls": "divide-y divide-current/10"
+          },
+          {
+            "tag": "tr",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "bg-[#EFE8DC]/70"
+          },
+          {
+            "tag": "td",
+            "text": "Core Memorial & Media",
+            "left": 17,
+            "right": 496,
+            "cls": "py-2.5 px-6 font-mono text-[10px] uppercase font-bold tracking-widest text-[#23324A]"
+          },
+          {
+            "tag": "tr",
+            "text": "Memorial Pages1 memorial1 memorialUp to 5 memorials",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "Up to 5 memorials",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Photographs Allowed3 curated photos30 photographs150 photos total (sha",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "150 photos total (shared pool)",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Total Media Allowance15 MB300 MB1.5 GB shared",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "1.5 GB shared",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Per-Photo Size Ceiling5 MB max10 MB max10 MB max",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "10 MB max",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Voice & Spoken MemoriesNoneUp to 60 minutes (100 MB)500 MB total acros",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "500 MB total across family",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Per-Audio Recording Ceiling\u201450 MB max per recording50 MB max per recor",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          },
+          {
+            "tag": "td",
+            "text": "50 MB max per recording",
+            "left": 375,
+            "right": 496,
+            "cls": "py-3.5 px-6 font-semibold"
+          },
+          {
+            "tag": "tr",
+            "text": "Life Timeline Milestones5 milestones50 milestones250 milestones",
+            "left": 17,
+            "right": 496,
+            "cls": ""
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/farewell",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/farewell",
+        "title": "Farewell Network \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "button",
+            "text": "All Services",
+            "left": -208,
+            "right": -102,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -191,
+            "right": -171,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -191,
+            "right": -171,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -191,
+            "right": -171,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "All Services",
+            "left": -185,
+            "right": -117,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Coordination",
+            "left": -94,
+            "right": 17,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": -70,
+            "right": -64,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "rect",
+            "text": "",
+            "left": -75,
+            "right": -59,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Coordination",
+            "left": -71,
+            "right": 2,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Organic Florals",
+            "left": 313,
+            "right": 435,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "span",
+            "text": "Organic Florals",
+            "left": 336,
+            "right": 420,
+            "cls": ""
+          },
+          {
+            "tag": "button",
+            "text": "Memorial Plaques",
+            "left": 443,
+            "right": 583,
+            "cls": "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all "
+          },
+          {
+            "tag": "path",
+            "text": "",
+            "left": 460,
+            "right": 480,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 460,
+            "right": 464,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "span",
+            "text": "Memorial Plaques",
+            "left": 466,
+            "right": 568,
+            "cls": ""
+          }
+        ],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 1,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signin",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signin",
+        "title": "Sign In \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 117,
+            "right": 505,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 119,
+            "right": 505,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 456,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 505,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/signup",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/signup",
+        "title": "Create Account \u2014 Pithros",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 117,
+            "right": 505,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 119,
+            "right": 505,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 457,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceThread of Remem",
+            "sw": 505,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forgot-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 118,
+            "right": 504,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 456,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceForgot your pas",
+            "sw": 504,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/reset-password",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/reset-password",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 118,
+            "right": 504,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 456,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceSet new passwor",
+            "sw": 504,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 1,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/verify-email",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/verify-email",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 117,
+            "right": 505,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 119,
+            "right": 505,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 456,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembranceVerify your ema",
+            "sw": 505,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/auth/phone",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/auth/phone",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [
+          {
+            "tag": "div",
+            "text": "",
+            "left": 119,
+            "right": 503,
+            "cls": "absolute -top-32 -right-32 w-96 h-96 pointer-events-none opacity-20"
+          },
+          {
+            "tag": "div",
+            "text": "",
+            "left": 117,
+            "right": 505,
+            "cls": "w-full h-full"
+          },
+          {
+            "tag": "svg",
+            "text": "",
+            "left": 118,
+            "right": 505,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 119,
+            "right": 504,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "ellipse",
+            "text": "",
+            "left": 167,
+            "right": 457,
+            "cls": "[object SVGAnimatedString]"
+          },
+          {
+            "tag": "circle",
+            "text": "",
+            "left": 411,
+            "right": 413,
+            "cls": "[object SVGAnimatedString]"
+          }
+        ],
+        "nestedOverflow": [
+          {
+            "tag": "div",
+            "text": "PithrosRemembrance\u2190 Return to PithrosPithrosRemembrancePhone sign-inSi",
+            "sw": 505,
+            "cw": 375,
+            "ox": "hidden",
+            "cls": "min-h-screen flex flex-col justify-between relative overflow-hidden transition-colors selection:bg-["
+          }
+        ],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 0,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/forbidden",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/forbidden",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    },
+    {
+      "route": "/does-not-exist",
+      "viewport": "375x667",
+      "navError": null,
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "pageErrors": [],
+      "metrics": {
+        "url": "http://127.0.0.1:3000/does-not-exist",
+        "title": "Pithros \u2014 Digital Memorial & Remembrance Platform",
+        "description": "A permanent digital place to remember a life. Create beautiful, private or public memorials, preserve memories, life stories, photographs, and connect with trusted farewell services.",
+        "canonical": "https://pithros.com/",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+        "docScrollWidth": 375,
+        "innerWidth": 375,
+        "outOfBounds": [],
+        "nestedOverflow": [],
+        "unnamedButtons": 0,
+        "unlabeledInputs": 0,
+        "headingSkips": 1,
+        "h1Count": 1
+      }
+    }
+  ]
+}

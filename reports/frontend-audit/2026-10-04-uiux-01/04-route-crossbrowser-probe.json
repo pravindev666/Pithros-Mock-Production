@@ -1,0 +1,81 @@
+﻿{
+  "routes": [
+    {
+      "route": "/signup?role=partner",
+      "before": {
+        "url": "http://127.0.0.1:3000/signup?role=partner",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nCreate your Pithros account.\n\nJoin our accredited network of bereavement and memorial service professionals.\n\nFamily Steward\nFarewell Partner\nContinue with Google\nor sign up with email\nFull ",
+        "mainText": "Pithros\nREMEMBRANCE\nCreate your Pithros account.\n\nJoin our accredited network of bereavement and memorial service professionals.\n\nFamily Steward\nFarewell Partner\nContinue with Goog"
+      },
+      "afterReload": {
+        "url": "http://127.0.0.1:3000/signup?role=partner",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nCreate your Pithros account.\n\nJoin our accredited network of bereavement and memorial service professionals.\n\nFamily Steward\nFarewell Partner\nContinue with Google\nor sign up with email\nFull ",
+        "mainText": "Pithros\nREMEMBRANCE\nCreate your Pithros account.\n\nJoin our accredited network of bereavement and memorial service professionals.\n\nFamily Steward\nFarewell Partner\nContinue with Goog"
+      }
+    },
+    {
+      "route": "/account/unknown",
+      "before": {
+        "url": "http://127.0.0.1:3000/account/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\n\nPithros \u2022 A permanent digital place to remember a life.\n\nPrivate Family Control\n\u2022\nFamily Stewarded\n\u2022\nZero Advertising",
+        "mainText": ""
+      },
+      "afterReload": {
+        "url": "http://127.0.0.1:3000/account/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\n\nPithros \u2022 A permanent digital place to remember a life.\n\nPrivate Family Control\n\u2022\nFamily Stewarded\n\u2022\nZero Advertising",
+        "mainText": ""
+      }
+    },
+    {
+      "route": "/dashboard/unknown",
+      "before": {
+        "url": "http://127.0.0.1:3000/dashboard/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinue with phone\n\nNew to Pithros? ",
+        "mainText": "Pithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinu"
+      },
+      "afterReload": {
+        "url": "http://127.0.0.1:3000/dashboard/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinue with phone\n\nNew to Pithros? ",
+        "mainText": "Pithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinu"
+      }
+    },
+    {
+      "route": "/partner/unknown",
+      "before": {
+        "url": "http://127.0.0.1:3000/partner/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinue with phone\n\nNew to Pithros? ",
+        "mainText": "Pithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinu"
+      },
+      "afterReload": {
+        "url": "http://127.0.0.1:3000/partner/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinue with phone\n\nNew to Pithros? ",
+        "mainText": "Pithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot password?\nSign In\nor continue with\nContinue with Google\nContinu"
+      }
+    },
+    {
+      "route": "/admin/unknown",
+      "before": {
+        "url": "http://127.0.0.1:3000/admin/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSEC-OP-AUTH\nPithros Administration\n\nRestricted administrative access.\n\nAdmin Identity\nPassword\nAUTHENTICATE OPERATOR\nReturn to public portal\nTLS 1.3 / E2E AUDITED\nNODE_ID: PITHROS-US-CENTRAL",
+        "mainText": "Pithros\nREMEMBRANCE\nSEC-OP-AUTH\nPithros Administration\n\nRestricted administrative access.\n\nAdmin Identity\nPassword\nAUTHENTICATE OPERATOR\nReturn to public portal\nTLS 1.3 / E2E AUDIT"
+      },
+      "afterReload": {
+        "url": "http://127.0.0.1:3000/admin/unknown",
+        "text": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSEC-OP-AUTH\nPithros Administration\n\nRestricted administrative access.\n\nAdmin Identity\nPassword\nAUTHENTICATE OPERATOR\nReturn to public portal\nTLS 1.3 / E2E AUDITED\nNODE_ID: PITHROS-US-CENTRAL",
+        "mainText": "Pithros\nREMEMBRANCE\nSEC-OP-AUTH\nPithros Administration\n\nRestricted administrative access.\n\nAdmin Identity\nPassword\nAUTHENTICATE OPERATOR\nReturn to public portal\nTLS 1.3 / E2E AUDIT"
+      }
+    }
+  ],
+  "browsers": [
+    {
+      "browser": "firefox",
+      "status": "NOT TESTED",
+      "detail": "BrowserType.launch: Executable doesn't exist at C:\\Users\\hp\\AppData\\Local\\ms-playwright\\firefox-1543\\firefox\\firefox.exe\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551 Looks like Playwright was just installed or updated.       \u2551\n\u2551 Please run the following command to download new browsers: \u2551\n\u2551                                                            \u2551\n\u2551     playwright install   "
+    },
+    {
+      "browser": "webkit",
+      "status": "NOT TESTED",
+      "detail": "BrowserType.launch: Executable doesn't exist at C:\\Users\\hp\\AppData\\Local\\ms-playwright\\webkit-2359\\Playwright.exe\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551 Looks like Playwright was just installed or updated.       \u2551\n\u2551 Please run the following command to download new browsers: \u2551\n\u2551                                                            \u2551\n\u2551     playwright install         "
+    }
+  ]
+}
