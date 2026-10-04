@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
 import { Button } from './Button';
 import { useTheme } from '../../context/ThemeContext';
 import { modalBackdropVariants, modalDialogVariants } from '../../lib/motion';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 import { api } from '../../services/api';
 
 export type ReportTargetType = 'memorial' | 'tribute' | 'media' | 'provider' | 'review';
@@ -43,6 +44,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const titleId = useId();
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -98,7 +102,12 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         />
 
         <motion.div
-          className={`relative z-10 w-full max-w-md rounded-2xl border p-6 shadow-2xl transition-colors ${
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className={`relative z-10 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border p-6 shadow-2xl transition-colors focus:outline-none ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
@@ -121,6 +130,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               />
               <div>
                 <h3
+                  id={titleId}
                   className={`text-lg font-serif ${
                     isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
                   }`}
@@ -137,7 +147,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Close dialog"
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isDark
                   ? 'text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'

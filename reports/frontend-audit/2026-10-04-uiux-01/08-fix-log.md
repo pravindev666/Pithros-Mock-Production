@@ -32,14 +32,23 @@
   - `/account/unknown` → "could not be found", main region not empty
 - **STATUS:** FIXED / VERIFIED (Chromium). Server authority unchanged; this is a presentation/route-correctness fix.
 
+## Fix 3 — FE-007 dialog accessibility (reproduced `ReportModal` + shared `Modal`)
+
+- **Files:** `lib/useDialogA11y.ts` (new), `components/ui/Modal.tsx`, `components/ui/ReportModal.tsx`
+- **Change:** one small shared hook moves focus into the dialog, traps Tab/Shift+Tab, closes on Escape, restores focus to the trigger, and locks body scroll. Both overlays now render `role="dialog"` + `aria-modal` + a labelled title, an `aria-label`led close button, `tabIndex={-1}`, and `max-h-[85vh] overflow-y-auto` for long content on mobile. Visual styling is unchanged.
+- **Regression evidence:** `10-modal-a11y-probe.json`
+  - Report dialog: `dialogCount: 1` (was `0`), `aria-modal: "true"`, focus inside the dialog, `bodyOverflow: "hidden"`, `focusAfterClose` restored to the trigger.
+  - Rejected memorial still correct in the same run (`badgeReviewed: 0`, `archivalVerified: 0`).
+- **Second-order check:** shared `Modal` consumers inherit the behavior without per-modal changes; Escape handling was consolidated into the hook (the old standalone listener was removed to avoid double-close).
+- **STATUS:** FIXED / VERIFIED (Chromium). Firefox/WebKit NOT TESTED.
+
 ## Still open (next queue)
 
-1. FE-007 — shared `Modal` dialog semantics, focus entry/trap/restore, scroll lock, mobile max-height
-2. FE-002 / FE-003 / FE-011 — registry chip scroller, filter wrapping, labelled controls, keyboard-operable cards
-3. FE-004 — pricing table component-scoped scrolling
-4. FE-008 — accessible password visibility controls
-5. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
-6. Re-run focused Chromium checks per fix, then final regression.
+1. FE-002 / FE-003 / FE-011 — registry chip scroller, filter wrapping, labelled controls, keyboard-operable cards
+2. FE-004 — pricing table component-scoped scrolling
+3. FE-008 — accessible password visibility controls
+4. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
+5. Re-run focused Chromium checks per fix, then final regression.
 
 ## Blockers / limitations
 

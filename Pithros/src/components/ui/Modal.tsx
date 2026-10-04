@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useId } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { modalBackdropVariants, modalDialogVariants } from '../../lib/motion';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface ModalProps {
   isOpen: boolean;
@@ -20,16 +21,8 @@ export const Modal: React.FC<ModalProps> = ({
   maxWidth = 'max-w-md',
 }) => {
   const { isDark } = useTheme();
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const titleId = useId();
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   return (
     <AnimatePresence>
@@ -45,11 +38,17 @@ export const Modal: React.FC<ModalProps> = ({
           />
 
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : 'Dialog'}
+            tabIndex={-1}
             variants={modalDialogVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={`relative w-full ${maxWidth} rounded-2xl border p-6 shadow-2xl transition-colors ${
+            className={`relative w-full ${maxWidth} max-h-[85vh] overflow-y-auto rounded-2xl border p-6 shadow-2xl transition-colors focus:outline-none ${
               isDark
                 ? 'border-[#202C40] bg-[#182337] text-[#F8F5EE]'
                 : 'border-[#E5DED2] bg-[#FCFAF5] text-[#20242A]'
@@ -57,13 +56,14 @@ export const Modal: React.FC<ModalProps> = ({
           >
             {title && (
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-inherit">
-                <h3 className="text-base font-serif font-semibold">{title}</h3>
+                <h3 id={titleId} className="text-base font-serif font-semibold">{title}</h3>
                 <button
                   type="button"
                   onClick={onClose}
+                  aria-label="Close dialog"
                   className="p-1 rounded-lg hover:opacity-75 transition-opacity cursor-pointer"
                 >
-                  <X className="w-4 h-4 opacity-70" />
+                  <X className="w-4 h-4 opacity-70" aria-hidden="true" />
                 </button>
               </div>
             )}
