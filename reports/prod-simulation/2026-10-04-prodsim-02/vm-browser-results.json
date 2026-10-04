@@ -1,0 +1,185 @@
+{
+  "base": "http://10.153.175.57",
+  "results": [
+    {
+      "journey": "journey_anon",
+      "step": "anonymous refused on every private endpoint",
+      "status": "PASS",
+      "detail": "14/14"
+    },
+    {
+      "journey": "journey_anon",
+      "step": "public endpoints stay readable anonymously",
+      "status": "PASS",
+      "detail": "3/3"
+    },
+    {
+      "journey": "journey_anon",
+      "step": "anonymous /dashboard shows a sign-in affordance, not the dashboard",
+      "status": "PASS",
+      "detail": "http://10.153.175.57/dashboard"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px public / no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px public /signin no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px public /signup no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px auth /dashboard no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px auth /create-memorial no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "360px auth /dashboard/contributors no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=360 innerWidth=360"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px public / no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px public /signin no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px public /signup no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px auth /dashboard no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px auth /create-memorial no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "390px auth /dashboard/contributors no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=390 innerWidth=390"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px public / no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px public /signin no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px public /signup no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px auth /dashboard no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px auth /create-memorial no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_mobile",
+      "step": "412px auth /dashboard/contributors no overflow",
+      "status": "PASS",
+      "detail": "scrollWidth=412 innerWidth=412"
+    },
+    {
+      "journey": "journey_evidence",
+      "step": "steward uploads evidence and creates the memorial",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_evidence",
+      "step": "submission reaches the human admin review queue (OCR ran)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_evidence",
+      "step": "admin queue exposes a human decision, not auto-approval",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_evidence",
+      "step": "admin approves the evidence",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_evidence",
+      "step": "steward sees the reviewer's decision",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "journey": "journey_signup",
+      "step": "signup blocked by Firebase (external)",
+      "status": "BLOCKED",
+      "detail": "Unable to complete this action right now. Please try again in a moment."
+    },
+    {
+      "journey": "journey_cross_user",
+      "step": "steward A creates a private memorial (UI)",
+      "status": "PASS",
+      "detail": "id=8348bf2b-ff73-4222-bac6-0a3e6386db38 url=http://10.153.175.57/m/vm-journey-private-memorial-7 api_seen=['GET 200 http://10.153.175.57/api/v1/memorials/085fad87-c0bc-4e07-a73a-c34441b503c0', 'GET 200 http://10.153.175.57/api/v1/memorials/4529522b-7307-4975-8902-5281e7f1bfcb', 'GET 200 http://10.153.175.57/api/v1/memorials/a86c0a5c-19b5-4404-89a1-e3e070756831', 'POST 201 http://10.153.175.57/api/v1/memorials']"
+    },
+    {
+      "journey": "journey_cross_user",
+      "step": "A can read A's memorial",
+      "status": "PASS",
+      "detail": "200"
+    },
+    {
+      "journey": "journey_cross_user",
+      "step": "journey",
+      "status": "BLOCKED",
+      "detail": "ReadTimeout: timed out"
+    }
+  ]
+}

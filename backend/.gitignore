@@ -27,3 +27,4 @@ var/
 
 # E2E runtime state (generated credentials, server logs)
 tests/e2e/.runtime/
+tests/e2e_vm/.runtime/
