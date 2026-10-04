@@ -47,10 +47,19 @@ SessionLocal = sessionmaker(
 
 def get_db() -> Iterator[Session]:
     db = SessionLocal()
+    # Mark the session as request-scoped so refusal audits are deferred until the
+    # session (and its row locks) have been released — otherwise the audit's FK
+    # check can block on the request's own uncommitted `users`-row write.
+    db.info["_pithros_request_session"] = True
     try:
         yield db
     finally:
+        deferred = db.info.pop("_pithros_audit_queue", [])
         db.close()
+        if deferred:
+            from app.audit.service import write_deferred_audits
+
+            write_deferred_audits(deferred)
 
 
 @contextmanager
