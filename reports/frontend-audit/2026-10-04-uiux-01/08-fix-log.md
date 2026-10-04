@@ -70,12 +70,19 @@
 
 - **Evidence:** `17-pricing-scroll-probe.json` — the comparison table is already inside `overflow-x: auto` (client 286 / scroll 465 at 320 px; final column reachable at right 303 after scroll; page `scrollWidth` 320). No clipping defect; no source change made for FE-004.
 
+## 6. Final regression (post-fix)
+
+- `02-public-browser-final.json` — 78 checks (13 routes × 320/360/390/412/768/1440): 0 navigation failures, 0 page exceptions, **0 page-level overflow**, 0 unnamed buttons (was 4), 0 unlabeled inputs (was 8), exactly one H1 per route.
+- `18-final-trust-modal-probe.json` — trust + dialog fixes still hold after the full changeset.
+- `19-vm-deployed-check.json` — the deployed VM build (`aba3d47`, pre-fix) loads public routes cleanly and still reproduces the verification-trust defect (`Document Reviewed` under a rejected fixture), confirming FE-001 was real in the deployed build.
+- VM `/ready` recovered at the end of the session: `{database, redis, storage: true}`.
+
 ## Still open (next queue)
 
-1. Re-run the focused Chromium checks and the full frontend gates.
-2. Final regression sweep across the affected routes.
+1. Deploy the fix commits to the sim VM and re-audit against the deployed post-fix SHA (requires your go-ahead).
+2. Authenticated family/partner/admin route audit, cross-user cache isolation, API-error matrix (were BLOCKED on VM readiness for most of the session).
 3. Firefox/WebKit remain NOT TESTED (binaries not installed).
-4. VM authenticated verification remains BLOCKED on `/ready`.
+4. FE-013 heading-hierarchy skips (P3) recorded, not yet fixed.
 
 ## Blockers / limitations
 

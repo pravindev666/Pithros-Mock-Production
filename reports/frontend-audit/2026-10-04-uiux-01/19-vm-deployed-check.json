@@ -1,0 +1,73 @@
+﻿{
+  "routes": [
+    {
+      "viewport": "360x800",
+      "route": "/",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Pithros \u2014 Digital Memorial & Remembrance Platform"
+    },
+    {
+      "viewport": "360x800",
+      "route": "/memorials",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Explore Memorials \u2014 Pithros"
+    },
+    {
+      "viewport": "360x800",
+      "route": "/pricing",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Pricing & Plans \u2014 Pithros"
+    },
+    {
+      "viewport": "360x800",
+      "route": "/signin",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Sign In \u2014 Pithros"
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Pithros \u2014 Digital Memorial & Remembrance Platform"
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/memorials",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Explore Memorials \u2014 Pithros"
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/pricing",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Pricing & Plans \u2014 Pithros"
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/signin",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "title": "Sign In \u2014 Pithros"
+    }
+  ],
+  "trustOnDeployedBuild": {
+    "deployedSha": "aba3d47",
+    "documentReviewedCount": 1,
+    "verificationRejectedCount": 0
+  }
+}
