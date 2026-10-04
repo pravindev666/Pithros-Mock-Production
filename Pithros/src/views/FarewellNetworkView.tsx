@@ -979,6 +979,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
               <Search className="w-5 h-5 text-[#B99452] flex-shrink-0" />
               <input
                 type="text"
+                aria-label={t('form_search_provider_label', 'Search farewell providers')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('form_search_provider', 'Search service or provider (e.g. Serene Transitions, Transit)...')}

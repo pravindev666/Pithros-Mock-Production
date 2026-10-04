@@ -53,12 +53,29 @@
 - **CORRECTION — FE-002 is NOT REPRODUCIBLE.** `13-registry-prefix-scroll-probe.json` measured the pre-fix chip container and it was already `overflow-x: auto` and scrollable (client 288 / scroll 527 at 320 px; Chennai reachable at right 304 after scroll; page scrollWidth 320). The chip row was never clipped. The extra `min-w-0`/`w-full` is defensive hardening only; FE-002 is withdrawn, not fixed.
 - **STATUS:** FE-003 FIXED / VERIFIED; FE-011 FIXED / VERIFIED; FE-002 NOT REPRODUCIBLE (Chromium).
 
+## Fix 5 — FE-008 controls and FE-009 / FE-010 SEO metadata
+
+- **Files:** `views/auth/ResetPasswordView.tsx`, `views/account/AccountSecurityView.tsx`, `views/FarewellNetworkView.tsx`, `components/common/SEOHead.tsx`, `App.tsx`, `index.html`
+- **Change:**
+  - Password visibility toggle now has a dynamic `aria-label` (Show/Hide password) and `aria-pressed`; the MFA control is a `role="switch"` with `aria-checked` and a name; the Farewell provider search input is labelled.
+  - Static `robots`/`canonical` removed from `index.html`; `SEOHead` omits the canonical when a page is `noindex`; unknown public paths (the 404 fallback) are now `noindex`.
+- **Regression evidence:** `16-seo-a11y-fix-probe.json` (390×844)
+  - `/memorials`, `/pricing`, `/farewell`: exactly one canonical, no duplicate.
+  - `/signin`, `/reset-password`, `/account/security`: single `noindex, nofollow`, no canonical (was both `index,follow` and `noindex`).
+  - `/does-not-exist`: `noindex, nofollow`, no self-canonical (was `index,follow` + canonical to the bad URL).
+  - Unnamed buttons 0 and unlabeled inputs 0 on all probed routes (was 1 unnamed on reset/account, 1 unlabeled on farewell).
+- **STATUS:** FIXED / VERIFIED (Chromium).
+
+## Correction — FE-004 pricing table is NOT REPRODUCIBLE
+
+- **Evidence:** `17-pricing-scroll-probe.json` — the comparison table is already inside `overflow-x: auto` (client 286 / scroll 465 at 320 px; final column reachable at right 303 after scroll; page `scrollWidth` 320). No clipping defect; no source change made for FE-004.
+
 ## Still open (next queue)
 
-1. FE-004 — pricing table component-scoped scrolling
-2. FE-008 — accessible password visibility controls
-3. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
-4. Re-run focused Chromium checks per fix, then final regression.
+1. Re-run the focused Chromium checks and the full frontend gates.
+2. Final regression sweep across the affected routes.
+3. Firefox/WebKit remain NOT TESTED (binaries not installed).
+4. VM authenticated verification remains BLOCKED on `/ready`.
 
 ## Blockers / limitations
 

@@ -1,0 +1,57 @@
+﻿[
+  {
+    "viewport": "320x568",
+    "pageScrollWidth": 320,
+    "innerWidth": 320,
+    "boxClientWidth": 286,
+    "boxScrollWidth": 465,
+    "boxOverflowX": "auto",
+    "scrolled": 179,
+    "lastCellBefore": 482,
+    "lastCellAfter": 303
+  },
+  {
+    "viewport": "360x800",
+    "pageScrollWidth": 360,
+    "innerWidth": 360,
+    "boxClientWidth": 326,
+    "boxScrollWidth": 465,
+    "boxOverflowX": "auto",
+    "scrolled": 139,
+    "lastCellBefore": 482,
+    "lastCellAfter": 343
+  },
+  {
+    "viewport": "390x844",
+    "pageScrollWidth": 390,
+    "innerWidth": 390,
+    "boxClientWidth": 356,
+    "boxScrollWidth": 479,
+    "boxOverflowX": "auto",
+    "scrolled": 123,
+    "lastCellBefore": 496,
+    "lastCellAfter": 373
+  },
+  {
+    "viewport": "412x915",
+    "pageScrollWidth": 412,
+    "innerWidth": 412,
+    "boxClientWidth": 378,
+    "boxScrollWidth": 479,
+    "boxOverflowX": "auto",
+    "scrolled": 101,
+    "lastCellBefore": 496,
+    "lastCellAfter": 395
+  },
+  {
+    "viewport": "1440x900",
+    "pageScrollWidth": 1440,
+    "innerWidth": 1440,
+    "boxClientWidth": 1150,
+    "boxScrollWidth": 1150,
+    "boxOverflowX": "auto",
+    "scrolled": 0,
+    "lastCellBefore": 1295,
+    "lastCellAfter": 1295
+  }
+]

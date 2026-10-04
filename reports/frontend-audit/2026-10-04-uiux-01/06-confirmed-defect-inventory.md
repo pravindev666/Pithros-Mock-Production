@@ -95,11 +95,10 @@
 - **ACTUAL:** The table is 479 px wide and extends to x=496 inside 320–390 px viewports; global clipping hides later columns
 - **ROOT CAUSE:** Wide table lacks a bounded `overflow-x-auto` wrapper/min-width contract
 - **AFFECTED CSS/COMPONENT:** `views/PricingView.tsx`
-- **WHY THIS IS REAL:** Paid-plan information is inaccessible on required mobile widths
-- **EVIDENCE:** `03-targeted-probe.json` lines 96–107, 417–428, 738–749; screenshots
-- **FIX:** Add component-scoped horizontal scrolling around the table, preserving typography and table structure
-- **REGRESSION TEST:** Page width stays equal to viewport; table itself scrolls horizontally; desktop unchanged
-- **STATUS:** VERIFIED
+- **WHY THIS WAS REPORTED:** The out-of-bounds detector flagged the table and its cells beyond the viewport — which is how a wide table inside a horizontal scroller appears
+- **EVIDENCE:** `17-pricing-scroll-probe.json` — the table already sits inside an `overflow-x: auto` wrapper (client 286 / scroll 465 at 320 px); setting `scrollLeft` brought the final column fully into view (right 482→303) while page `scrollWidth` stayed 320; at 1440 the table fits with no scroll.
+- **CORRECTION:** **NOT REPRODUCIBLE.** The comparison table was already a bounded, horizontally scrollable region; the earlier "clipped columns" reading was a detector artifact.
+- **STATUS:** NOT REPRODUCIBLE
 
 ### FE-005
 
@@ -271,14 +270,14 @@
 
 ## Frozen totals
 
-- Total confirmed defects: **11** (after reclassifying FE-002 as not reproducible)
+- Total confirmed defects: **10** (after reclassifying FE-002 and FE-004 as not reproducible)
 - P0: **0**
 - P1: **3** (`FE-001`, `FE-005`, `FE-007`)
-- P2: **8**
+- P2: **7**
 - P3: **0**
 - Fixed: **0** at freeze time (see `08-fix-log.md` for current status)
-- Remaining: **11** at freeze time
-- Not reproducible: **2** (`FE-002`, and the `/signup?role=partner` suspicion)
+- Remaining: **10** at freeze time
+- Not reproducible: **3** (`FE-002`, `FE-004`, and the `/signup?role=partner` suspicion)
 - Blocked/partially unverified domains: authenticated VM matrix, Firefox, WebKit, cross-user cache isolation, full performance measurements
 
 ## Fix queue
@@ -287,7 +286,6 @@
 2. FE-005/FE-006 account routing and fallback
 3. FE-007 shared modal accessibility
 4. FE-003/FE-011 registry responsiveness and semantics
-5. FE-004 pricing table scrolling
-6. FE-008/FE-012 accessible controls
-7. FE-009/FE-010 SEO metadata
+5. FE-008 accessible controls
+6. FE-009/FE-010 SEO metadata
 8. Re-run focused Chromium checks, frontend gates, then Firefox/WebKit if browser binaries can be reused or installed project-locally

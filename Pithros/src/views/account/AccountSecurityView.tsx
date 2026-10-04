@@ -405,6 +405,9 @@ export const AccountSecurityView: React.FC<AccountSecurityViewProps> = ({ onNavi
 
             <button
               type="button"
+              role="switch"
+              aria-checked={mfaEnabled}
+              aria-label="Multi-factor authentication"
               onClick={() => setMfaEnabled(!mfaEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
                 mfaEnabled ? 'bg-amber-500' : isDark ? 'bg-stone-800' : 'bg-stone-300'

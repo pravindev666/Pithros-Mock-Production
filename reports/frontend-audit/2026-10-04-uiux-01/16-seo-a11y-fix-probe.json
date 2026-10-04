@@ -1,0 +1,1261 @@
+﻿{
+  "rows": [
+    {
+      "viewport": "320x568",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nMEMORIAL REGISTRY\nExplore Public Memorials\n\nDiscover life stories, milestone archives, and memories share",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 410,
+        "right": 465,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 471,
+        "right": 543,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "320x568",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nTHOUGHTFUL REMEMBRANCE & DIGITAL LONGEVITY\nSimple, Dignified Pricing\n\nEvery family can remember a loved o",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 17,
+        "right": 496,
+        "width": 479,
+        "clientWidth": 479,
+        "scrollWidth": 479,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "320x568",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nVERIFIED FAREWELL & REMEMBRANCE MARKETPLACE\nHow can we help?\n\nFind compassionate local service providers ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 69,
+          "right": 281,
+          "width": 212,
+          "clientWidth": 212,
+          "scrollWidth": 212,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "320x568",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "320x568",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "320x568",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\n404\nThis page could not be found\n\nThe link may be outdated, or the memorial may have been made private or",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nMEMORIAL REGISTRY\nExplore Public Memorials\n\nDiscover life stories, milestone archives, and memories share",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 410,
+        "right": 465,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 471,
+        "right": 543,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nTHOUGHTFUL REMEMBRANCE & DIGITAL LONGEVITY\nSimple, Dignified Pricing\n\nEvery family can remember a loved o",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 17,
+        "right": 496,
+        "width": 479,
+        "clientWidth": 479,
+        "scrollWidth": 479,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nVERIFIED FAREWELL & REMEMBRANCE MARKETPLACE\nHow can we help?\n\nFind compassionate local service providers ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 69,
+          "right": 321,
+          "width": 252,
+          "clientWidth": 252,
+          "scrollWidth": 252,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "360x800",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "360x800",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\n404\nThis page could not be found\n\nThe link may be outdated, or the memorial may have been made private or",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nMEMORIAL REGISTRY\nExplore Public Memorials\n\nDiscover life stories, milestone archives, and memories share",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 410,
+        "right": 465,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 471,
+        "right": 543,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nTHOUGHTFUL REMEMBRANCE & DIGITAL LONGEVITY\nSimple, Dignified Pricing\n\nEvery family can remember a loved o",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 17,
+        "right": 496,
+        "width": 479,
+        "clientWidth": 479,
+        "scrollWidth": 479,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nVERIFIED FAREWELL & REMEMBRANCE MARKETPLACE\nHow can we help?\n\nFind compassionate local service providers ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 69,
+          "right": 351,
+          "width": 282,
+          "clientWidth": 282,
+          "scrollWidth": 282,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "390x844",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\n404\nThis page could not be found\n\nThe link may be outdated, or the memorial may have been made private or",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nMEMORIAL REGISTRY\nExplore Public Memorials\n\nDiscover life stories, milestone archives, and memories share",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 410,
+        "right": 465,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 471,
+        "right": 543,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nTHOUGHTFUL REMEMBRANCE & DIGITAL LONGEVITY\nSimple, Dignified Pricing\n\nEvery family can remember a loved o",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 17,
+        "right": 496,
+        "width": 479,
+        "clientWidth": 479,
+        "scrollWidth": 479,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\nVERIFIED FAREWELL & REMEMBRANCE MARKETPLACE\nHow can we help?\n\nFind compassionate local service providers ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 63,
+        "right": 142,
+        "width": 79,
+        "clientWidth": 79,
+        "scrollWidth": 79,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 39,
+        "right": 199,
+        "width": 160,
+        "clientWidth": 160,
+        "scrollWidth": 160,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 69,
+          "right": 373,
+          "width": 304,
+          "clientWidth": 304,
+          "scrollWidth": 304,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "412x915",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "412x915",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nSwitch to remembrance theme (Dark)\n404\nThis page could not be found\n\nThe link may be outdated, or the memorial may have been made private or",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nMEMORIAL REGISTRY\nExplore",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 418,
+        "right": 473,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 479,
+        "right": 551,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nTHOUGHTFUL REMEMBRANCE & ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 25,
+        "right": 743,
+        "width": 718,
+        "clientWidth": 718,
+        "scrollWidth": 718,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nVERIFIED FAREWELL & REMEM",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 288,
+        "right": 377,
+        "width": 89,
+        "clientWidth": 89,
+        "scrollWidth": 89,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 288,
+        "right": 377,
+        "width": 89,
+        "clientWidth": 89,
+        "scrollWidth": 89,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 410,
+        "right": 593,
+        "width": 183,
+        "clientWidth": 183,
+        "scrollWidth": 183,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 410,
+        "right": 593,
+        "width": 183,
+        "clientWidth": 183,
+        "scrollWidth": 183,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 77,
+          "right": 231,
+          "width": 154,
+          "clientWidth": 154,
+          "scrollWidth": 154,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nWelcome back to Pithros.\n\nYour memories, your family, your space.\n\nEmail address\nPassword\nForgot pas",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "768x1024",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\n404\nThis page could not b",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/memorials",
+      "url": "http://127.0.0.1:3000/memorials",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nMEMORIAL REGISTRY\nExplore",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ],
+      "cityPune": {
+        "tag": "BUTTON",
+        "text": "Pune",
+        "left": 730,
+        "right": 785,
+        "width": 55,
+        "clientWidth": 53,
+        "scrollWidth": 53,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "BUTTON",
+        "text": "Chennai",
+        "left": 791,
+        "right": 863,
+        "width": 72,
+        "clientWidth": 70,
+        "scrollWidth": 70,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/pricing",
+      "url": "http://127.0.0.1:3000/pricing",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nTHOUGHTFUL REMEMBRANCE & ",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": {
+        "tag": "TABLE",
+        "text": "Capability\tFREE MEMORIAL\tMEMORIAL CARE (\u20b9999/YR)\tFAMILY ARCHIVE (\u20b92,999/YR)\nCORE",
+        "left": 145,
+        "right": 1295,
+        "width": 1150,
+        "clientWidth": 1150,
+        "scrollWidth": 1150,
+        "overflowX": "visible",
+        "aria": null,
+        "id": ""
+      },
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/farewell",
+      "url": "http://127.0.0.1:3000/farewell",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\nVERIFIED FAREWELL & REMEM",
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/farewell"
+      ],
+      "cityPune": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 712,
+        "right": 801,
+        "width": 89,
+        "clientWidth": 89,
+        "scrollWidth": 89,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "cityChennai": {
+        "tag": "SELECT",
+        "text": "All Cities\nBengaluru\nMumbai\nChennai\nDelhi NCR\nKochi\nPune",
+        "left": 712,
+        "right": 801,
+        "width": 89,
+        "clientWidth": 89,
+        "scrollWidth": 89,
+        "overflowX": "clip",
+        "aria": "Select City",
+        "id": ""
+      },
+      "pricingTable": null,
+      "farewellAll": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 834,
+        "right": 1017,
+        "width": 183,
+        "clientWidth": 183,
+        "scrollWidth": 183,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "farewellPlaques": {
+        "tag": "SELECT",
+        "text": "All Services\nFarewell Coordination\nTransport & Repatriation\nDocumentation\nFloral",
+        "left": 834,
+        "right": 1017,
+        "width": 183,
+        "clientWidth": 183,
+        "scrollWidth": 183,
+        "overflowX": "clip",
+        "aria": "Filter by Service Category",
+        "id": ""
+      },
+      "unnamedButtons": [],
+      "unlabeled": [
+        {
+          "tag": "INPUT",
+          "text": "Search provider, city, or service...",
+          "left": 325,
+          "right": 655,
+          "width": 330,
+          "clientWidth": 330,
+          "scrollWidth": 330,
+          "overflowX": "clip",
+          "aria": null,
+          "id": ""
+        }
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/reset-password",
+      "url": "http://127.0.0.1:3000/reset-password",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nSet new password\n\nChoose a strong, memorable passphrase for your account.\n\nReset authorization code ",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/signin",
+      "url": "http://127.0.0.1:3000/signin",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nThread of Remembrance\n\n\"Your memories, your family, your space.\"\n\nProtected by cryptographic identit",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/account/security",
+      "url": "http://127.0.0.1:3000/account/security",
+      "body": "Pithros\nREMEMBRANCE\n\u2190 Return to Pithros\nPithros\nREMEMBRANCE\nThread of Remembrance\n\n\"Your memories, your family, your space.\"\n\nProtected by cryptographic identit",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/does-not-exist",
+      "url": "http://127.0.0.1:3000/does-not-exist",
+      "body": "Pithros\nREMEMBRANCE\nMemorials\nHow It Works\nFarewell Network\nPricing\nEnglish\nSwitch to remembrance theme (Dark)\nSign In\nCreate Memorial\n404\nThis page could not b",
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": [],
+      "cityPune": null,
+      "cityChennai": null,
+      "pricingTable": null,
+      "farewellAll": null,
+      "farewellPlaques": null,
+      "unnamedButtons": [],
+      "unlabeled": []
+    }
+  ],
+  "partnerTransition": {
+    "candidateCount": 0
+  }
+}

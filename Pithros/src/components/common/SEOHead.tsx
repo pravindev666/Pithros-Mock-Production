@@ -128,7 +128,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       {/* Primary Meta Tags */}
       <title>{title}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href={canonical} />
+      {/* A noindex page must not also declare a canonical to itself. */}
+      {!noindex && <link rel="canonical" href={canonical} />}
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph / Facebook */}

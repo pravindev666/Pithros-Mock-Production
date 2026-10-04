@@ -788,6 +788,10 @@ export default function App() {
     if (isAuthRoute || isDashboardRoute || isPartnerRoute || isAdminRoute) {
       return { route: currentRoute, noindex: true };
     }
+    // Unknown public paths render the 404 fallback and must not be indexed.
+    if (!isKnownPublicRoute(currentRoute)) {
+      return { route: currentRoute, noindex: true };
+    }
     return { route: currentRoute };
   })();
 
