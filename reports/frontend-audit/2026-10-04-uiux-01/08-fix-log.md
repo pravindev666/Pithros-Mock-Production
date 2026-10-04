@@ -77,12 +77,18 @@
 - `19-vm-deployed-check.json` — the deployed VM build (`aba3d47`, pre-fix) loads public routes cleanly and still reproduces the verification-trust defect (`Document Reviewed` under a rejected fixture), confirming FE-001 was real in the deployed build.
 - VM `/ready` recovered at the end of the session: `{database, redis, storage: true}`.
 
+## 7. Authenticated VM journeys on the deployed fix (c96f18f)
+
+- **`mobile` — 18/18 PASS** (`22-vm-journey-mobile.txt`): signed-in `/dashboard`, `/create-memorial`, `/dashboard/contributors` show no page overflow at 360/390/412.
+- **`cross_user` — 5 PASS / 1 FAIL** (`23`, `23b`, `27-cross-user-triage.md`): all browser-level isolation checks pass (B refused 7/7; B's direct URL reveals nothing; A's memorial absent from B's dashboard). The single FAIL is an unreliable test-harness memorial-id assertion, **not** an app defect — independently verified that both the API and the UI create path return `fullName` exactly and `GET /memorials/{id}` is 200 (`24`, `25`, `26`).
+
 ## Still open (next queue)
 
 1. ~~Deploy the fix commits to the sim VM~~ — DONE: VM deployed `c96f18f`, `/health` 200, `/ready` 200, public/auth fixes verified on the deployed build (`21-vm-postfix-verification.json`).
-2. Authenticated family/partner/admin route audit, cross-user cache isolation, API-error matrix (VM `/ready` now healthy).
-3. Firefox/WebKit remain NOT TESTED (binaries not installed).
-4. FE-013 heading-hierarchy skips (P3) recorded, not yet fixed.
+2. Remaining authenticated VM journeys: `signup`, `anon`, `evidence`, `burst` (run one at a time). Harden the `cross_user` id resolution first.
+3. Partner/admin route audit and the API-error state matrix (VM `/ready` now healthy).
+4. Firefox/WebKit remain NOT TESTED (binaries not installed).
+5. FE-013 heading-hierarchy skips (P3) recorded, not yet fixed.
 
 ## Blockers / limitations
 
