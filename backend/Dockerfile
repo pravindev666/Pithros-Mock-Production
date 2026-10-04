@@ -26,6 +26,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y libpq5 postgresql-client curl tesseract-ocr \
+    && apt-get install --only-upgrade -y libpcre2-8-0 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 1001 pithros \
     && useradd --system --uid 1001 --gid pithros --create-home pithros
