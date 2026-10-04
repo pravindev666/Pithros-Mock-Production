@@ -80,6 +80,7 @@
 ## 7. Authenticated VM journeys on the deployed fix (c96f18f)
 
 - **`mobile` — 18/18 PASS** (`22-vm-journey-mobile.txt`): signed-in `/dashboard`, `/create-memorial`, `/dashboard/contributors` show no page overflow at 360/390/412.
+- **`anon` — 3/3 PASS** (`28-vm-journey-anon.txt`): 14/14 private endpoints refuse an anonymous caller, 3/3 public endpoints stay readable, and anonymous `/dashboard` shows a sign-in affordance rather than the dashboard.
 - **`cross_user` — 5 PASS / 1 FAIL** (`23`, `23b`, `27-cross-user-triage.md`): all browser-level isolation checks pass (B refused 7/7; B's direct URL reveals nothing; A's memorial absent from B's dashboard). The single FAIL is an unreliable test-harness memorial-id assertion, **not** an app defect — independently verified that both the API and the UI create path return `fullName` exactly and `GET /memorials/{id}` is 200 (`24`, `25`, `26`).
 
 ## Still open (next queue)
