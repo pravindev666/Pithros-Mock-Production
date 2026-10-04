@@ -85,55 +85,62 @@ export const PrivacyBadge: React.FC<{ privacy: PrivacyLevel; className?: string 
 
 export const VerificationBadge: React.FC<{
   type?: 'Family Managed' | 'Document Reviewed' | 'Enhanced Verification';
-  status?: VerificationStatus;
+  status: VerificationStatus;
   className?: string;
   onClick?: () => void;
-}> = ({ type, status = 'approved', className = '', onClick }) => {
+}> = ({ type, status, className = '', onClick }) => {
   const { isDark } = useTheme();
 
-  const interactiveClass = onClick
-    ? 'cursor-pointer hover:opacity-85 transition-opacity'
-    : '';
+  let content: React.ReactNode;
 
   if (status === 'draft' || status === 'pending') {
-    return (
-      <span onClick={onClick} className={interactiveClass} role={onClick ? 'button' : undefined}>
-        <Badge variant="muted" size="sm" className={className}>
-          <Clock className={`w-3 h-3 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`} />
-          <span>Verification Pending</span>
-        </Badge>
-      </span>
+    content = (
+      <Badge variant="muted" size="sm" className={className}>
+        <Clock className={`w-3 h-3 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`} />
+        <span>Verification Pending</span>
+      </Badge>
     );
-  }
-
-  if (status === 'under_review') {
-    return (
-      <span onClick={onClick} className={interactiveClass} role={onClick ? 'button' : undefined}>
-        <Badge variant="amber" size="sm" className={className}>
-          <Clock className={`w-3 h-3 animate-pulse ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`} />
-          <span>Under Document Review</span>
-        </Badge>
-      </span>
+  } else if (status === 'under_review') {
+    content = (
+      <Badge variant="amber" size="sm" className={className}>
+        <Clock className={`w-3 h-3 animate-pulse ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`} />
+        <span>Under Document Review</span>
+      </Badge>
     );
-  }
-
-  if (status === 'needs_info') {
-    return (
-      <span onClick={onClick} className={interactiveClass} role={onClick ? 'button' : undefined}>
-        <Badge variant="amber" size="sm" className={className}>
-          <AlertCircle className={`w-3 h-3 ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`} />
-          <span>Information Requested</span>
-        </Badge>
-      </span>
+  } else if (status === 'needs_info') {
+    content = (
+      <Badge variant="amber" size="sm" className={className}>
+        <AlertCircle className={`w-3 h-3 ${isDark ? 'text-[#B99452]' : 'text-[#23324A]'}`} />
+        <span>Information Requested</span>
+      </Badge>
     );
-  }
-
-  return (
-    <span onClick={onClick} className={interactiveClass} role={onClick ? 'button' : undefined}>
+  } else if (status === 'rejected') {
+    content = (
+      <Badge variant="danger" size="sm" className={className}>
+        <AlertCircle className="w-3 h-3" />
+        <span>Verification Rejected</span>
+      </Badge>
+    );
+  } else {
+    content = (
       <Badge variant="sage" size="sm" className={className}>
         <ShieldCheck className={`w-3.5 h-3.5 ${isDark ? 'text-[#86EFAC]' : 'text-[#397A5E]'}`} />
         <span>{type || 'Document Reviewed'}</span>
       </Badge>
-    </span>
-  );
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="cursor-pointer rounded-full transition-opacity hover:opacity-85"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return content;
 };

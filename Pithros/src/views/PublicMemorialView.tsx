@@ -293,6 +293,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
             <VerificationBadge
               type={memorial.verificationBadgeType}
+              status={memorial.verificationStatus}
               onClick={() => setVerificationDrawerOpen(true)}
             />
             <PrivacyBadge privacy={memorial.privacy} />
@@ -476,8 +477,12 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
               />
               Family-governed sanctuary
             </span>
-            <span>•</span>
-            <span>Archival record verified</span>
+            {memorial.verificationStatus === 'approved' && (
+              <>
+                <span>•</span>
+                <span>Archival record verified</span>
+              </>
+            )}
             <span>•</span>
             <span>Permanent preservation</span>
           </div>

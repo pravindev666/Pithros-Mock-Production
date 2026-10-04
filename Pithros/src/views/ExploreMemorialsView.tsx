@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useLocale } from '../context/LocaleContext';
 import { memorialsApi } from '../services/api/memorials';
-import type { ApiSearchResult } from '../services/api/mappers';
+import { mapVerificationStatus, type ApiSearchResult } from '../services/api/mappers';
 
 interface ExploreMemorialsViewProps {
   memorials: Memorial[];
@@ -44,7 +44,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             shortEpitaph: r.shortEpitaph || '',
             portraitUrl: r.portraitUrl || '',
             privacy: 'public',
-            verificationStatus: (r.verificationStatus === 'approved' ? 'approved' : 'unverified') as any,
+            verificationStatus: mapVerificationStatus(r.verificationStatus),
             verificationBadgeType: (r.verificationBadgeType as any) || (r.verificationStatus === 'approved' ? 'Document Reviewed' : undefined),
             story: { overview: '', favoriteQuotes: [] },
             timeline: [],
@@ -309,7 +309,10 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
                       className="w-full h-full object-cover grayscale-[15%] group-hover:scale-103 transition-transform duration-500"
                     />
                     <div className="absolute top-2.5 right-2.5">
-                      <VerificationBadge type={m.verificationBadgeType} />
+                      <VerificationBadge
+                        type={m.verificationBadgeType}
+                        status={m.verificationStatus}
+                      />
                     </div>
                   </div>
 

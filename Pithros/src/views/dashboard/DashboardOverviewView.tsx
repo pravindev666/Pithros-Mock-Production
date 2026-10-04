@@ -78,7 +78,10 @@ export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
               Family Custodian
             </span>
             <span className={isDark ? 'text-[#737982]' : 'text-[#C4B7A5]'}>•</span>
-            <VerificationBadge type={memorial.verificationBadgeType} />
+            <VerificationBadge
+              type={memorial.verificationBadgeType}
+              status={memorial.verificationStatus}
+            />
           </div>
           <h1
             className={`text-2xl sm:text-3xl font-serif ${
