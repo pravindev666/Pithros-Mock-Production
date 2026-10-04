@@ -1,0 +1,50 @@
+﻿[
+  {
+    "viewport": "360x800",
+    "route": "/account/security",
+    "signInForm": true,
+    "notFound": false,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  },
+  {
+    "viewport": "360x800",
+    "route": "/account/profile",
+    "signInForm": true,
+    "notFound": false,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  },
+  {
+    "viewport": "360x800",
+    "route": "/account/unknown",
+    "signInForm": false,
+    "notFound": true,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  },
+  {
+    "viewport": "1440x900",
+    "route": "/account/security",
+    "signInForm": true,
+    "notFound": false,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  },
+  {
+    "viewport": "1440x900",
+    "route": "/account/profile",
+    "signInForm": true,
+    "notFound": false,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  },
+  {
+    "viewport": "1440x900",
+    "route": "/account/unknown",
+    "signInForm": false,
+    "notFound": true,
+    "claimsAccountSecurity": false,
+    "mainEmpty": false
+  }
+]

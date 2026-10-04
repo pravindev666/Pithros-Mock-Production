@@ -281,6 +281,54 @@ export default function App() {
     if (isAuthRoute) {
       const isOperationalAdmin = currentRoute === '/admin/signin';
 
+      // Account settings are private. They previously rendered for a signed-out
+      // visitor (and rendered an empty shell for unknown paths) because the
+      // dispatcher only matched the two known children. Gate them explicitly.
+      if (currentRoute.startsWith('/account/')) {
+        const isKnownAccountRoute =
+          currentRoute === '/account/profile' || currentRoute === '/account/security';
+
+        return (
+          <AuthShell
+            currentRoute={currentRoute}
+            onNavigate={navigate}
+            isOperationalAdmin={false}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <PageTransition key={currentRoute} routeKey={currentRoute}>
+                {!isKnownAccountRoute ? (
+                  <div className={`min-h-[60vh] flex flex-col items-center justify-center gap-4 px-6 text-center ${isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'}`}>
+                    <p className="text-lg font-medium">This account page could not be found.</p>
+                    <p className="text-sm opacity-80 max-w-md">
+                      The link may be outdated. Sign in to reach your account settings.
+                    </p>
+                    <Button variant="primary" onClick={() => navigate('/signin')}>
+                      Go to sign in
+                    </Button>
+                  </div>
+                ) : authLoading ? (
+                  <div className="min-h-[60vh] flex items-center justify-center text-sm opacity-70">
+                    <span
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-3"
+                      style={{ borderColor: isDark ? '#B99452' : '#23324A', borderTopColor: 'transparent' }}
+                    />
+                    Opening Pithros…
+                  </div>
+                ) : authState === 'authenticated' ? (
+                  currentRoute === '/account/profile' ? (
+                    <AccountProfileView onNavigate={navigate} />
+                  ) : (
+                    <AccountSecurityView onNavigate={navigate} />
+                  )
+                ) : (
+                  <SignInView onNavigate={navigate} onSelectRole={handleSelectRole} />
+                )}
+              </PageTransition>
+            </AnimatePresence>
+          </AuthShell>
+        );
+      }
+
       return (
         <AuthShell
           currentRoute={currentRoute}
@@ -309,12 +357,6 @@ export default function App() {
               )}
               {currentRoute === '/admin/signin' && (
                 <AdminSignInView onNavigate={navigate} />
-              )}
-              {currentRoute === '/account/security' && (
-                <AccountSecurityView onNavigate={navigate} />
-              )}
-              {currentRoute === '/account/profile' && (
-                <AccountProfileView onNavigate={navigate} />
               )}
             </PageTransition>
           </AnimatePresence>

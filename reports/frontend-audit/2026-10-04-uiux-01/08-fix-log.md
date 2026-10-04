@@ -22,15 +22,24 @@
 - **Second-order check:** badge consumers in dashboard verification/overview and memorials already passed status; typing now prevents a future omission.
 - **STATUS:** FIXED / VERIFIED (Chromium). Firefox/WebKit still NOT TESTED.
 
+## Fix 2 — FE-005 / FE-006 account route guarding and fallback
+
+- **File:** `App.tsx`
+- **Change:** `/account/*` now has an explicit branch. Unknown account paths render a recovery message; signed-out users get the sign-in screen; loading shows a spinner; authenticated users get the requested account view. The previous duplicate account children were removed.
+- **Regression evidence:** `09-account-route-probe.json` (360×800 and 1440×900)
+  - `/account/security` signed out → sign-in form, no account-security content
+  - `/account/profile` signed out → sign-in form
+  - `/account/unknown` → "could not be found", main region not empty
+- **STATUS:** FIXED / VERIFIED (Chromium). Server authority unchanged; this is a presentation/route-correctness fix.
+
 ## Still open (next queue)
 
-1. FE-005 / FE-006 — account route guard + unknown account fallback
-2. FE-007 — shared `Modal` dialog semantics, focus entry/trap/restore, scroll lock, mobile max-height
-3. FE-002 / FE-003 / FE-011 — registry chip scroller, filter wrapping, labelled controls, keyboard-operable cards
-4. FE-004 — pricing table component-scoped scrolling
-5. FE-008 — accessible password visibility controls
-6. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
-7. Re-run focused Chromium checks per fix, then final regression.
+1. FE-007 — shared `Modal` dialog semantics, focus entry/trap/restore, scroll lock, mobile max-height
+2. FE-002 / FE-003 / FE-011 — registry chip scroller, filter wrapping, labelled controls, keyboard-operable cards
+3. FE-004 — pricing table component-scoped scrolling
+4. FE-008 — accessible password visibility controls
+5. FE-009 / FE-010 — 404 noindex and duplicate canonical/robots metadata
+6. Re-run focused Chromium checks per fix, then final regression.
 
 ## Blockers / limitations
 
