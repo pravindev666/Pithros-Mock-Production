@@ -102,5 +102,8 @@ three items are blocked on external/human action.
 
 **Risk:**
 7. No metrics/error-aggregator (F-19); abandoned-upload rows accumulate without the RUN_ID cleanup tool.
+8. Under burst, the 2 sync uvicorn workers can be exhausted on a `users`-row lock wait (the
+   `audit_logs` FK check), leaving `/health`/`/ready` unresponsive until a backend restart; no app-level
+   short lock timeout. Observed and recovered this wave — see `35-reconciliation-observability.md` §6.
 
 **Deferred by decision:** real Cashfree transaction (application-side billing lifecycle is covered).

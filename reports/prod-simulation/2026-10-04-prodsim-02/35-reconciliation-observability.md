@@ -69,3 +69,34 @@ re-register their tasks, and the app stays ready. No duplicate-effect or lost-qu
 discrepancies (abandoned uploads = cleanup candidates; retained thumbnails = expected). The DLQ has a
 working read surface with one genuine recorded failure. Worker/scheduler restart recovery is proven.
 Remaining: proactive metrics/aggregator and the deeper per-task failure-injection matrix.
+
+---
+
+## 6. Live finding — backend unresponsiveness under burst (observed & recovered)
+
+**Severity: P2 (availability under burst).** After the anonymous + cross-user + signup journeys were
+run repeatedly in quick succession, the app became unresponsive: through Caddy, `/health`/`/ready`
+timed out (`000`, 30 s) while the SPA (`/`) still answered `200` in 5 ms. The backend log showed sync
+requests blocking for **121 s and 204 s**:
+
+```
+psycopg.errors.QueryCanceled: canceling statement due to statement timeout
+CONTEXT: while locking tuple (2,23) in relation "users"
+SQL: INSERT INTO audit_logs (...)   -- FK check does SELECT 1 FROM users ... FOR KEY SHARE
+GET /api/v1/memorials/<id>  404  duration_ms=204606
+```
+
+**Root cause.** `audit_logs` inserts run an FK check that takes a `KEY SHARE` row lock on `users`; under
+bursty concurrent authenticated requests the lock wait exceeded and each sync request held a uvicorn
+worker for minutes. With only **2** uvicorn workers, both were pinned, so the liveness probe itself
+could not be served. This amplifies the already-known bottleneck (2 vCPU + remote Supabase
+round-trip latency).
+
+**Recovery (verified).** A DB probe right after showed **no** lingering `pg_blocking_pids` and no `users`
+lock holders (the contention had cleared). `docker restart pithros-sim-backend-1` → `/health` `200`
+(0.58 s), `/ready` `{database,redis,storage:true}`. **The VM is left healthy.**
+
+**Impact / recommendation.** Not a correctness defect and not reproduced under normal pacing — but under
+a burst the sync workers can be exhausted with no app-level short timeout on the lock wait. Recommend
+(a) a short statement/lock timeout on request-path writes and (b) more uvicorn workers (or async DB) if
+burst tolerance matters. Recorded, not fixed (needs your call; out of scope for this pass).
