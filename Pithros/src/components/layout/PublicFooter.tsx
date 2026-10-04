@@ -224,16 +224,6 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('/admin')}
-                  className={`transition-colors hover:underline cursor-pointer ${
-                    isDark ? 'hover:text-[#B99452]' : 'hover:text-[#23324A]'
-                  }`}
-                >
-                  Admin Trust Console
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => setSupportModalOpen(true)}
                   className={`transition-colors hover:underline cursor-pointer flex items-center gap-1.5 ${
                     isDark ? 'hover:text-[#B99452] text-[#B99452]' : 'hover:text-[#23324A] text-[#8C5C0F]'

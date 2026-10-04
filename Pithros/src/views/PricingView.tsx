@@ -3,6 +3,7 @@ import { Check, Shield, ArrowRight } from 'lucide-react';
 import { pricingPlans } from '../data/mockData';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 interface PricingViewProps {
   onNavigate: (route: string) => void;
@@ -10,6 +11,7 @@ interface PricingViewProps {
 
 export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
   const { isDark } = useTheme();
+  const { pithrosUser, setReturnUrl } = useAuth();
   const [careInterval, setCareInterval] = React.useState<'monthly' | 'half_yearly' | 'annual'>('annual');
 
   const displayPlans = pricingPlans.filter(
@@ -22,7 +24,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      <div className="max-w-6xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
+      <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
         {/* Title */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <span
@@ -262,6 +264,9 @@ export const PricingView: React.FC<PricingViewProps> = ({ onNavigate }) => {
                     onClick={() => {
                       if (targetPlanId === 'plan_free') {
                         onNavigate('/create-memorial');
+                      } else if (!pithrosUser) {
+                        setReturnUrl(`/checkout?plan=${targetPlanId}`);
+                        onNavigate('/signin');
                       } else {
                         onNavigate(`/checkout?plan=${targetPlanId}`);
                       }

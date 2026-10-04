@@ -272,6 +272,34 @@ label,
   }
 }
 
+/* ─── Keepsake print isolation ────────────────────────────────────────────── */
+/* The selected keepsake artifact is rendered into #keepsake-print-root (a direct
+   child of <body>). It never shows on screen; while printing, every other
+   top-level node (app, modals, toasts, widgets) is removed from the output. */
+#keepsake-print-root {
+  display: none;
+}
+@media print {
+  body.keepsake-printing > *:not(#keepsake-print-root) {
+    display: none !important;
+  }
+  body.keepsake-printing #keepsake-print-root {
+    display: block;
+    background: #fff;
+    color: #20242a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #keepsake-print-root .keepsake-print-page {
+    break-after: page;
+    page-break-after: always;
+  }
+  #keepsake-print-root .keepsake-print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
+
 /* ─── Print Styles ────────────────────────────────────────────────────────── */
 @media print {
   body {

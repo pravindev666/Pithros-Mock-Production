@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { modalBackdropVariants, modalDialogVariants } from '../../lib/motion';
 import { Memorial } from '../../types';
 import { useAnniversaries } from '../../hooks/useAnniversaries';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface AnniversarySettingsModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
+
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   useEffect(() => {
     if (settings) {
@@ -83,7 +86,12 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
         />
 
         <motion.div
-          className={`relative z-10 w-full max-w-lg rounded-2xl border p-6 shadow-2xl transition-colors my-6 ${
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="anniversary-modal-title"
+          tabIndex={-1}
+          className={`relative z-10 w-full max-w-lg max-h-[92vh] max-h-[92dvh] overflow-y-auto focus:outline-none rounded-2xl border p-6 shadow-2xl transition-colors my-6 ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
@@ -109,6 +117,7 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
               </div>
               <div>
                 <h3
+                  id="anniversary-modal-title"
                   className={`text-lg font-serif ${
                     isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
                   }`}
@@ -122,6 +131,7 @@ export const AnniversarySettingsModal: React.FC<AnniversarySettingsModalProps> =
             </div>
             <button
               onClick={onClose}
+              aria-label="Close anniversary settings"
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isDark
                   ? 'text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'

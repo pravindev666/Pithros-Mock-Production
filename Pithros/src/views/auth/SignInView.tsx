@@ -97,9 +97,9 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left Column: Atmospheric Pithros Visual (Desktop) */}
-        <div className="hidden lg:block lg:col-span-5 xl:col-span-6 h-full">
+      <div className="w-full max-w-5xl xl:max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+        {/* Atmospheric Pithros Visual: Responsive Banner on Mobile & Tablet, Full Panel on Desktop */}
+        <div className="block lg:col-span-6 h-full flex flex-col justify-center">
           <AuthAtmosphereVisual tagline="Your memories, your family, your space." />
         </div>
 
@@ -108,7 +108,7 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto"
+          className="lg:col-span-6 w-full max-w-md mx-auto flex flex-col justify-center"
         >
           <div
             className={`p-7 sm:p-9 rounded-3xl border shadow-2xl backdrop-blur-md transition-colors ${
@@ -119,9 +119,6 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
           >
             {/* Header */}
             <div className="text-center sm:text-left space-y-2 mb-7">
-              <div className="lg:hidden inline-block mb-2">
-                <PithrosLogo variant={isDark ? 'dark' : 'light'} />
-              </div>
               <h1
                 className={`text-2xl sm:text-3xl font-serif font-normal tracking-tight ${
                   isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
@@ -134,7 +131,7 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
                   isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
                 }`}
               >
-                Your memories, your family, your space.
+                Sign in to your account. Family Stewards, Care Partners, and Contributors are automatically directed to their designated workspace.
               </p>
             </div>
 
@@ -328,8 +325,20 @@ export const SignInView: React.FC<SignInViewProps> = ({ onNavigate, onSelectRole
                     isDark ? 'text-[#B99452]' : 'text-[#23324A]'
                   }`}
                 >
-                  Create an account
+                  Create a family account
                   <ArrowRight className="w-3 h-3" />
+                </button>
+              </p>
+              <p className={`text-[11px] ${isDark ? 'text-[#9EA3AA]/80' : 'text-[#7D766D]/80'}`}>
+                Bereavement service professional?{' '}
+                <button
+                  type="button"
+                  onClick={() => onNavigate('/signup?role=partner')}
+                  className={`underline hover:opacity-90 ${
+                    isDark ? 'text-[#6EE7B7]' : 'text-[#245C45]'
+                  }`}
+                >
+                  Register as a Care Partner
                 </button>
               </p>
             </div>

@@ -1,0 +1,223 @@
+<USER_REQUEST>
+PITHROS — GOLD MASTER REAL-PERSONA PRODUCTION-LIKE E2E TEST
+=============================================================
+
+THIS IS THE FINAL INTEGRATION TEST.
+
+Do NOT just make the test pass.
+
+Do NOT modify the database to make the browser test pass.
+
+Do NOT bypass authentication.
+
+Do NOT bypass email verification.
+
+Do NOT bypass payment verification.
+
+Do NOT directly create business records in PostgreSQL.
+
+Do NOT directly modify business state in PostgreSQL.
+
+The goal is to prove that Pithros works as a REAL CONNECTED PRODUCT.
+
+=============================================================
+TEST PRINCIPLE
+=============================================================
+
+A test step only counts as PASS if the real user performs it through
+the UI or a legitimate public/API workflow AND the resulting backend
+state is verified independently.
+
+Use:
+
+Playwright
++
+real browser contexts
++
+real Firebase Authentication
++
+real FastAPI
++
+real PostgreSQL
++
+real R2
++
+Cashfree SANDBOX
++
+real Partner workflow
++
+real Admin workflow
+
+=============================================================
+TEST ACCOUNT
+=============================================================
+
+Use EXACTLY:
+
+mathew60666@GMAIL.COM
+
+Do not silently substitute another generated email.
+
+If that exact account already exists:
+
+STOP and determine whether it is an intentionally retained test account.
+
+Do not overwrite another person's account.
+
+If the environment allows creating the account, create it through the
+REAL Pithros signup flow.
+
+=============================================================
+PASSWORD
+=============================================================
+
+Generate a strong temporary password automatically.
+
+Minimum:
+
+20 characters
+upper case
+lower case
+numbers
+special characters
+
+Never:
+
+print it
+commit it
+hardcode it
+include it in screenshots
+include it in the final report
+
+Use secure ephemeral storage.
+
+========================================
+<truncated 21402 bytes>
+ENSHOTS
+
+38. FINAL TEST COUNT
+
+39. REMAINING GAPS
+
+=============================================================
+MANDATORY DEFECT FORMAT
+=============================================================
+
+ID:
+SEVERITY:
+PERSONA:
+SCREEN:
+ACTION:
+EXPECTED:
+ACTUAL:
+ROOT CAUSE:
+API:
+DB:
+R2:
+ADMIN:
+PARTNER:
+SECURITY:
+PRIVACY:
+FINANCIAL:
+FIX:
+REGRESSION:
+RESULT:
+
+=============================================================
+FINAL STANDARD
+=============================================================
+
+DO NOT SAY:
+
+"FULL LIFECYCLE PASSED"
+
+unless the test actually proves:
+
+SIGNUP
++
+AUTHENTICATION
++
+EMAIL VERIFICATION
++
+USER PROVISIONING
++
+MEMORIAL
++
+PHOTO
++
+VOICE
++
+TIMELINE
++
+FAMILY
++
+VERIFICATION
++
+PUBLIC MEMORIAL
++
+TRIBUTE
++
+FAREWELL LEAD
++
+PARTNER
++
+ADMIN
++
+CASHFREE
++
+PAYMENT
++
+ENTITLEMENT
++
+PREMIUM FEATURE USE
++
+REFRESH
++
+LOGOUT
++
+RELOGIN
++
+CROSS-USER SECURITY
++
+DELETION
+
+all work through actual connected workflows.
+
+=============================================================
+FINAL QUESTION
+=============================================================
+
+At the end answer:
+
+"Could I hand Pithros to a completely new family today and expect the
+entire product to work without a developer manually fixing database
+records?"
+
+YES or NO.
+
+If NO:
+
+list the exact blockers.
+
+Do not hide them.
+
+=============================================================
+ABSOLUTE PRINCIPLE
+=============================================================
+
+THE TEST MUST TEST THE PRODUCT.
+
+NOT THE TEST SCRIPT.
+
+DO NOT MAKE THE TEST PASS.
+
+MAKE PITHROS PASS.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-02T07:12:34+05:30.
+
+The user's current state is as follows:
+Browser State:
+  Page 9C1EC837F571EB5CFF9A8712BFABE199 (mathew_02_error_creation.png (1280×800)) - file:///C:/Users/hp/Desktop/Pithros-Rememberence-Project/Pithros/e2e/screenshots... [ACTIVE]
+    Viewport: 1370x693, Page Height: 800
+</ADDITIONAL_METADATA>

@@ -67,7 +67,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
         </div>
 
         {/* Desktop Nav Items */}
-        <nav data-ui-component="navigation" className="hidden md:flex items-center gap-7">
+        <nav data-ui-component="navigation" className="hidden lg:flex items-center gap-6 xl:gap-7">
           {navLinks.map((link) => {
             const isActive = currentRoute === link.route;
             return (
@@ -92,7 +92,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
         </nav>
 
         {/* Right Actions */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           {/* Dynamic Indic Language Selector */}
           <LanguageSelector />
 
@@ -233,7 +233,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
         </div>
 
         {/* Mobile Controls */}
-        <div className="flex sm:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2">
           <ThemeToggle variant="compact" />
           <button
             onClick={() => onNavigate('/memorials')}
@@ -259,7 +259,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div
-          className={`sm:hidden border-b px-4 pt-3 pb-6 space-y-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain transition-colors ${
+          className={`lg:hidden border-b px-4 pt-3 pb-6 space-y-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain transition-colors ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'

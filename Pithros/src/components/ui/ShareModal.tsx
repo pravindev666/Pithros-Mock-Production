@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { modalBackdropVariants, modalDialogVariants } from '../../lib/motion';
 import { useQR } from '../../hooks/useQR';
 import { DocumentSecurityBadge } from './DocumentSecurityBadge';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'share' | 'og_preview' | 'qr_plaque'>('share');
   const { memorialUrl, qrSvgUrl, svgContent, downloadQRAsSVG } = useQR(memorial.slug);
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -58,7 +60,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         {/* Dialog Window */}
         <motion.div
-          className={`relative z-10 w-full max-w-lg rounded-2xl border p-6 shadow-2xl transition-colors my-6 ${
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-modal-title"
+          tabIndex={-1}
+          className={`relative z-10 w-full max-w-lg max-h-[92vh] max-h-[92dvh] overflow-y-auto focus:outline-none rounded-2xl border p-6 shadow-2xl transition-colors my-6 ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
@@ -83,6 +90,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 Remembrance Link & Archival Share
               </span>
               <h3
+                id="share-modal-title"
                 className={`text-xl font-serif mt-0.5 ${
                   isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
                 }`}
@@ -92,6 +100,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close share dialog"
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isDark
                   ? 'text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'

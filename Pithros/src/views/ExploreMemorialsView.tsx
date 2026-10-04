@@ -1,77 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, MapPin, Calendar, X } from 'lucide-react';
+import { Search, ArrowRight, MapPin, Calendar, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { Memorial } from '../types';
 import { VerificationBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useLocale } from '../context/LocaleContext';
-import { memorialsApi } from '../services/api/memorials';
-import { mapVerificationStatus, type ApiSearchResult } from '../services/api/mappers';
+import { api } from '../services/api';
 
 interface ExploreMemorialsViewProps {
-  memorials: Memorial[];
+  memorials?: Memorial[];
   onOpenMemorial: (slug: string) => void;
   onNavigate: (route: string) => void;
 }
 
 export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
-  memorials,
   onOpenMemorial,
   onNavigate,
 }) => {
   const { isDark } = useTheme();
-  const { t, metadata } = useLocale();
+  const { metadata } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [verificationFilter, setVerificationFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');
-  const [activeList, setActiveList] = useState<Memorial[]>(memorials && memorials.length > 0 ? memorials : []);
+  const [activeList, setActiveList] = useState<Memorial[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fetchPublicMemorials = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const results = await api.searchMemorials();
+      // Ensure only public memorials are shown in the public registry
+      setActiveList((results || []).filter((m) => m.privacy === 'public'));
+    } catch (err) {
+      console.error('Failed to load public memorial registry:', err);
+      setErrorMessage('Unable to load the memorial registry at this moment. Please check your connection and try again.');
+      setActiveList([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (memorials && memorials.length > 0) {
-      setActiveList(memorials);
-    } else {
-      memorialsApi.search().then((results) => {
-        if (results && results.length > 0) {
-          const mapped: Memorial[] = results.map((r: ApiSearchResult) => ({
-            id: r.slug,
-            slug: r.slug,
-            fullName: r.fullName,
-            birthDate: r.birthDate || '',
-            deathDate: r.deathDate || '',
-            birthPlace: r.birthPlace || '',
-            restingPlace: r.restingPlace || undefined,
-            shortEpitaph: r.shortEpitaph || '',
-            portraitUrl: r.portraitUrl || '',
-            privacy: 'public',
-            verificationStatus: mapVerificationStatus(r.verificationStatus),
-            verificationBadgeType: (r.verificationBadgeType as any) || (r.verificationStatus === 'approved' ? 'Document Reviewed' : undefined),
-            story: { overview: '', favoriteQuotes: [] },
-            timeline: [],
-            family: [],
-            media: [],
-            voiceMemories: [],
-            tributes: [],
-            offerings: [],
-            legacyLinks: [],
-            stewardId: '',
-            stewardName: '',
-            stewardEmail: '',
-            completenessPercent: 100,
-            createdAt: '',
-            updatedAt: '',
-          }));
-          setActiveList(mapped);
-        } else {
-          // No public results. Never fall back to the signed-in user's own
-          // memorials — this is a public explore page.
-          setActiveList([]);
-        }
-      }).catch(() => {
-        setActiveList([]);
-      });
-    }
-  }, [memorials]);
+    fetchPublicMemorials();
+  }, []);
 
   const filtered = activeList.filter((m) => {
     // Only show public memorials in explore
@@ -109,7 +83,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto">
         {/* Header */}
         <div className="max-w-2xl mx-auto text-center mb-10 space-y-3">
           <span
@@ -139,7 +113,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
         <div
           data-ui-component="form"
           style={{ fontFamily: metadata.uiFontFamily }}
-          className="max-w-3xl mx-auto mb-12 space-y-4"
+          className="max-w-4xl lg:max-w-5xl mx-auto mb-12 space-y-4"
         >
           <div className="relative">
             <Search
@@ -175,12 +149,12 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
           {/* Quick Filter Pills */}
           <div className="flex flex-col gap-3 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto no-scrollbar py-1 sm:w-auto">
-              <span className={`mr-1 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              <span className={`mr-1 shrink-0 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                 City:
               </span>
               <button
                 onClick={() => setSelectedCity('all')}
-                className={`px-3 py-1 rounded-full border transition-colors cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-full border transition-colors cursor-pointer ${
                   selectedCity === 'all'
                     ? isDark
                       ? 'border-[#B99452] bg-[#B99452]/10 text-[#B99452]'
@@ -196,7 +170,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
                 <button
                   key={c}
                   onClick={() => setSelectedCity(c)}
-                  className={`px-3 py-1 rounded-full border transition-colors cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-full border transition-colors cursor-pointer ${
                     selectedCity === c
                       ? isDark
                         ? 'border-[#B99452] bg-[#B99452]/10 text-[#B99452]'
@@ -247,18 +221,67 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
           </div>
         </div>
 
-        {/* Memorial Grid */}
-        {filtered.length === 0 ? (
+        {/* Memorial Grid States */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className={`rounded-2xl border p-5 ${
+                  isDark ? 'border-[#202C40] bg-[#182337]/50' : 'border-[#E5DED2] bg-[#FCFAF5]/70'
+                }`}
+              >
+                <div className={`aspect-[4/3] rounded-xl mb-4 ${isDark ? 'bg-[#202C40]' : 'bg-[#E5DED2]'}`} />
+                <div className={`h-6 rounded w-3/4 mb-2 ${isDark ? 'bg-[#202C40]' : 'bg-[#E5DED2]'}`} />
+                <div className={`h-4 rounded w-1/2 mb-4 ${isDark ? 'bg-[#202C40]/60' : 'bg-[#E5DED2]/60'}`} />
+                <div className={`h-10 rounded w-full mb-4 ${isDark ? 'bg-[#202C40]/40' : 'bg-[#E5DED2]/40'}`} />
+                <div className={`h-4 rounded w-1/3 pt-2 ${isDark ? 'bg-[#202C40]/40' : 'bg-[#E5DED2]/40'}`} />
+              </div>
+            ))}
+          </div>
+        ) : errorMessage ? (
+          <div
+            className={`py-16 px-6 text-center rounded-2xl border max-w-xl mx-auto space-y-4 ${
+              isDark ? 'border-[#202C40] bg-[#182337]' : 'border-[#E5DED2] bg-[#FCFAF5]'
+            }`}
+          >
+            <AlertCircle className={`w-10 h-10 mx-auto ${isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'}`} />
+            <div className="space-y-1">
+              <h3 className={`text-lg font-serif ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                Registry Connection Issue
+              </h3>
+              <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                {errorMessage}
+              </p>
+            </div>
+            <div className="pt-2 flex justify-center gap-3">
+              <Button variant="primary" size="sm" onClick={fetchPublicMemorials}>
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                Retry Loading
+              </Button>
+            </div>
+          </div>
+        ) : activeList.length === 0 ? (
           <div className="py-20 text-center space-y-3">
-            <p
-              className={`text-base font-serif ${
-                isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-              }`}
-            >
+            <p className={`text-base font-serif ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
               No public memorials found
             </p>
             <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
-              Try searching with a different name or clear the filters.
+              No public memorials have been published to the registry yet.
+            </p>
+            <div className="pt-2 flex justify-center">
+              <Button variant="primary" size="sm" onClick={() => onNavigate('/create-memorial')}>
+                Create a Memorial
+              </Button>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center space-y-3">
+            <p className={`text-base font-serif ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+              No memorials match your current filters
+            </p>
+            <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+              Try searching with a different name, selecting another city, or clearing active filters.
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               {(searchQuery || selectedCity !== 'all' || verificationFilter !== 'all') && (
@@ -284,7 +307,7 @@ export const ExploreMemorialsView: React.FC<ExploreMemorialsViewProps> = ({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {filtered.map((m) => (
               <div
                 key={m.id}

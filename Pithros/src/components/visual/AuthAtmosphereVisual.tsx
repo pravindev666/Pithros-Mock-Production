@@ -20,124 +20,66 @@ export const AuthAtmosphereVisual: React.FC<AuthAtmosphereVisualProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full min-h-[520px] rounded-3xl overflow-hidden flex flex-col justify-between p-8 md:p-12 border select-none transition-colors ${
+      className={`relative w-full h-full min-h-[190px] sm:min-h-[220px] md:min-h-[250px] lg:min-h-[520px] xl:min-h-[580px] rounded-3xl overflow-hidden flex flex-col justify-between p-5 sm:p-7 md:p-8 lg:p-10 xl:p-12 select-none border transition-all duration-300 shadow-2xl ${
         isDark
-          ? 'bg-[#0E0C09] border-[#202C40]'
-          : 'bg-[#F4ECE1] border-[#E5DED2]'
+          ? 'bg-[#0A0D14] border-[#B99452]/35 shadow-[0_16px_50px_rgba(0,0,0,0.6)]'
+          : 'bg-[#0B101B] border-[#B99452]/30 shadow-[0_16px_45px_rgba(20,28,40,0.22)]'
       } ${className}`}
       aria-hidden="true"
     >
-      {/* 1. Ambient Background Gradients */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-60"
-        style={{
-          background: isDark
-            ? 'radial-gradient(ellipse at 50% 40%, rgba(255, 184, 48, 0.08) 0%, rgba(255, 107, 0, 0.03) 45%, transparent 75%)'
-            : 'radial-gradient(ellipse at 50% 40%, rgba(217, 148, 30, 0.12) 0%, rgba(178, 122, 30, 0.05) 50%, transparent 80%)',
-        }}
+      {/* 1. Full-bleed Stretched Celestial Galaxy Constellation Artwork (Edge-to-Edge) */}
+      <img
+        src="/images/constellation_sanctuary.jpg"
+        alt="Celestial Constellation Sanctuary"
+        className="absolute inset-0 w-full h-full object-cover object-center filter contrast-[1.08] brightness-[0.92] scale-[1.02]"
       />
 
-      {/* 2. StarField Drift */}
-      <StarField count={28} className="opacity-70" />
+      {/* 2. Atmospheric Gradient Vignettes for Text Legibility & Celestial Depth */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#080B10]/85 via-[#080B10]/25 to-transparent h-32 sm:h-36" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#080B10]/95 via-[#080B10]/60 to-transparent top-auto h-36 sm:h-48 lg:h-60" />
+      <div className="absolute inset-0 pointer-events-none bg-[#080B10]/15" />
 
-      {/* 3. Top Branding Anchor */}
-      <div className="relative z-10">
-        <PithrosLogo variant={isDark ? 'dark' : 'light'} />
-      </div>
+      {/* 3. StarField Subtle Twinkle Drift */}
+      <StarField count={22} className="opacity-40" />
 
-      {/* 4. Center Atmospheric Geometrics: Orbit, Halo, Constellation Nodes */}
-      <div className="relative z-10 flex-1 flex items-center justify-center my-6">
-        {/* Slow rotating orbit ring */}
+      {/* 4. Ambient Orbit & Halo Effects */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 160, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          transition={{ duration: 200, repeat: Infinity, ease: 'linear' }}
+          className="w-full h-full flex items-center justify-center"
         >
-          <MemoryOrbit width="100%" height="100%" className="scale-125 opacity-70" />
+          <MemoryOrbit width="90%" height="90%" className="scale-110 opacity-30" />
         </motion.div>
-
-        {/* Gentle pulsing halo */}
         <motion.div
-          animate={{ scale: [0.97, 1.03, 0.97], opacity: [0.35, 0.5, 0.35] }}
+          animate={{ scale: [0.96, 1.05, 0.96], opacity: [0.25, 0.45, 0.25] }}
           transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute flex items-center justify-center pointer-events-none"
+          className="absolute flex items-center justify-center"
         >
-          <MemorialHalo size={380} />
+          <MemorialHalo size={320} />
         </motion.div>
+      </div>
 
-        {/* Abstract Memory Constellation SVG */}
-        <div className="relative w-64 h-64 flex items-center justify-center">
-          <svg
-            viewBox="0 0 240 240"
-            fill="none"
-            className="w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Constellation link lines */}
-            <motion.path
-              d="M120 40 L180 90 L160 170 L80 170 L60 90 Z"
-              stroke={isDark ? '#D9D2C6' : '#7D766D'}
-              strokeWidth="0.75"
-              strokeDasharray="3 4"
-              strokeOpacity={isDark ? '0.35' : '0.4'}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.8, ease: 'easeInOut' }}
-            />
-            <motion.path
-              d="M120 40 L120 120 L180 90 M120 120 L160 170 M120 120 L80 170 M120 120 L60 90"
-              stroke={isDark ? '#B99452' : '#23324A'}
-              strokeWidth="0.75"
-              strokeOpacity={isDark ? '0.4' : '0.45'}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 2.2, ease: 'easeInOut' }}
-            />
-
-            {/* Radiant Center Node */}
-            <circle cx="120" cy="120" r="16" fill={isDark ? '#B99452' : '#D9941E'} fillOpacity={isDark ? '0.12' : '0.18'} />
-            <circle cx="120" cy="120" r="7" fill={isDark ? '#B99452' : '#23324A'} fillOpacity={isDark ? '0.45' : '0.55'} />
-            <circle cx="120" cy="120" r="2.5" fill={isDark ? '#F8F5EE' : '#FCFAF5'} />
-
-            {/* Perimeter Constellation Nodes */}
-            <g className="cursor-default">
-              <circle cx="120" cy="40" r="3" fill={isDark ? '#F8F5EE' : '#23324A'} />
-              <circle cx="180" cy="90" r="2.5" fill={isDark ? '#D9D2C6' : '#7D766D'} />
-              <circle cx="160" cy="170" r="3" fill={isDark ? '#B99452' : '#23324A'} />
-              <circle cx="80" cy="170" r="2.5" fill={isDark ? '#D9D2C6' : '#7D766D'} />
-              <circle cx="60" cy="90" r="3" fill={isDark ? '#B99452' : '#23324A'} />
-            </g>
-          </svg>
-
-          {/* Core remembrance caption pill */}
-          <div
-            className={`absolute bottom-2 px-3 py-1 rounded-full border text-[11px] font-sans tracking-wide backdrop-blur-md ${
-              isDark
-                ? 'border-[#202C40] bg-[#182337]/80 text-[#D9D2C6]'
-                : 'border-[#E5DED2] bg-[#FCFAF5]/90 text-[#554F48]'
-            }`}
-          >
-            Thread of Remembrance
-          </div>
+      {/* 5. Top Branding Anchor */}
+      <div className="relative z-10 flex items-center justify-between">
+        <PithrosLogo variant="dark" />
+        <div className="lg:hidden px-3 py-1 rounded-full border border-[#B99452]/40 bg-[#0B0F17]/80 backdrop-blur-md text-[#F8F5EE] text-[11px] font-sans tracking-wider flex items-center gap-1.5 shadow">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E5B869] animate-pulse" />
+          Sanctuary
         </div>
       </div>
 
-      {/* 5. MemoryThread & Bottom Quote */}
-      <div className="relative z-10 space-y-4">
-        <MemoryThread className="opacity-60" />
+      {/* 6. Center Celestial Space (Unobstructed View of the Constellation Sanctuary) */}
+      <div className="relative z-10 flex-1 min-h-[30px]" />
+
+      {/* 7. MemoryThread & Bottom Quote (Responsive: full on sm+, compact on mobile) */}
+      <div className="relative z-10 space-y-2 sm:space-y-3">
+        <MemoryThread className="opacity-60 text-[#B99452]" />
         <div className="space-y-1">
-          <p
-            className={`text-sm font-serif italic ${
-              isDark ? 'text-[#D9D2C6]' : 'text-[#554F48]'
-            }`}
-          >
+          <p className="text-sm sm:text-base lg:text-lg font-serif italic text-[#F8F5EE] drop-shadow-md">
             "{tagline}"
           </p>
-          <p
-            className={`text-[11px] font-sans ${
-              isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-            }`}
-          >
+          <p className="hidden sm:block text-xs font-sans text-[#D4CBBF] drop-shadow-sm leading-relaxed">
             Protected by cryptographic identity, permanent archiving, and family stewardship.
           </p>
         </div>

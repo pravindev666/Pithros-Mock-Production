@@ -15,6 +15,7 @@ import { Memorial } from '../../types';
 import { Button } from '../ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { MOTION_TIMING, MOTION_EASING } from '../../lib/motion';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface MemoryMosaicModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const MemoryMosaicModal: React.FC<MemoryMosaicModalProps> = ({
 }) => {
   const { isDark } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   const availablePhotos = memorial.media.filter((m) => m.type === 'photo');
   const allImages = [
@@ -233,11 +235,16 @@ export const MemoryMosaicModal: React.FC<MemoryMosaicModalProps> = ({
 
       {/* Main Card */}
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mosaic-modal-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 16 }}
         transition={{ duration: MOTION_TIMING.standard, ease: MOTION_EASING.cinematicEaseOut }}
-        className={`relative z-10 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${
+        className={`relative z-10 w-full max-w-4xl max-h-[92vh] max-h-[92dvh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden focus:outline-none ${
           isDark
             ? 'bg-[#111820] border-[#202C40] text-[#F8F5EE]'
             : 'bg-[#FAF6EF] border-[#E5DED2] text-[#20242A]'
@@ -252,7 +259,7 @@ export const MemoryMosaicModal: React.FC<MemoryMosaicModalProps> = ({
           <div className="flex items-center gap-2.5">
             <Sparkles className={`w-4 h-4 ${isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'}`} />
             <div>
-              <h2 className="text-base font-serif font-semibold">Memory Mosaic</h2>
+              <h2 id="mosaic-modal-title" className="text-base font-serif font-semibold">Memory Mosaic</h2>
               <p className={`text-[11px] ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                 Curate a commemorative photo tapestry to download and share
               </p>
@@ -266,7 +273,7 @@ export const MemoryMosaicModal: React.FC<MemoryMosaicModalProps> = ({
                 ? 'border-[#202C40] text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'
                 : 'border-[#E5DED2] text-[#7D766D] hover:text-[#20242A] hover:bg-[#EAE2D5]'
             }`}
-            aria-label="Close modal"
+            aria-label="Close memory mosaic dialog"
           >
             <X className="w-4 h-4" />
           </button>

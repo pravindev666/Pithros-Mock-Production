@@ -273,6 +273,15 @@ export default function App() {
   const isAdminRoute = currentRoute.startsWith('/admin') && currentRoute !== '/admin/signin';
   const isMemorialDetail = currentRoute.startsWith('/m/');
 
+  // Capture deep links to protected routes when signed out so sign-in returns to the intended view
+  useEffect(() => {
+    if (authState === 'signed_out') {
+      if (isDashboardRoute || isPartnerRoute || currentRoute.startsWith('/account/')) {
+        setReturnUrl(currentRoute);
+      }
+    }
+  }, [authState, currentRoute, isDashboardRoute, isPartnerRoute, setReturnUrl]);
+
   // Main View Dispatcher with Strict Shell Enforcement
   const renderShellContent = () => {
     // ─────────────────────────────────────────────────────────────

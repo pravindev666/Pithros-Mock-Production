@@ -13,7 +13,7 @@
 import { FeatureNotAvailableError, ValidationFailedError } from './client';
 import { auditApi } from './audit';
 import { contributorsApi } from './contributors';
-import { memorialsApi } from './memorials';
+import { memorialsApi, type SearchFilters } from './memorials';
 import { mediaApi } from './media';
 import { offeringsApi, tributesApi } from './tributes';
 import { verificationApi } from './verification';
@@ -25,11 +25,13 @@ import {
   toProviderLead,
   toServiceProvider,
 } from './providers';
+import { mapVerificationStatus } from './mappers';
 import type * as demoModule from '../demo/demoApi';
 import type {
   BillingInvoice,
   DigitalLegacyLink,
   FamilyMember,
+  Memorial,
   ProviderLead,
 } from '../../types';
 
@@ -68,6 +70,40 @@ export const liveApi = {
     } catch {
       return null;
     }
+  },
+
+  async searchMemorials(params?: string | SearchFilters): Promise<Memorial[]> {
+    const results = await memorialsApi.search(params);
+    return results.map((r) => ({
+      id: r.slug,
+      slug: r.slug,
+      fullName: r.fullName,
+      birthDate: r.birthDate || '',
+      deathDate: r.deathDate || '',
+      birthPlace: r.birthPlace || '',
+      restingPlace: r.restingPlace || undefined,
+      shortEpitaph: r.shortEpitaph || '',
+      portraitUrl: r.portraitUrl || '',
+      privacy: 'public' as const,
+      verificationStatus: mapVerificationStatus(r.verificationStatus),
+      verificationBadgeType:
+        (r.verificationBadgeType as Memorial['verificationBadgeType']) ||
+        (r.verificationStatus === 'approved' ? 'Document Reviewed' : undefined),
+      story: { overview: '', favoriteQuotes: [] },
+      timeline: [],
+      family: [],
+      media: [],
+      voiceMemories: [],
+      tributes: [],
+      offerings: [],
+      legacyLinks: [],
+      stewardId: '',
+      stewardName: '',
+      stewardEmail: '',
+      completenessPercent: 100,
+      createdAt: '',
+      updatedAt: '',
+    }));
   },
 
   // ─── Tributes and offerings ─────────────────────────────────────────────

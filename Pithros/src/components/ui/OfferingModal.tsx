@@ -15,6 +15,7 @@ import {
   MemorySymbol,
 } from '../visual/PithrosVisualSymbols';
 import { useTheme } from '../../context/ThemeContext';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 import {
   modalBackdropVariants,
   modalDialogVariants,
@@ -109,8 +110,6 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [completedText, setCompletedText] = useState('A gesture of remembrance was placed.');
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!senderName.trim()) return;
@@ -133,9 +132,13 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
     onClose();
   };
 
+  const dialogRef = useDialogA11y(isOpen, handleFinishAndClose);
+
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         {/* Backdrop */}
         <motion.div
           className={`fixed inset-0 backdrop-blur-sm ${
@@ -150,7 +153,12 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
 
         {/* Dialog Window */}
         <motion.div
-          className={`relative z-10 w-full max-w-lg rounded-3xl border p-6 sm:p-7 shadow-2xl transition-colors ${
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="offering-modal-title"
+          tabIndex={-1}
+          className={`relative z-10 w-full max-w-lg max-h-[92vh] max-h-[92dvh] overflow-y-auto rounded-3xl border p-6 sm:p-7 shadow-2xl transition-colors focus:outline-none my-6 ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
@@ -175,6 +183,7 @@ export const OfferingModal: React.FC<OfferingModalProps> = ({
                 Remembrance Gesture
               </span>
               <h3
+                id="offering-modal-title"
                 className={`text-xl font-serif mt-0.5 ${
                   isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
                 }`}

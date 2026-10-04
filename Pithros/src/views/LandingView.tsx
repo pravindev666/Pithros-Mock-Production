@@ -59,6 +59,7 @@ import {
   ScaleReveal,
 } from '../lib/motion';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { VerificationDrawer } from '../components/verification/VerificationDrawer';
 import { MemorialBookModal } from '../components/memorial/MemorialBookModal';
 import { pricingPlans } from '../data/mockData';
@@ -73,6 +74,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onOpenMemorial,
 }) => {
   const { isDark } = useTheme();
+  const { pithrosUser, setReturnUrl } = useAuth();
   const shouldReduceMotion = useReducedMotion();
 
   // Modals & Drawers
@@ -277,7 +279,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         {/* Pithros Sanctuary Sky Atmosphere Engine */}
         <HeroAtmosphere intensity="soft" />
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-6 sm:space-y-8">
+        <div className="relative z-10 max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-6 sm:space-y-8">
           {/* Emotional Header */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -383,7 +385,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
@@ -506,7 +508,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
+        <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
           <div className="text-center max-w-xl mx-auto space-y-3">
             <span
               className={`text-[10px] uppercase font-mono tracking-widest ${
@@ -640,7 +642,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-10 sm:space-y-12 md:space-y-16">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -789,7 +791,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+        <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -937,7 +939,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
+        <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1038,7 +1040,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1127,7 +1129,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 text-center">
+        <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1211,7 +1213,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
+        <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 md:space-y-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1285,7 +1287,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1433,7 +1435,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1527,6 +1529,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     onClick={() => {
                       if (plan.id === 'plan_free') {
                         onNavigate('/create-memorial');
+                      } else if (!pithrosUser) {
+                        setReturnUrl(`/checkout?plan=${plan.id}`);
+                        onNavigate('/signin');
                       } else {
                         onNavigate(`/checkout?plan=${plan.id}`);
                       }
@@ -1553,7 +1558,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-t transition-colors relative"
         style={{ borderColor: isDark ? '#1C1610' : '#E8DEC8' }}
       >
-        <div className="max-w-3xl mx-auto space-y-8 sm:space-y-10">
+        <div className="max-w-3xl lg:max-w-4xl mx-auto space-y-8 sm:space-y-10">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1637,7 +1642,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: MOTION_TIMING.emotional, ease: MOTION_EASING.easeOut }}
-          className="max-w-2xl mx-auto space-y-5 sm:space-y-6"
+          className="max-w-2xl lg:max-w-3xl mx-auto space-y-5 sm:space-y-6"
         >
           <h2
             className={`text-3xl sm:text-5xl font-serif leading-tight ${
@@ -1680,66 +1685,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
       <MemorialBookModal
         isOpen={memorialBookOpen}
         onClose={() => setMemorialBookOpen(false)}
-        memorial={{
-          fullName: 'Dr. Arun Krishnan',
-          birthDate: '14 August 1948',
-          deathDate: '12 January 2026',
-          birthPlace: 'Fort Kochi, Kerala',
-          restingPlace: 'Kaveri Memorial Quietude, Bengaluru',
-          shortEpitaph: 'Botanist, quiet mentor, and gardener who saw eternity in the leaves of the Western Ghats.',
-          story: {
-            overview:
-              'Dr. Arun Krishnan dedicated forty-four years to teaching plant taxonomy and documenting endangered flora across the rainforests of Kerala and Karnataka.',
-            earlyLife:
-              'Born by the tranquil backwaters of Fort Kochi, Arun was the eldest son of schoolteachers.',
-            passionsAndValues:
-              'Arun believed that patience was the greatest form of intelligence.',
-            enduringLegacy:
-              'He is remembered by three generations of students whom he taught to observe rather than merely look.',
-            favoriteQuotes: [
-              '“To walk quietly through a forest is to listen to a conversation that began a million years before us.”',
-            ],
-          },
-          timeline: [
-            {
-              id: 'tl_1',
-              year: '1948',
-              dateStr: '14 August 1948',
-              title: 'Born in Fort Kochi',
-              description: 'Born along the backwaters to schoolteachers.',
-            },
-            {
-              id: 'tl_2',
-              year: '1975',
-              dateStr: '28 December 1975',
-              title: 'Marriage to Anita Varma',
-              description: 'Married Anita in a quiet morning ceremony under rain trees in Thrissur.',
-            },
-            {
-              id: 'tl_3',
-              year: '1982',
-              dateStr: 'October 1982',
-              title: 'Silent Valley Expeditions',
-              description: 'Led the landmark ecological biodiversity census in Silent Valley.',
-            },
-          ],
-          family: [
-            { id: 'f1', name: 'Anita Krishnan', relationship: 'Wife & Steward', role: 'steward' },
-            { id: 'f2', name: 'Vikram Krishnan', relationship: 'Son', role: 'archivist' },
-            { id: 'f3', name: 'Sunita Krishnan', relationship: 'Daughter', role: 'contributor' },
-          ],
-          tributes: [
-            {
-              id: 'tr_1',
-              authorName: 'Father George Mathew',
-              relationship: 'Lifelong Family Friend',
-              message:
-                'A soul of deep harmony and peace. Arun brought gentle patience to every life he touched.',
-              date: '18 Jan 2026',
-              isApproved: true,
-            },
-          ],
-        } as any}
+        sample
       />
     </div>
   );

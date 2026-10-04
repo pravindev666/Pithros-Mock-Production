@@ -22,7 +22,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigate }) =>
         isDark ? 'bg-[#111820] text-[#F8F5EE]' : 'bg-[#F3EEE4] text-[#20242A]'
       }`}
     >
-      <div className="max-w-4xl mx-auto space-y-16">
+      <div className="max-w-5xl lg:max-w-6xl 2xl:max-w-7xl mx-auto space-y-16">
         {/* Title */}
         <div className="text-center space-y-4">
           <span

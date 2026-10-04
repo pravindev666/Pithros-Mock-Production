@@ -57,19 +57,161 @@ function setStored<T>(key: string, data: T): void {
   }
 }
 
+/**
+ * Access the complete underlying memorial registry stored locally.
+ *
+ * Separates raw persistence from user-scoped authorization.
+ * Public search, discovery, and tributes query this dataset.
+ */
+function getAllStoredMemorials(): Memorial[] {
+  return getStored<Memorial[]>('memorials', demoMemorials);
+}
+
+interface DemoSessionUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+}
+
+/**
+ * Resolves the active demo session user from sessionStorage.
+ * Returns null if the visitor is anonymous, signed out, or in the 'visitor' persona.
+ */
+function getActiveDemoUser(): DemoSessionUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const role = sessionStorage.getItem('pithros_demo_role');
+    if (role === 'visitor') return null;
+
+    const raw = sessionStorage.getItem('pithros_active_user');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.id) return parsed;
+    }
+
+    if (role === 'family_steward') {
+      return {
+        id: 'usr_anita_krishnan',
+        email: 'anita.k@example.com',
+        name: 'Anita Krishnan',
+        role: 'family_steward',
+      };
+    } else if (role === 'admin') {
+      return {
+        id: 'usr_admin',
+        email: 'admin@pithros.org',
+        name: 'Sarah Chen (Security Ops)',
+        role: 'admin',
+      };
+    } else if (role === 'partner') {
+      return {
+        id: 'usr_partner',
+        email: 'partner@pithros.org',
+        name: 'Rajesh Varma (Shanti Memorial Care)',
+        role: 'partner',
+      };
+    } else if (role === 'family_contributor') {
+      return {
+        id: 'usr_family_contributor',
+        email: 'vikram.k@example.com',
+        name: 'Vikram Krishnan (Brother)',
+        role: 'family_contributor',
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export const demoApi = {
-  // Memorials
+  // Memorials — returns ONLY memorials the authenticated caller is authorized to steward.
+  // Mirrors `memorialsApi.listMine` (`GET /me/memorials`). Returns [] for unauthenticated visitors.
   async getMemorials(): Promise<Memorial[]> {
-    return getStored<Memorial[]>('memorials', demoMemorials);
+    const user = getActiveDemoUser();
+    if (!user) {
+      return [];
+    }
+    const all = getAllStoredMemorials();
+    return all.filter((m) => {
+      if (m.stewardId && m.stewardId === user.id) return true;
+      if (user.email && m.stewardEmail && m.stewardEmail.toLowerCase() === user.email.toLowerCase()) return true;
+      return false;
+    });
   },
 
   async getMemorialBySlug(slug: string): Promise<Memorial | null> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     return list.find((m) => m.slug === slug || m.id === slug) || null;
   },
 
+  async searchMemorials(params?: string | import('../api/memorials').SearchFilters): Promise<Memorial[]> {
+    let list = getAllStoredMemorials();
+    if (!list || list.length === 0) {
+      list = demoMemorials;
+    } else {
+      // Ensure seeded public demo memorials are always available for exploration
+      const existingSlugs = new Set(list.map((m) => m.slug));
+      const missingDemo = demoMemorials.filter((m) => !existingSlugs.has(m.slug));
+      if (missingDemo.length > 0) {
+        list = [...list, ...missingDemo];
+      }
+    }
+    // Only public memorials can ever appear in the public registry
+    let results = list.filter((m) => m.privacy === 'public');
+
+    if (typeof params === 'string') {
+      const q = params.trim().toLowerCase();
+      if (q) {
+        results = results.filter(
+          (m) =>
+            m.fullName.toLowerCase().includes(q) ||
+            m.shortEpitaph.toLowerCase().includes(q) ||
+            (m.birthPlace && m.birthPlace.toLowerCase().includes(q)) ||
+            (m.restingPlace && m.restingPlace.toLowerCase().includes(q))
+        );
+      }
+    } else if (params) {
+      if (params.q && params.q.trim()) {
+        const q = params.q.trim().toLowerCase();
+        results = results.filter(
+          (m) =>
+            m.fullName.toLowerCase().includes(q) ||
+            m.shortEpitaph.toLowerCase().includes(q) ||
+            (m.birthPlace && m.birthPlace.toLowerCase().includes(q)) ||
+            (m.restingPlace && m.restingPlace.toLowerCase().includes(q))
+        );
+      }
+      if (params.city && params.city !== 'all') {
+        const city = params.city.trim().toLowerCase();
+        results = results.filter(
+          (m) =>
+            (m.birthPlace && m.birthPlace.toLowerCase().includes(city)) ||
+            (m.restingPlace && m.restingPlace.toLowerCase().includes(city))
+        );
+      }
+      if (params.verificationStatus && params.verificationStatus !== 'all') {
+        if (params.verificationStatus === 'reviewed') {
+          results = results.filter((m) => m.verificationStatus === 'approved');
+        } else if (params.verificationStatus === 'family') {
+          results = results.filter((m) => m.verificationBadgeType === 'Family Managed');
+        }
+      }
+      if (params.sortBy) {
+        if (params.sortBy === 'name_asc') results.sort((a, b) => a.fullName.localeCompare(b.fullName));
+        else if (params.sortBy === 'name_desc') results.sort((a, b) => b.fullName.localeCompare(a.fullName));
+        else if (params.sortBy === 'birth_date_asc') results.sort((a, b) => (a.birthDate || '').localeCompare(b.birthDate || ''));
+        else if (params.sortBy === 'death_date_desc') results.sort((a, b) => (b.deathDate || '').localeCompare(a.deathDate || ''));
+      }
+    }
+    return results;
+  },
+
   async createMemorial(memorialData: Partial<Memorial>): Promise<Memorial> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
+    const user = getActiveDemoUser();
     const newMemorial: Memorial = {
       id: `mem_${Date.now()}`,
       slug: (memorialData.fullName || 'new-memorial')
@@ -99,9 +241,9 @@ export const demoApi = {
       tributes: [],
       offerings: [],
       legacyLinks: memorialData.legacyLinks || [],
-      stewardId: 'usr_anita_krishnan',
-      stewardName: 'Anita Krishnan',
-      stewardEmail: 'anita.k@example.com',
+      stewardId: user ? user.id : 'usr_anita_krishnan',
+      stewardName: user ? (user.name || 'Family Steward') : 'Anita Krishnan',
+      stewardEmail: user ? (user.email || 'steward@example.com') : 'anita.k@example.com',
       completenessPercent: 70,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -112,7 +254,7 @@ export const demoApi = {
   },
 
   async updateMemorial(id: string, updates: Partial<Memorial>): Promise<Memorial | null> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === id || m.slug === id);
     if (idx === -1) return null;
     list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
@@ -122,7 +264,7 @@ export const demoApi = {
 
   // Tributes
   async addTribute(memorialId: string, tribute: Omit<Tribute, 'id' | 'date' | 'isApproved'>): Promise<Tribute> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newTribute: Tribute = {
       ...tribute,
@@ -142,7 +284,7 @@ export const demoApi = {
     memorialId: string,
     offering: Omit<RemembranceOffering, 'id' | 'timestamp'>
   ): Promise<RemembranceOffering> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newOffering: RemembranceOffering = {
       ...offering,
@@ -150,6 +292,9 @@ export const demoApi = {
       timestamp: 'Just now',
     };
     if (idx !== -1) {
+      if (!Array.isArray(list[idx].offerings)) {
+        list[idx].offerings = [];
+      }
       list[idx].offerings.unshift(newOffering);
       setStored('memorials', list);
     }
@@ -158,7 +303,7 @@ export const demoApi = {
 
   // Timeline
   async addTimelineEvent(memorialId: string, event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newEvent: TimelineEvent = {
       ...event,
@@ -177,7 +322,7 @@ export const demoApi = {
     eventId: string,
     event: Partial<Omit<TimelineEvent, 'id'>>,
   ): Promise<TimelineEvent> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     let updated: TimelineEvent = { id: eventId, year: '', title: '', description: '' };
     if (idx !== -1) {
@@ -193,7 +338,7 @@ export const demoApi = {
   },
 
   async removeTimelineEvent(memorialId: string, eventId: string): Promise<void> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     if (idx !== -1) {
       list[idx].timeline = list[idx].timeline.filter((e) => e.id !== eventId);
@@ -206,7 +351,7 @@ export const demoApi = {
     memorialId: string,
     link: Omit<DigitalLegacyLink, 'id'>,
   ): Promise<DigitalLegacyLink> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newLink: DigitalLegacyLink = {
       ...link,
@@ -225,7 +370,7 @@ export const demoApi = {
     linkId: string,
     updates: Partial<Omit<DigitalLegacyLink, 'id'>>,
   ): Promise<DigitalLegacyLink | null> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     if (idx === -1 || !list[idx].legacyLinks) return null;
     const linkIdx = list[idx].legacyLinks.findIndex((l) => l.id === linkId);
@@ -236,7 +381,7 @@ export const demoApi = {
   },
 
   async removeLegacyLink(memorialId: string, linkId: string): Promise<void> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     if (idx !== -1 && list[idx].legacyLinks) {
       list[idx].legacyLinks = list[idx].legacyLinks.filter((l) => l.id !== linkId);
@@ -249,7 +394,7 @@ export const demoApi = {
     memorialId: string,
     member: Omit<FamilyMember, 'id' | 'status'>
   ): Promise<{ member: FamilyMember; invitationToken?: string | null }> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newMember: FamilyMember = {
       ...member,
@@ -264,7 +409,7 @@ export const demoApi = {
   },
 
   async acceptInvitation(_token: string): Promise<FamilyMember> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const member = list.flatMap((m) => m.family).find((f) => f.status === 'invited');
     if (member) {
       member.status = 'active';
@@ -281,7 +426,7 @@ export const demoApi = {
 
   // Media
   async addMedia(memorialId: string, mediaItem: Omit<MediaItem, 'id'>): Promise<MediaItem> {
-    const list = await this.getMemorials();
+    const list = getAllStoredMemorials();
     const idx = list.findIndex((m) => m.id === memorialId || m.slug === memorialId);
     const newMedia: MediaItem = {
       ...mediaItem,

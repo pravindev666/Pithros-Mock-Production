@@ -18,6 +18,7 @@ import { Button } from '../ui/Button';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
 import { MOTION_TIMING, MOTION_EASING } from '../../lib/motion';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface MemoryInviteModalProps {
   isOpen: boolean;
@@ -44,6 +45,8 @@ export const MemoryInviteModal: React.FC<MemoryInviteModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   // Pre-configured relationship badges
   const relationPresets = [
@@ -119,11 +122,16 @@ export const MemoryInviteModal: React.FC<MemoryInviteModalProps> = ({
 
       {/* Modal Card */}
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="memory-invite-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 16 }}
         transition={{ duration: MOTION_TIMING.standard, ease: MOTION_EASING.cinematicEaseOut }}
-        className={`relative z-10 w-full max-w-xl rounded-3xl border shadow-2xl overflow-hidden ${
+        className={`relative z-10 w-full max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto focus:outline-none rounded-3xl border shadow-2xl ${
           isDark
             ? 'bg-[#141B2D] border-[#202C40] text-[#F8F5EE]'
             : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A]'
@@ -131,14 +139,14 @@ export const MemoryInviteModal: React.FC<MemoryInviteModalProps> = ({
       >
         {/* Header */}
         <div
-          className={`px-6 py-4 border-b flex items-center justify-between ${
+          className={`px-6 py-4 border-b flex items-center justify-between sticky top-0 z-10 ${
             isDark ? 'border-[#202C40] bg-[#111820]' : 'border-[#E5DED2] bg-[#F4EFE6]'
           }`}
         >
           <div className="flex items-center gap-2.5">
             <Heart className={`w-4 h-4 ${isDark ? 'text-[#B99452]' : 'text-[#8C5C0F]'}`} />
             <div>
-              <h2 className="text-base font-serif font-semibold">Memory Invite</h2>
+              <h2 id="memory-invite-title" className="text-base font-serif font-semibold">Memory Invite</h2>
               <p className={`text-[11px] ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                 Remembering {memorial.fullName}
               </p>
@@ -152,7 +160,7 @@ export const MemoryInviteModal: React.FC<MemoryInviteModalProps> = ({
                 ? 'border-[#202C40] text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'
                 : 'border-[#E5DED2] text-[#7D766D] hover:text-[#20242A] hover:bg-[#EAE2D5]'
             }`}
-            aria-label="Close modal"
+            aria-label="Close memory invite dialog"
           >
             <X className="w-4 h-4" />
           </button>

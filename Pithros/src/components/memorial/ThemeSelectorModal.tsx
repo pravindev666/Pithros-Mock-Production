@@ -4,6 +4,7 @@ import { X, Check, Sparkles, Lock, Palette, Crown, ExternalLink } from 'lucide-r
 import { MEMORIAL_THEMES, MemorialThemeId, MemorialThemeDefinition } from '../../lib/memorialThemes';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/Button';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface ThemeSelectorModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const ThemeSelectorModal: React.FC<ThemeSelectorModalProps> = ({
   onUpgradeClick,
 }) => {
   const { isDark } = useTheme();
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -32,11 +34,16 @@ export const ThemeSelectorModal: React.FC<ThemeSelectorModalProps> = ({
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="theme-selector-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.96, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 16 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${
+          className={`relative w-full max-w-2xl max-h-[90vh] max-h-[92dvh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden focus:outline-none ${
             isDark
               ? 'bg-[#141B26] border-[#223048] text-[#F8F5EE]'
               : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A]'
@@ -57,7 +64,7 @@ export const ThemeSelectorModal: React.FC<ThemeSelectorModalProps> = ({
                 <Palette className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-serif font-medium">Memorial Appearance</h3>
+                <h3 id="theme-selector-title" className="text-lg font-serif font-medium">Memorial Appearance</h3>
                 <p className={`text-xs ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                   Choose how their memory and legacy are presented to the world
                 </p>
@@ -68,7 +75,7 @@ export const ThemeSelectorModal: React.FC<ThemeSelectorModalProps> = ({
               className={`p-2 rounded-xl transition-colors cursor-pointer ${
                 isDark ? 'hover:bg-[#1E2838] text-[#9EA3AA]' : 'hover:bg-[#EAE4D8] text-[#7D766D]'
               }`}
-              aria-label="Close"
+              aria-label="Close memorial appearance dialog"
             >
               <X className="w-5 h-5" />
             </button>

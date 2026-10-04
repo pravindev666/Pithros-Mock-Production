@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { modalBackdropVariants, modalDialogVariants } from '../../lib/motion';
 import { Memorial } from '../../types';
 import { useDisputes } from '../../hooks/useDisputes';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface DisputeModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -89,7 +92,12 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
         />
 
         <motion.div
-          className={`relative z-10 w-full max-w-lg rounded-2xl border p-6 sm:p-7 shadow-2xl my-8 transition-colors ${
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dispute-modal-title"
+          tabIndex={-1}
+          className={`relative z-10 w-full max-w-lg max-h-[92vh] max-h-[92dvh] overflow-y-auto focus:outline-none rounded-2xl border p-6 sm:p-7 shadow-2xl my-8 transition-colors ${
             isDark
               ? 'border-[#202C40] bg-[#182337]'
               : 'border-[#E5DED2] bg-[#FCFAF5]'
@@ -115,6 +123,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
               </div>
               <div>
                 <h3
+                  id="dispute-modal-title"
                   className={`text-lg font-serif ${
                     isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
                   }`}
@@ -132,6 +141,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close dispute dialog"
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isDark
                   ? 'text-[#9EA3AA] hover:text-[#F8F5EE] hover:bg-[#182337]'

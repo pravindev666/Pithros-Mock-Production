@@ -63,7 +63,12 @@ export const CinematicRemembranceModal: React.FC<CinematicRemembranceModalProps>
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [isOpen, onClose, totalSlides]);
 
   // Audio control
@@ -83,7 +88,13 @@ export const CinematicRemembranceModal: React.FC<CinematicRemembranceModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#060504] text-[#F8F5EE] flex flex-col justify-between overflow-hidden select-none">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cinematic Remembrance"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 bg-[#060504] text-[#F8F5EE] flex flex-col justify-between overflow-hidden select-none focus:outline-none"
+    >
       {/* Optional Audio Element */}
       {sampleVoiceUrl && (
         <audio ref={audioRef} src={sampleVoiceUrl} loop />

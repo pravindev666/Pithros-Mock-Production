@@ -25,8 +25,8 @@ export const Lightbox: React.FC<LightboxProps> = ({
   const { isDark } = useTheme();
 
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowLeft') {
         onNavigate((currentIndex - 1 + images.length) % images.length);
@@ -36,7 +36,12 @@ export const Lightbox: React.FC<LightboxProps> = ({
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [isOpen, currentIndex, images.length, onClose, onNavigate]);
 
   const currentItem = images[currentIndex];
@@ -59,7 +64,11 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
         {/* Modal Window */}
         <motion.div
-          className="relative z-10 max-w-4xl w-full flex flex-col items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+          tabIndex={-1}
+          className="relative z-10 max-w-4xl w-full flex flex-col items-center focus:outline-none"
           initial={{ opacity: 0, scale: 0.97, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: 12 }}

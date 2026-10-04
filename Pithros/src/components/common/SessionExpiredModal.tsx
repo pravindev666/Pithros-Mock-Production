@@ -4,6 +4,7 @@ import { Clock, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface SessionExpiredModalProps {
   onReauthenticated: () => void;
@@ -22,7 +23,10 @@ export const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  if (authState !== 'session_expired') return null;
+  const isExpired = authState === 'session_expired';
+  const dialogRef = useDialogA11y(isExpired, onNavigateToSignIn);
+
+  if (!isExpired) return null;
 
   const emailToUnlock = currentUser?.email || pithrosUser?.email || 'anita.k@example.com';
 
@@ -50,10 +54,15 @@ export const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
+          ref={dialogRef}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="session-paused-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className={`w-full max-w-md p-7 sm:p-9 rounded-3xl border shadow-2xl transition-colors ${
+          className={`w-full max-w-md p-7 sm:p-9 rounded-3xl border shadow-2xl transition-colors focus:outline-none ${
             isDark
               ? 'bg-[#182337] border-[#202C40] text-[#F8F5EE]'
               : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A]'
@@ -64,7 +73,7 @@ export const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
               <Clock className="w-7 h-7" />
             </div>
 
-            <h2 className="text-2xl font-serif">Session Paused</h2>
+            <h2 id="session-paused-title" className="text-2xl font-serif">Session Paused</h2>
             <p
               className={`text-xs sm:text-sm leading-relaxed ${
                 isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'

@@ -408,14 +408,14 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
               Invite Memories
             </Button>
 
-            {/* 6. Leave an Offering */}
+            {/* 6. Leave an Offering / Gesture */}
             <Button
               variant="outline"
               size="md"
               onClick={() => setOfferingOpen(true)}
               icon={Flame}
             >
-              Leave Offering
+              Leave a Gesture
             </Button>
 
             {/* 7. Share Memorial */}
@@ -497,7 +497,7 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
             : 'border-[#E5DED2] bg-[#F3EEE4]/95'
         }`}
       >
-        <div className="max-w-5xl mx-auto px-4 flex items-center justify-start sm:justify-center overflow-x-auto py-2.5 gap-1 sm:gap-3 no-scrollbar">
+        <div className="max-w-5xl mx-auto px-4 flex items-center overflow-x-auto py-2.5 gap-1 sm:gap-3 no-scrollbar">
           {[
             { id: 'story', label: 'Life Story', icon: BookOpen },
             { id: 'timeline', label: 'Timeline', icon: Calendar },
@@ -513,7 +513,8 @@ export const PublicMemorialView: React.FC<PublicMemorialViewProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-sans whitespace-nowrap transition-all cursor-pointer ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`shrink-0 first:ml-auto last:mr-auto flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-sans whitespace-nowrap transition-all cursor-pointer ${
                   isActive
                     ? isDark
                       ? 'text-[#B99452] font-semibold border-b-2 border-[#B99452] bg-[#182337]/70'

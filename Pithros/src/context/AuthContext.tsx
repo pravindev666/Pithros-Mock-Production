@@ -118,10 +118,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             // Persona switching is a demo-only affordance and must never be
             // restored in live mode — the server-resolved account is authoritative.
+            const savedActiveUser = DEMO_MODE && typeof window !== 'undefined'
+              ? sessionStorage.getItem('pithros_active_user')
+              : null;
             const savedDemo = DEMO_MODE && typeof window !== 'undefined'
               ? sessionStorage.getItem('pithros_demo_role')
               : null;
-            if (savedDemo && savedDemo !== 'visitor') {
+
+            if (savedActiveUser && savedDemo !== 'visitor') {
+              try {
+                const parsed = JSON.parse(savedActiveUser);
+                if (parsed && parsed.id && isMounted) {
+                  const restored: PithrosUserRecord = {
+                    id: parsed.id,
+                    firebase_uid: `fb_uid_${parsed.id}`,
+                    name: parsed.name || 'Family Steward',
+                    email: parsed.email || 'steward@example.com',
+                    role: (parsed.role || savedDemo || 'family_steward') as UserRole,
+                    status: 'active',
+                    email_verified: true,
+                    phone_verified: true,
+                    mfa_enabled: false,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
+                  setPithrosUser(restored);
+                  setCurrentUser({
+                    uid: restored.firebase_uid,
+                    email: restored.email,
+                    emailVerified: true,
+                    displayName: restored.name,
+                    phoneNumber: null,
+                    photoURL: null,
+                    providerId: 'password',
+                  });
+                  setAuthState('authenticated');
+                }
+              } catch {
+                // fallback
+              }
+            } else if (savedDemo && savedDemo !== 'visitor') {
               switchRole(savedDemo as UserRole);
             } else {
               if (isMounted) {
@@ -140,9 +176,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       } else {
         // Firebase not configured in local environment: check if explicit demo mode persona was chosen
+        const savedActiveUser = DEMO_MODE && typeof window !== 'undefined'
+          ? sessionStorage.getItem('pithros_active_user')
+          : null;
         const savedDemo = DEMO_MODE && typeof window !== 'undefined'
           ? sessionStorage.getItem('pithros_demo_role')
           : null;
+
+        if (savedActiveUser && savedDemo !== 'visitor') {
+          try {
+            const parsed = JSON.parse(savedActiveUser);
+            if (parsed && parsed.id) {
+              const restored: PithrosUserRecord = {
+                id: parsed.id,
+                firebase_uid: `fb_uid_${parsed.id}`,
+                name: parsed.name || 'Family Steward',
+                email: parsed.email || 'steward@example.com',
+                role: (parsed.role || savedDemo || 'family_steward') as UserRole,
+                status: 'active',
+                email_verified: true,
+                phone_verified: true,
+                mfa_enabled: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              };
+              setPithrosUser(restored);
+              setCurrentUser({
+                uid: restored.firebase_uid,
+                email: restored.email,
+                emailVerified: true,
+                displayName: restored.name,
+                phoneNumber: null,
+                photoURL: null,
+                providerId: 'password',
+              });
+              setAuthState('authenticated');
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // fallback
+          }
+        }
+
         if (savedDemo && savedDemo !== 'visitor') {
           switchRole(savedDemo as UserRole);
         } else {
@@ -182,6 +258,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
 
     if (res.success && res.data) {
+      if (typeof window !== 'undefined' && res.data.user) {
+        sessionStorage.setItem(
+          'pithros_active_user',
+          JSON.stringify({
+            id: res.data.user.id,
+            email: res.data.user.email,
+            name: res.data.user.name,
+            role: res.data.user.role,
+          })
+        );
+        sessionStorage.setItem('pithros_demo_role', res.data.user.role || 'family_steward');
+      }
       setPithrosUser(res.data.user);
       setCurrentUser({
         uid: res.data.user.firebase_uid,
@@ -211,6 +299,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
 
     if (res.success && res.data) {
+      if (typeof window !== 'undefined' && res.data.user) {
+        sessionStorage.setItem(
+          'pithros_active_user',
+          JSON.stringify({
+            id: res.data.user.id,
+            email: res.data.user.email,
+            name: res.data.user.name,
+            role: res.data.user.role,
+          })
+        );
+        sessionStorage.setItem('pithros_demo_role', res.data.user.role || 'family_steward');
+      }
       setPithrosUser(res.data.user);
       setCurrentUser({
         uid: res.data.user.firebase_uid,
@@ -235,6 +335,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
 
     if (res.success && res.data) {
+      if (typeof window !== 'undefined' && res.data.user) {
+        sessionStorage.setItem(
+          'pithros_active_user',
+          JSON.stringify({
+            id: res.data.user.id,
+            email: res.data.user.email,
+            name: res.data.user.name,
+            role: res.data.user.role,
+          })
+        );
+        sessionStorage.setItem('pithros_demo_role', res.data.user.role || 'family_steward');
+      }
       setPithrosUser(res.data.user);
       setCurrentUser({
         uid: res.data.user.firebase_uid,
@@ -421,14 +533,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       targetUid = 'fb_uid_contributor';
       targetName = 'Vikram Krishnan (Brother)';
       targetEmail = 'vikram.k@example.com';
-    } else if (newRole === 'visitor') {
-      targetUid = 'fb_uid_visitor';
-      targetName = 'Guest Visitor';
-      targetEmail = 'visitor@example.com';
+    }
+
+    if (newRole === 'visitor') {
+      setPithrosUser(null);
+      setCurrentUser(null);
+      setAuthState('signed_out');
+      setSessionTimeRemaining(0);
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('pithros_active_user');
+        sessionStorage.setItem('pithros_demo_role', 'visitor');
+      }
+      return;
     }
 
     const updatedUser: PithrosUserRecord = {
-      id: `usr_${newRole}`,
+      id: newRole === 'family_steward' ? 'usr_anita_krishnan' : `usr_${newRole}`,
       firebase_uid: targetUid,
       name: targetName,
       email: targetEmail,
@@ -446,6 +566,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(
+        'pithros_active_user',
+        JSON.stringify({
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+        })
+      );
+    }
 
     setPithrosUser(updatedUser);
     setCurrentUser({

@@ -43,34 +43,52 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const { isDark } = useTheme();
   const { pithrosUser, setReturnUrl } = useAuth();
 
-  // Helper to extract plan ID from route query parameters or location
-  const getPlanFromRoute = (route: string) => {
+  // Helper to extract plan and memorial from route query parameters or location
+  const getQueryParamsFromRoute = (route: string) => {
     try {
       const [, qStr] = route.split('?');
       const search = qStr ? `?${qStr}` : window.location.search;
       const params = new URLSearchParams(search);
       const qPlan = params.get('plan');
-      if (qPlan && pricingPlans.some((p) => p.id === qPlan)) return qPlan;
+      const qMemorial = params.get('memorial');
+      return {
+        plan: qPlan && pricingPlans.some((p) => p.id === qPlan) ? qPlan : null,
+        memorial: qMemorial,
+      };
     } catch {
-      // fallback
+      return { plan: null, memorial: null };
     }
-    return null;
   };
 
   // Selected plan state (reads query or defaults to plan_care_annual)
   const [selectedPlanId, setSelectedPlanId] = useState<string>(() => {
-    return getPlanFromRoute(currentRoute) || 'plan_care_annual';
+    return getQueryParamsFromRoute(currentRoute).plan || 'plan_care_annual';
   });
   const [selectedMemorialId, setSelectedMemorialId] = useState<string>('');
-  const [loadedMemorials, setLoadedMemorials] = useState<Memorial[]>(memorials);
+  const [loadedMemorials, setLoadedMemorials] = useState<Memorial[]>([]);
+  const [unauthorizedMemorialRequested, setUnauthorizedMemorialRequested] = useState<boolean>(false);
 
   // Sync selectedPlanId whenever currentRoute query changes (e.g. user chooses another tier)
   useEffect(() => {
-    const routePlan = getPlanFromRoute(currentRoute);
+    const routePlan = getQueryParamsFromRoute(currentRoute).plan;
     if (routePlan && routePlan !== selectedPlanId) {
       setSelectedPlanId(routePlan);
     }
   }, [currentRoute]);
+
+  // Derive genuine entitlement state from records
+  const hasActiveCarePlan = (memId: string, memName: string): boolean => {
+    if (DEMO_MODE) {
+      const payments = paymentService.getPayments();
+      return payments.some(
+        (p) =>
+          (p.memorialId === memId || p.memorialName === memName) &&
+          p.status === 'success' &&
+          p.planId !== 'plan_free'
+      );
+    }
+    return false;
+  };
 
   // Checkout state. Live mode holds the server order; demo mode holds the local record.
   const [checkoutOrder, setCheckoutOrder] = useState<CreateOrderResult | null>(null);
@@ -82,19 +100,51 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   // Payment method selection (cards, UPI, netbanking)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
 
-  // Load memorials if not provided
+  // Load authorized memorials only when authenticated
   useEffect(() => {
-    if (memorials.length === 0) {
-      api.getMemorials().then((list) => {
-        setLoadedMemorials(list);
-        if (list.length > 0 && !selectedMemorialId) {
-          setSelectedMemorialId(list[0].id);
-        }
-      });
-    } else if (!selectedMemorialId && memorials.length > 0) {
-      setSelectedMemorialId(memorials[0].id);
+    if (!pithrosUser) {
+      // ANONYMOUS: No user's memorial records may ever be loaded or held in state
+      setLoadedMemorials([]);
+      setSelectedMemorialId('');
+      setUnauthorizedMemorialRequested(false);
+      return;
     }
-  }, [memorials]);
+
+    // AUTHENTICATED: Load only the caller's authorized memorials
+    let isCancelled = false;
+    api.getMemorials().then((list) => {
+      if (isCancelled) return;
+      setLoadedMemorials(list);
+
+      const targetMemorialParam = getQueryParamsFromRoute(currentRoute).memorial;
+      if (targetMemorialParam) {
+        const found = list.find(
+          (m) => m.id === targetMemorialParam || m.slug === targetMemorialParam
+        );
+        if (found) {
+          setSelectedMemorialId(found.id);
+          setUnauthorizedMemorialRequested(false);
+        } else {
+          // Reject URL tampering! The user requested a memorial they are NOT authorized for.
+          setUnauthorizedMemorialRequested(true);
+          setSelectedMemorialId(list.length > 0 ? list[0].id : '');
+        }
+      } else if (list.length > 0) {
+        setSelectedMemorialId((prev) => {
+          if (prev && list.some((m) => m.id === prev)) return prev;
+          return list[0].id;
+        });
+        setUnauthorizedMemorialRequested(false);
+      } else {
+        setSelectedMemorialId('');
+        setUnauthorizedMemorialRequested(false);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [pithrosUser, currentRoute]);
 
   // Determine current checkout sub-route step (cleanly strip query strings so /checkout?plan=... resolves to 'index')
   const [pathname] = currentRoute.split('?');
@@ -416,70 +466,182 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
                   {/* Memorial Association */}
                   <div
-                    className={`p-6 rounded-3xl border ${
+                    className={`p-6 rounded-3xl border transition-all ${
                       isDark ? 'bg-[#182337] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
                     }`}
                   >
-                    <label
-                      className={`block text-[11px] uppercase tracking-wider font-mono mb-3 ${
-                        isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-                      }`}
-                    >
-                      Memorial to Apply Plan To
-                    </label>
-                    {loadedMemorials.length > 0 ? (
-                      <div className="space-y-2">
-                        {loadedMemorials.map((mem) => (
-                          <label
-                            key={mem.id}
-                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                              selectedMemorialId === mem.id
-                                ? isDark
-                                  ? 'border-[#B99452] bg-[#1A140E]'
-                                  : 'border-[#23324A] bg-[#FFF8EE]'
-                                : isDark
-                                ? 'border-[#202C40]'
-                                : 'border-[#E8DEC8]'
-                            }`}
+                    <div className="flex items-center justify-between mb-3">
+                      <label
+                        className={`block text-[11px] uppercase tracking-wider font-mono ${
+                          isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+                        }`}
+                      >
+                        Choose a memorial to preserve
+                      </label>
+                      {pithrosUser && loadedMemorials.length > 0 && (
+                        <span className={`text-[10px] font-mono ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                          {loadedMemorials.length} {loadedMemorials.length === 1 ? 'memorial authorized' : 'memorials authorized'}
+                        </span>
+                      )}
+                    </div>
+
+                    {unauthorizedMemorialRequested && (
+                      <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" />
+                        <span>
+                          The memorial requested in the URL is not associated with your account or does not exist. Showing only your authorized memorials.
+                        </span>
+                      </div>
+                    )}
+
+                    {!pithrosUser ? (
+                      /* OPTION B: Clear Anonymous Checkout Gate */
+                      <div className={`p-5 rounded-2xl border text-center space-y-3 ${
+                        isDark ? 'bg-[#141E30] border-[#202C40]' : 'bg-[#F5EFE6] border-[#D8CABE]'
+                      }`}>
+                        <div className="w-10 h-10 rounded-full mx-auto flex items-center justify-center bg-[#B99452]/15 text-[#B99452]">
+                          <Lock className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className={`text-base font-serif font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                            Sign in to preserve a memorial
+                          </h4>
+                          <p className={`text-xs max-w-md mx-auto leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+                            Purchasing a preservation plan connects directly to your verified family account so you can manage tributes, secure spoken histories, and steward the archive.
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-xs mx-auto pt-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setReturnUrl(window.location.pathname + window.location.search);
+                              onNavigate('/signin');
+                            }}
                           >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="radio"
-                                name="memorial"
-                                checked={selectedMemorialId === mem.id}
-                                onChange={() => setSelectedMemorialId(mem.id)}
-                                className="accent-[#B99452]"
-                              />
-                              <div>
-                                <div
-                                  className={`text-sm font-medium ${
-                                    isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
-                                  }`}
-                                >
-                                  {mem.fullName}
-                                </div>
-                                <div
-                                  className={`text-[11px] ${
-                                    isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
-                                  }`}
-                                >
-                                  pithros.org/m/{mem.slug}
-                                </div>
-                              </div>
-                            </div>
-                            <span
-                              className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                                isDark ? 'bg-[#202C40] text-[#D9D2C6]' : 'bg-[#EAE2D2] text-[#554F48]'
-                              }`}
-                            >
-                              Current: Active
-                            </span>
-                          </label>
-                        ))}
+                            Sign In
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setReturnUrl(window.location.pathname + window.location.search);
+                              onNavigate('/signup');
+                            }}
+                          >
+                            Create Account
+                          </Button>
+                        </div>
+                        <p className={`text-[10px] font-mono pt-1 ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
+                          Zero public profiles are accessible for purchase without authentication.
+                        </p>
+                      </div>
+                    ) : loadedMemorials.length === 0 ? (
+                      /* Authenticated User with 0 Memorials */
+                      <div className={`p-5 rounded-2xl border text-center space-y-3 ${
+                        isDark ? 'bg-[#141E30] border-[#202C40]' : 'bg-[#F5EFE6] border-[#D8CABE]'
+                      }`}>
+                        <div className="w-10 h-10 rounded-full mx-auto flex items-center justify-center bg-amber-500/15 text-amber-500">
+                          <Heart className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className={`text-base font-serif font-medium ${isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'}`}>
+                            You don't have a memorial to preserve yet.
+                          </h4>
+                          <p className={`text-xs max-w-md mx-auto leading-relaxed ${isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}`}>
+                            Create your loved one's memorial first, then apply a preservation plan to steward their story, audio memories, and family archive.
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-xs mx-auto pt-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => onNavigate('/create-memorial')}
+                          >
+                            Create a Memorial
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => onNavigate('/pricing')}
+                          >
+                            Back to Plans
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-xs text-[#9EA3AA]">
-                        You can create a new memorial immediately after completing preservation.
+                      /* Authenticated User with 1+ Memorials */
+                      <div className="space-y-2">
+                        {loadedMemorials.map((mem) => {
+                          const isPlanActive = hasActiveCarePlan(mem.id, mem.fullName);
+                          return (
+                            <label
+                              key={mem.id}
+                              className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                selectedMemorialId === mem.id
+                                  ? isDark
+                                    ? 'border-[#B99452] bg-[#1A140E]'
+                                    : 'border-[#23324A] bg-[#FFF8EE]'
+                                  : isDark
+                                  ? 'border-[#202C40] hover:border-[#2E3C56]'
+                                  : 'border-[#E8DEC8] hover:border-[#D0C2A8]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="radio"
+                                  name="memorial"
+                                  checked={selectedMemorialId === mem.id}
+                                  onChange={() => setSelectedMemorialId(mem.id)}
+                                  className="accent-[#B99452]"
+                                />
+                                <div>
+                                  <div
+                                    className={`text-sm font-medium ${
+                                      isDark ? 'text-[#F8F5EE]' : 'text-[#20242A]'
+                                    }`}
+                                  >
+                                    {mem.fullName}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span
+                                      className={`text-[11px] ${
+                                        isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'
+                                      }`}
+                                    >
+                                      pithros.org/m/{mem.slug}
+                                    </span>
+                                    <span className="text-[10px] opacity-40">•</span>
+                                    <span
+                                      className={`text-[10px] uppercase font-mono ${
+                                        mem.privacy === 'public'
+                                          ? 'text-sky-600 dark:text-sky-400'
+                                          : 'text-amber-600 dark:text-amber-400'
+                                      }`}
+                                    >
+                                      {mem.privacy === 'public' ? 'Public' : 'Family Only'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <span
+                                className={`text-[10px] font-mono px-2.5 py-1 rounded-full ${
+                                  isPlanActive
+                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold'
+                                    : isDark
+                                    ? 'bg-[#202C40] text-[#D9D2C6]'
+                                    : 'bg-[#EAE2D2] text-[#554F48]'
+                                }`}
+                              >
+                                {isPlanActive ? 'Care Plan (Active)' : 'Free Memorial'}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -544,6 +706,16 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       <div className="flex justify-between">
                         <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Plan</span>
                         <span className="font-medium">{plan.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Memorial</span>
+                        <span className="font-medium text-right max-w-[180px] truncate">
+                          {!pithrosUser
+                            ? 'Sign in to select'
+                            : loadedMemorials.length === 0
+                            ? 'No memorial yet'
+                            : activeMemorial?.fullName || 'Selected Memorial'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className={isDark ? 'text-[#9EA3AA]' : 'text-[#554F48]'}>Preservation Base</span>
@@ -642,10 +814,23 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       variant="primary"
                       size="lg"
                       className="w-full"
-                      onClick={handleProceedToPayment}
+                      onClick={() => {
+                        if (!pithrosUser) {
+                          setReturnUrl(window.location.pathname + window.location.search);
+                          onNavigate('/signin');
+                        } else if (loadedMemorials.length === 0) {
+                          onNavigate('/create-memorial');
+                        } else {
+                          handleProceedToPayment();
+                        }
+                      }}
                       isLoading={isProcessing}
                     >
-                      {pithrosUser ? 'Proceed to Secure Payment' : 'Sign In to Proceed'}
+                      {!pithrosUser
+                        ? 'Sign In to Proceed'
+                        : loadedMemorials.length === 0
+                        ? 'Create a Memorial to Proceed'
+                        : 'Proceed to Secure Payment'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
 

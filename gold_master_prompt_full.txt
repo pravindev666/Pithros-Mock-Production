@@ -1,0 +1,1429 @@
+<USER_REQUEST>
+PITHROS — GOLD MASTER REAL-PERSONA PRODUCTION-LIKE E2E TEST
+=============================================================
+
+THIS IS THE FINAL INTEGRATION TEST.
+
+Do NOT just make the test pass.
+
+Do NOT modify the database to make the browser test pass.
+
+Do NOT bypass authentication.
+
+Do NOT bypass email verification.
+
+Do NOT bypass payment verification.
+
+Do NOT directly create business records in PostgreSQL.
+
+Do NOT directly modify business state in PostgreSQL.
+
+The goal is to prove that Pithros works as a REAL CONNECTED PRODUCT.
+
+=============================================================
+TEST PRINCIPLE
+=============================================================
+
+A test step only counts as PASS if the real user performs it through
+the UI or a legitimate public/API workflow AND the resulting backend
+state is verified independently.
+
+Use:
+
+Playwright
++
+real browser contexts
++
+real Firebase Authentication
++
+real FastAPI
++
+real PostgreSQL
++
+real R2
++
+Cashfree SANDBOX
++
+real Partner workflow
++
+real Admin workflow
+
+=============================================================
+TEST ACCOUNT
+=============================================================
+
+Use EXACTLY:
+
+mathew60666@GMAIL.COM
+
+Do not silently substitute another generated email.
+
+If that exact account already exists:
+
+STOP and determine whether it is an intentionally retained test account.
+
+Do not overwrite another person's account.
+
+If the environment allows creating the account, create it through the
+REAL Pithros signup flow.
+
+=============================================================
+PASSWORD
+=============================================================
+
+Generate a strong temporary password automatically.
+
+Minimum:
+
+20 characters
+upper case
+lower case
+numbers
+special characters
+
+Never:
+
+print it
+commit it
+hardcode it
+include it in screenshots
+include it in the final report
+
+Use secure ephemeral storage.
+
+=============================================================
+ENVIRONMENT SAFETY
+=============================================================
+
+This test MUST run against:
+
+LOCAL or STAGING
+
+NOT production.
+
+Cashfree MUST be SANDBOX.
+
+If Cashfree is not clearly sandbox:
+
+STOP payment testing.
+
+Do not charge real money.
+
+Use synthetic memorial data.
+
+Use synthetic photo assets.
+
+Use synthetic audio.
+
+Use synthetic verification documents.
+
+=============================================================
+BROWSER PERSONAS
+=============================================================
+
+Create separate Playwright browser contexts for:
+
+1. FAMILY STEWARD
+   mathew60666@GMAIL.COM
+
+2. CONTRIBUTOR
+   separate synthetic account
+
+3. PUBLIC VISITOR
+   unauthenticated
+
+4. FAREWELL PARTNER
+   separate synthetic account
+
+5. ADMIN
+   existing authorized test admin from secure environment
+
+Every persona MUST use an isolated browser context.
+
+Never share:
+
+cookies
+localStorage
+sessionStorage
+IndexedDB
+Firebase session
+service-worker state
+
+=============================================================
+NO-CHEATING RULE
+=============================================================
+
+The test harness MAY READ PostgreSQL/R2 for independent verification.
+
+The test harness MUST NOT mutate PostgreSQL/R2 to make the product pass.
+
+Forbidden during the browser workflow:
+
+UPDATE users ...
+UPDATE memberships ...
+UPDATE payments ...
+UPDATE entitlements ...
+UPDATE memorials ...
+
+Do not mutate business truth directly from the test script.
+
+The ONLY exception is test-environment reset/cleanup that happens BEFORE
+or AFTER the scenario and does not alter an in-progress business action.
+
+=============================================================
+PHASE 1 — CLEAN START
+=============================================================
+
+Create a fresh browser context.
+
+Verify:
+
+no Firebase authentication
+no Pithros authenticated user
+no stale draft
+no stale memorial
+no stale cache
+
+Open:
+
+/
+
+Click:
+
+Create Memorial
+
+while logged out.
+
+Expected:
+
+authentication gate.
+
+No previous user's memorial data.
+
+=============================================================
+PHASE 2 — SIGN UP THROUGH REAL UI
+=============================================================
+
+Using the actual UI:
+
+Sign Up
+→ Family Steward
+→ email
+→ password
+→ submit
+
+Do NOT call Firebase SDK directly from the test if the UI is supposed
+to perform the action.
+
+Follow the real UI workflow.
+
+If email verification is required:
+
+USE THE REAL TEST EMAIL VERIFICATION WORKFLOW.
+
+Do not set:
+
+email_verified=True
+
+in PostgreSQL.
+
+Do not bypass the verification screen.
+
+If the test environment cannot receive verification email:
+
+create a controlled test email interception mechanism or approved
+Firebase emulator/test flow.
+
+The test must exercise the actual application state transition.
+
+=============================================================
+PHASE 3 — FIREBASE → PITHROS PROVISIONING
+=============================================================
+
+After authentication verify:
+
+Firebase UID
+email
+Pithros User ID
+role
+status
+
+The account must be exactly:
+
+mathew60666@GMAIL.COM
+
+Verify profile consistency across:
+
+header
+profile
+dashboard
+
+=============================================================
+PHASE 4 — CREATE MEMORIAL
+=============================================================
+
+Click:
+
+Create Memorial
+
+from the UI.
+
+The form MUST start clean.
+
+Create:
+
+Mathew E2E Heritage Memorial
+
+with synthetic data.
+
+Enter through actual UI controls.
+
+Do not inject React state.
+
+Do not populate from test code.
+
+=============================================================
+PHASE 5 — PORTRAIT UPLOAD
+=============================================================
+
+Generate/use a synthetic test portrait.
+
+Upload through the REAL browser uploader.
+
+Verify:
+
+UI upload
+→ backend upload intent
+→ storage upload
+→ completion
+→ DB media record
+→ ready state
+→ UI display
+
+Confirm independently in:
+
+PostgreSQL
+AND
+R2
+
+No blob-only success.
+
+=============================================================
+PHASE 6 — PHOTOGRAPHS
+=============================================================
+
+Find the photograph workflow like a normal family steward.
+
+Do NOT navigate directly to /dashboard/media initially.
+
+Find the entry point naturally.
+
+Upload:
+
+photo 1
+photo 2
+photo 3
+
+Test:
+
+preview
+save
+ordering if supported
+replace
+delete
+
+Refresh.
+
+Verify.
+
+Logout.
+
+Login again.
+
+Verify.
+
+=============================================================
+PHASE 7 — VOICE MEMORY
+=============================================================
+
+Find:
+
+Add Voice Memory
+
+through the UI.
+
+Upload synthetic audio.
+
+Verify:
+
+upload
+storage
+DB record
+processing
+ready
+playback
+
+If waveform/transcript exists:
+
+verify it.
+
+Refresh.
+
+Logout/login.
+
+Play again.
+
+=============================================================
+PHASE 8 — TIMELINE
+=============================================================
+
+Create multiple milestones through the UI.
+
+Verify persistence after:
+
+save
+refresh
+logout
+login
+
+=============================================================
+PHASE 9 — FAMILY CONTRIBUTOR
+=============================================================
+
+From steward UI:
+
+Invite Family Contributor.
+
+Use a separate synthetic contributor account.
+
+Follow:
+
+invite
+→ email/link
+→ contributor authentication
+→ accept
+→ role activation
+
+Contributor must see only the permitted memorial.
+
+=============================================================
+PHASE 10 — CONTRIBUTOR TEST
+=============================================================
+
+Perform an allowed contributor action.
+
+Then attempt forbidden steward action.
+
+Examples:
+
+change privacy
+delete memorial
+transfer stewardship
+billing change
+
+Expected:
+
+allowed action works
+
+forbidden action denied.
+
+Test both:
+
+UI
+AND backend authorization.
+
+=============================================================
+PHASE 11 — VERIFICATION
+=============================================================
+
+Open the real verification workflow.
+
+Submit a synthetic verification document through the browser.
+
+DO NOT directly insert a verified state.
+
+Verify:
+
+document upload
+→ storage
+→ processing
+→ verification state
+→ admin queue
+
+Admin then reviews the submission.
+
+Test:
+
+approve
+
+or:
+
+request more information
+
+according to actual workflow.
+
+Verify the family UI updates.
+
+=============================================================
+PHASE 12 — PUBLIC MEMORIAL
+=============================================================
+
+Publish the memorial through the actual workflow.
+
+Open a fresh unauthenticated browser.
+
+Open:
+
+/memorials
+
+Search for the memorial.
+
+Open the public memorial.
+
+Verify:
+
+portrait
+story
+timeline
+photos
+voice
+verification state
+public visibility
+
+Private data must remain private.
+
+=============================================================
+PHASE 13 — PUBLIC REMEMBRANCE
+=============================================================
+
+Visitor:
+
+Leave a Memory
+
+Use synthetic tribute text.
+
+Verify:
+
+submission
+backend record
+moderation state
+family visibility
+
+Family steward:
+
+review
+
+approve/reject
+
+Verify public result.
+
+=============================================================
+PHASE 14 — FAREWELL NETWORK
+=============================================================
+
+As a public/family user:
+
+Open Farewell Network.
+
+Discover provider.
+
+Open provider profile.
+
+Find:
+
+Request Quote
+Request Coordination
+Contact
+
+Use actual UI.
+
+Submit a synthetic service request.
+
+=============================================================
+PHASE 15 — PARTNER RECEIVES LEAD
+=============================================================
+
+Open separate Partner browser context.
+
+Login as actual partner.
+
+Open:
+
+Partner Dashboard
+Partner Leads
+
+Verify that the new lead appears.
+
+DO NOT create the lead directly in PostgreSQL.
+
+Verify the lead originated from the family/public browser action.
+
+=============================================================
+PHASE 16 — PARTNER LEAD LIFECYCLE
+=============================================================
+
+Through actual Partner UI:
+
+Submitted
+→ Contacted
+→ Quote Received
+→ In Discussion
+→ Booked
+→ Completed
+
+Only test states that the real product actually supports.
+
+Verify every state transition persists.
+
+=============================================================
+PHASE 17 — ADMIN SEES THE NEW USER
+=============================================================
+
+Open separate Admin context.
+
+Login through actual Admin login.
+
+Do NOT seed the user directly.
+
+Search:
+
+mathew60666@GMAIL.COM
+
+Admin must see the new user.
+
+Verify:
+
+email
+role
+status
+memorial count
+created date
+
+=============================================================
+PHASE 18 — ADMIN SEES THE MEMORIAL
+=============================================================
+
+Admin:
+
+find memorial
+
+Verify:
+
+owner
+status
+privacy
+publication
+verification
+media counts
+
+All must reflect actual DB state.
+
+=============================================================
+PHASE 19 — ADMIN SEES THE FAREWELL LEAD
+=============================================================
+
+Admin:
+
+open marketplace leads
+
+Find the synthetic lead.
+
+Verify:
+
+provider
+category
+status
+timestamps
+
+=============================================================
+PHASE 20 — PRICING
+=============================================================
+
+Family steward:
+
+open Pricing
+
+Click actual paid plan.
+
+Do not use a mocked plan.
+
+Verify authoritative backend plan.
+
+=============================================================
+PHASE 21 — CHECKOUT
+=============================================================
+
+Click:
+
+Preserve with Memorial Care
+
+Verify:
+
+Pricing
+→ Checkout
+→ Pithros backend order creation
+→ Cashfree sandbox order/session
+
+Capture no secrets.
+
+Verify internal payment/order record exists.
+
+=============================================================
+PHASE 22 — CASHFREE SANDBOX PAYMENT
+=============================================================
+
+Complete the payment using an approved Cashfree SANDBOX test method.
+
+Do not bypass the gateway.
+
+Do not manually mark payment paid.
+
+=============================================================
+PHASE 23 — PAYMENT WEBHOOK
+=============================================================
+
+Verify that backend receives and processes the webhook.
+
+Verify:
+
+signature verification
+payment lookup
+status transition
+idempotency
+entitlement activation
+
+=============================================================
+PHASE 24 — PAYMENT SUCCESS
+=============================================================
+
+Verify:
+
+payment = SUCCESS
+
+entitlement = ACTIVE
+
+plan = purchased plan
+
+expiry = correct
+
+invoice = created if implemented
+
+dashboard = paid
+
+admin = paid
+
+=============================================================
+PHASE 25 — USE THE PAID PLAN
+=============================================================
+
+THIS IS MANDATORY.
+
+Do not stop at:
+
+"Payment succeeded."
+
+Read actual entitlement configuration.
+
+For every premium capability allowed by the purchased plan:
+
+attempt to USE it.
+
+Examples:
+
+additional photos
+voice
+video
+additional timeline capacity
+additional collaborators
+digital legacy
+Memorial Book
+archive
+enhanced verification
+
+Do not assume these all exist.
+
+Use the actual entitlement model.
+
+For each:
+
+BEFORE PAYMENT:
+verify restricted where applicable
+
+AFTER PAYMENT:
+verify enabled
+
+=============================================================
+PHASE 26 — PREMIUM PERSISTENCE
+=============================================================
+
+After payment and premium usage:
+
+Refresh.
+
+Logout.
+
+Login again.
+
+Open a new browser context.
+
+Verify premium entitlement still exists.
+
+This must be backend-driven.
+
+=============================================================
+PHASE 27 — ADMIN PAYMENT VISIBILITY
+=============================================================
+
+Admin:
+
+open Payments
+
+find the test transaction.
+
+Verify:
+
+user
+plan
+amount
+currency
+status
+gateway
+gateway reference
+created timestamp
+
+=============================================================
+PHASE 28 — ADMIN ENTITLEMENT CONTROL
+=============================================================
+
+If Admin entitlement controls exist:
+
+Test:
+
+Grant
+Extend
+Revoke
+
+using Admin UI.
+
+Do NOT directly change DB.
+
+Verify:
+
+audit event
+entitlement state
+user dashboard state
+
+=============================================================
+PHASE 29 — PAYMENT FAILURE
+=============================================================
+
+Use a separate sandbox account.
+
+Trigger:
+
+failed payment.
+
+Verify:
+
+payment = FAILED
+
+entitlement remains inactive.
+
+UI provides retry/recovery.
+
+=============================================================
+PHASE 30 — PAYMENT PENDING
+=============================================================
+
+Use a sandbox scenario where payment remains pending if supported.
+
+Verify:
+
+PENDING
+
+not:
+
+SUCCESS.
+
+Do not grant premium early.
+
+=============================================================
+PHASE 31 — DUPLICATE PAYMENT
+=============================================================
+
+Double click payment initiation.
+
+Create repeated requests where safe.
+
+Verify idempotency.
+
+No unintended duplicate entitlement.
+
+=============================================================
+PHASE 32 — DUPLICATE WEBHOOK
+=============================================================
+
+Replay the same sandbox webhook event through the approved test harness.
+
+Verify:
+
+one payment effect
+
+one entitlement effect
+
+one invoice effect
+
+where applicable.
+
+=============================================================
+PHASE 33 — CROSS-USER SECURITY
+=============================================================
+
+Create:
+
+User A
+Memorial A
+
+User B
+Memorial B
+
+Attempt from A:
+
+read B
+edit B
+delete B
+access B private media
+access B documents
+access B billing
+
+Expected:
+
+DENIED.
+
+Repeat from B to A.
+
+=============================================================
+PHASE 34 — MOBILE
+=============================================================
+
+Run core workflows at:
+
+390x844
+
+Test:
+
+Sign Up
+Sign In
+Create Memorial
+Photo
+Voice
+Dashboard
+My Memorials
+Pricing
+Checkout
+Payment status
+Logout
+
+=============================================================
+PHASE 35 — MULTI-TAB
+=============================================================
+
+Open two tabs for the same user.
+
+Modify in Tab A.
+
+Refresh Tab B.
+
+Verify consistent state.
+
+Logout in one tab.
+
+Verify other tab handles identity change safely.
+
+=============================================================
+PHASE 36 — CROSS-DEVICE
+=============================================================
+
+Simulate:
+
+Desktop user
+
+Mobile user
+
+Photo uploaded on one.
+
+Verify on the other.
+
+Payment initiated/confirmed on one.
+
+Verify entitlement on the other.
+
+=============================================================
+PHASE 37 — ACCOUNT DELETION
+=============================================================
+
+THIS MUST BE A REAL DELETE LIFECYCLE.
+
+Do not merely:
+
+open delete modal
+
+and dismiss it.
+
+Determine the actual supported Pithros deletion model.
+
+If self-service:
+
+complete deletion.
+
+If request-based:
+
+submit real request and process it through the supported workflow.
+
+Verify:
+
+Firebase
+Pithros User
+sessions
+drafts
+private media
+entitlements
+memorial stewardship
+notifications
+
+according to the actual deletion policy.
+
+=============================================================
+PHASE 38 — POST-DELETION
+=============================================================
+
+After the test account is actually deleted/deactivated according to
+policy:
+
+Attempt login again.
+
+Expected:
+
+correct policy outcome.
+
+Admin should see the correct lifecycle state.
+
+Any memorial requiring successor stewardship must follow actual
+product policy.
+
+=============================================================
+PHASE 39 — FINAL CROSS-PERSONA RECONCILIATION
+=============================================================
+
+Compare:
+
+FAMILY USER
+ADMIN
+PARTNER
+PUBLIC VISITOR
+
+For each important entity:
+
+User
+Memorial
+Photos
+Voice
+Timeline
+Contributor
+Verification
+Tribute
+Lead
+Payment
+Entitlement
+Deletion
+
+Build:
+
+| Entity | Family | Public | Partner | Admin | DB | R2 | Result |
+
+=============================================================
+PHASE 40 — BUTTON CONTRACT TEST
+=============================================================
+
+For EVERY meaningful button encountered in the full journey:
+
+CLICK
+
+Then prove:
+
+destination
+API request
+backend state
+database state
+storage state if applicable
+next UI state
+persistence
+
+Examples:
+
+Create
+Save
+Upload
+Add
+Delete
+Invite
+Accept
+Approve
+Reject
+Publish
+Share
+Remember
+Request Quote
+Contact
+Pay
+Retry
+Upgrade
+Grant
+Revoke
+Extend
+Logout
+Delete Account
+
+=============================================================
+PHASE 41 — AGENTIC DISCOVERY
+=============================================================
+
+IMPORTANT:
+
+Do NOT hard-code all internal URLs first.
+
+Prefer:
+
+human sees interface
+→ identifies action
+→ clicks action
+→ follows workflow
+
+Only use direct URLs for:
+
+deep-link testing
+security testing
+known route verification
+recovery testing
+
+=============================================================
+PHASE 42 — "NO INSIDER KNOWLEDGE"
+=============================================================
+
+For every major step ask:
+
+Could a normal person discover this?
+
+Could a family member find:
+
+Photos?
+Voice?
+Family?
+Verification?
+Billing?
+My Memorials?
+
+Could a partner find:
+
+Leads?
+Services?
+Verification?
+
+Could Admin find:
+
+Users?
+Payments?
+Memorials?
+Leads?
+
+If not:
+
+FLAG AND FIX.
+
+=============================================================
+PHASE 43 — OBSERVABILITY
+=============================================================
+
+Capture:
+
+console errors
+network failures
+API errors
+uncaught exceptions
+failed background jobs
+
+A workflow that passes while throwing silent errors is NOT PASS.
+
+=============================================================
+PHASE 44 — DATA ASSERTIONS
+=============================================================
+
+For every major mutation:
+
+ASSERT database state.
+
+For media:
+
+ASSERT R2 state.
+
+For payment:
+
+ASSERT payment record AND entitlement.
+
+For partner lead:
+
+ASSERT lead record AND partner visibility.
+
+For admin:
+
+ASSERT admin visibility.
+
+For deletion:
+
+ASSERT lifecycle state.
+
+=============================================================
+PHASE 45 — NO FALSE PASS
+=============================================================
+
+The test MUST FAIL if:
+
+a direct database mutation was required to continue
+
+a user was authenticated by test harness instead of UI
+
+email verification was bypassed
+
+payment was manually marked SUCCESS
+
+entitlement was manually inserted
+
+photo was only a blob URL
+
+voice was only local state
+
+partner lead was directly seeded
+
+Admin record was directly seeded
+
+deletion only opened a modal
+
+=============================================================
+PHASE 46 — AUTOMATIC REGRESSION CREATION
+=============================================================
+
+Whenever a defect is found:
+
+1. document defect
+2. fix root cause
+3. add Playwright regression test
+4. rerun the journey
+
+Do not merely patch the current script.
+
+=============================================================
+FINAL REPORT
+=============================================================
+
+Return:
+
+1. REAL PERSONA MATRIX
+
+2. ACTUAL ACCOUNT USED
+
+3. AUTHENTICATION TRACE
+
+4. FIREBASE TRACE
+
+5. PITHROS USER TRACE
+
+6. MEMORIAL TRACE
+
+7. PHOTO TRACE
+
+8. VOICE TRACE
+
+9. TIMELINE TRACE
+
+10. CONTRIBUTOR TRACE
+
+11. VERIFICATION TRACE
+
+12. PUBLIC MEMORIAL TRACE
+
+13. TRIBUTE TRACE
+
+14. FAREWELL TRACE
+
+15. PARTNER TRACE
+
+16. ADMIN TRACE
+
+17. PAYMENT TRACE
+
+18. CASHFREE TRACE
+
+19. ENTITLEMENT TRACE
+
+20. PREMIUM FEATURE TRACE
+
+21. ADMIN ENTITLEMENT TRACE
+
+22. CROSS-USER SECURITY TRACE
+
+23. MOBILE TRACE
+
+24. MULTI-TAB TRACE
+
+25. CROSS-DEVICE TRACE
+
+26. DELETION TRACE
+
+27. DATABASE PROOF
+
+28. R2 PROOF
+
+29. ADMIN PROOF
+
+30. PARTNER PROOF
+
+31. BUTTON CONTRACT RESULTS
+
+32. CONSOLE/NETWORK ERRORS
+
+33. DEFECTS
+
+34. ROOT CAUSES
+
+35. FIXES
+
+36. REGRESSION TESTS ADDED
+
+37. SCREENSHOTS
+
+38. FINAL TEST COUNT
+
+39. REMAINING GAPS
+
+=============================================================
+MANDATORY DEFECT FORMAT
+=============================================================
+
+ID:
+SEVERITY:
+PERSONA:
+SCREEN:
+ACTION:
+EXPECTED:
+ACTUAL:
+ROOT CAUSE:
+API:
+DB:
+R2:
+ADMIN:
+PARTNER:
+SECURITY:
+PRIVACY:
+FINANCIAL:
+FIX:
+REGRESSION:
+RESULT:
+
+=============================================================
+FINAL STANDARD
+=============================================================
+
+DO NOT SAY:
+
+"FULL LIFECYCLE PASSED"
+
+unless the test actually proves:
+
+SIGNUP
++
+AUTHENTICATION
++
+EMAIL VERIFICATION
++
+USER PROVISIONING
++
+MEMORIAL
++
+PHOTO
++
+VOICE
++
+TIMELINE
++
+FAMILY
++
+VERIFICATION
++
+PUBLIC MEMORIAL
++
+TRIBUTE
++
+FAREWELL LEAD
++
+PARTNER
++
+ADMIN
++
+CASHFREE
++
+PAYMENT
++
+ENTITLEMENT
++
+PREMIUM FEATURE USE
++
+REFRESH
++
+LOGOUT
++
+RELOGIN
++
+CROSS-USER SECURITY
++
+DELETION
+
+all work through actual connected workflows.
+
+=============================================================
+FINAL QUESTION
+=============================================================
+
+At the end answer:
+
+"Could I hand Pithros to a completely new family today and expect the
+entire product to work without a developer manually fixing database
+records?"
+
+YES or NO.
+
+If NO:
+
+list the exact blockers.
+
+Do not hide them.
+
+=============================================================
+ABSOLUTE PRINCIPLE
+=============================================================
+
+THE TEST MUST TEST THE PRODUCT.
+
+NOT THE TEST SCRIPT.
+
+DO NOT MAKE THE TEST PASS.
+
+MAKE PITHROS PASS.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-02T07:12:34+05:30.
+
+The user's current state is as follows:
+Browser State:
+  Page 9C1EC837F571EB5CFF9A8712BFABE199 (mathew_02_error_creation.png (1280×800)) - file:///C:/Users/hp/Desktop/Pithros-Rememberence-Project/Pithros/e2e/screenshots... [ACTIVE]
+    Viewport: 1370x693, Page Height: 800
+</ADDITIONAL_METADATA>

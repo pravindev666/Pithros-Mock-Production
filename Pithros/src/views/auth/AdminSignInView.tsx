@@ -15,7 +15,7 @@ export const AdminSignInView: React.FC<AdminSignInViewProps> = ({ onNavigate }) 
   const { isDark } = useTheme();
   const { signInWithEmail, switchRole } = useAuth();
 
-  const [email, setEmail] = useState('admin@pithros.org');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');

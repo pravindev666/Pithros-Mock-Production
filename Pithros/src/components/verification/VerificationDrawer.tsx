@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, X, FileText, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { MOTION_TIMING, MOTION_EASING } from '../../lib/motion';
+import { useDialogA11y } from '../../lib/useDialogA11y';
 
 interface VerificationDrawerProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const VerificationDrawer: React.FC<VerificationDrawerProps> = ({
   reviewerNotes,
 }) => {
   const { isDark } = useTheme();
+  const dialogRef = useDialogA11y(isOpen, onClose);
 
   return (
     <AnimatePresence>
@@ -39,11 +41,16 @@ export const VerificationDrawer: React.FC<VerificationDrawerProps> = ({
 
           {/* Drawer Panel */}
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="verification-drawer-title"
+            tabIndex={-1}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: MOTION_TIMING.standard, ease: MOTION_EASING.cinematicEaseOut }}
-            className={`relative z-10 w-full max-w-md h-full overflow-y-auto border-l p-6 sm:p-8 flex flex-col justify-between shadow-2xl transition-colors ${
+            className={`relative z-10 w-full max-w-md h-full overflow-y-auto focus:outline-none border-l p-6 sm:p-8 flex flex-col justify-between shadow-2xl transition-colors ${
               isDark ? 'bg-[#182337] border-[#202C40] text-[#F8F5EE]' : 'bg-[#FCFAF5] border-[#E5DED2] text-[#20242A]'
             }`}
           >
@@ -59,7 +66,7 @@ export const VerificationDrawer: React.FC<VerificationDrawerProps> = ({
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-serif font-medium">About this Review</h3>
+                    <h3 id="verification-drawer-title" className="text-base font-serif font-medium">About this Review</h3>
                     <p className={`text-[11px] ${isDark ? 'text-[#9EA3AA]' : 'text-[#7D766D]'}`}>
                       Pithros Trust & Authenticity Architecture
                     </p>

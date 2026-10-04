@@ -286,7 +286,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
             isDark ? 'bg-[#111820]/95 border-[#202C40]' : 'bg-[#F3EEE4]/95 border-[#E5DED2]'
           }`}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
             <button
               onClick={handleBackToResults}
               className={`inline-flex items-center gap-2 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
@@ -309,7 +309,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
         </div>
 
         {/* Profile Hero Header */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-8">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-8">
           {/* Cover Photo Banner */}
           <div className="relative h-64 sm:h-80 md:h-96 w-full rounded-3xl overflow-hidden border shadow-sm group">
             <img
@@ -951,7 +951,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
             : 'bg-gradient-to-b from-[#FCFAF5] to-[#F3EEE4] border-[#E5DED2]'
         }`}
       >
-        <div className="max-w-5xl mx-auto space-y-6 text-center">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-6 text-center">
           <div className="space-y-2">
             <span
               className={`text-xs uppercase tracking-[0.2em] font-semibold text-[#B99452]`}
@@ -964,13 +964,35 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
             <p className={`text-sm sm:text-base max-w-xl mx-auto ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
               Find compassionate local service providers for dignified ceremonies, temperature-controlled transit, memorial plaques, and legal assistance.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs">
+              <span className={isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}>
+                Are you a bereavement service provider?
+              </span>
+              <button
+                onClick={() => onNavigate('/partner')}
+                className={`font-medium underline cursor-pointer ${
+                  isDark ? 'text-[#6EE7B7] hover:text-[#A7F3D0]' : 'text-[#245C45] hover:text-[#1B4332]'
+                }`}
+              >
+                Partner Portal Sign In
+              </button>
+              <span className="opacity-40">•</span>
+              <button
+                onClick={() => onNavigate('/signup?role=partner')}
+                className={`font-medium underline cursor-pointer ${
+                  isDark ? 'text-[#B99452] hover:text-[#D1B477]' : 'text-[#23324A] hover:text-[#182337]'
+                }`}
+              >
+                Join as Care Partner
+              </button>
+            </div>
           </div>
 
           {/* Unified Marketplace Search Bar (Swiggy/Airbnb pattern) */}
           <div
             data-ui-component="form"
             style={{ fontFamily: metadata.uiFontFamily }}
-            className={`p-2.5 rounded-2xl border shadow-lg max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-2 transition-colors ${
+            className={`p-2.5 rounded-2xl border shadow-lg max-w-5xl lg:max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-2 transition-colors ${
               isDark ? 'bg-[#111820] border-[#202C40]' : 'bg-[#FCFAF5] border-[#E5DED2]'
             }`}
           >
@@ -1058,7 +1080,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
 
           {/* Browse Services Category Pills */}
           <div className="pt-2">
-            <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
               {categoryPresets.map((cat) => {
                 const Icon = cat.icon;
                 const isSelected = selectedCategory.toLowerCase() === cat.id.toLowerCase();
@@ -1066,7 +1088,7 @@ export const FarewellNetworkView: React.FC<FarewellNetworkViewProps> = ({
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer whitespace-nowrap ${
+                    className={`shrink-0 first:ml-auto last:mr-auto inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer whitespace-nowrap ${
                       isSelected
                         ? 'bg-[#B99452] text-[#111820] border-[#B99452] font-semibold shadow-xs'
                         : isDark
