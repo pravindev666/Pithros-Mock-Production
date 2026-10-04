@@ -1,0 +1,106 @@
+﻿{
+  "health": {
+    "/health": 200,
+    "/ready": 200
+  },
+  "routes": [
+    {
+      "viewport": "360x800",
+      "route": "/",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/"
+      ]
+    },
+    {
+      "viewport": "360x800",
+      "route": "/memorials",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ]
+    },
+    {
+      "viewport": "360x800",
+      "route": "/pricing",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ]
+    },
+    {
+      "viewport": "360x800",
+      "route": "/nonexistent-uiux-check",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": []
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/memorials",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/memorials"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/pricing",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [],
+      "canonicals": [
+        "https://pithros.com/pricing"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "route": "/nonexistent-uiux-check",
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "canonicals": []
+    }
+  ],
+  "trust": {
+    "documentReviewed": 0,
+    "verificationRejected": 1
+  },
+  "account": {
+    "signInForm": true,
+    "claimsAccountSecurity": false,
+    "notFound": false
+  },
+  "seo": {}
+}

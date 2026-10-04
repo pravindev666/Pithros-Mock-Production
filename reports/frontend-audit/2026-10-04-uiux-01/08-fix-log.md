@@ -79,8 +79,8 @@
 
 ## Still open (next queue)
 
-1. Deploy the fix commits to the sim VM and re-audit against the deployed post-fix SHA (requires your go-ahead).
-2. Authenticated family/partner/admin route audit, cross-user cache isolation, API-error matrix (were BLOCKED on VM readiness for most of the session).
+1. ~~Deploy the fix commits to the sim VM~~ — DONE: VM deployed `c96f18f`, `/health` 200, `/ready` 200, public/auth fixes verified on the deployed build (`21-vm-postfix-verification.json`).
+2. Authenticated family/partner/admin route audit, cross-user cache isolation, API-error matrix (VM `/ready` now healthy).
 3. Firefox/WebKit remain NOT TESTED (binaries not installed).
 4. FE-013 heading-hierarchy skips (P3) recorded, not yet fixed.
 

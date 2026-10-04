@@ -105,20 +105,31 @@ Plus one suspicion (`/signup?role=partner` losing its query on reload) — **NOT
 17. **Public/private behavior correct?** Public routes indexable with one canonical; private/404 now `noindex`. Authenticated route guards NOT TESTED beyond account routes.
 18. **Did a fix create a secondary problem?** No regressions in the 78-check sweep; the two withdrawn findings were detector artifacts, not fixes.
 19. **Did any fix affect desktop?** Verified unchanged at 1440 in the final sweep.
-20. **Remaining risks:** authenticated/role routes unverified; Firefox/WebKit untested; heading hierarchy (FE-013); bundle size; VM runs the pre-fix build.
+20. **Remaining risks:** authenticated/role routes unverified; Firefox/WebKit untested; heading hierarchy (FE-013); bundle size. (The VM now runs the fixed revision `c96f18f`.)
 
-## 8. Verdict
+## 8. Post-deploy VM verification (addendum)
+
+The fix commits were bundled and deployed to the simulation VM (`aba3d47` → `c96f18f`) via `git bundle` + `scripts/prod-sim/deploy.sh`; the stack was rebuilt and restarted (frontend/backend/worker/beat recreated) and Dokploy on `:3000` was untouched.
+
+- **Deployed revision:** `c96f18f` (frontend/backend/worker/beat recreated; served bundle hash changed).
+- **Health:** `/health` 200, `/ready` 200 (`database/redis/storage: true`).
+- **FE-001 on the deployed build:** rejected fixture → `Verification Rejected` (`documentReviewed: 0`), where the pre-fix deployed build showed `Document Reviewed` (`19-vm-deployed-check.json`).
+- **FE-005 on the deployed build:** `/account/security` signed out → sign-in form, no account-security content.
+- **Public routes** at 360 and 1440: all 200, one H1, no page overflow.
+- **Evidence:** `21-vm-postfix-verification.json`.
+
+## 9. Verdict
 
 **NOT READY** for a full frontend release sign-off.
 
-Every defect confirmed and fixed in this campaign is verified at the local gate and in Chromium. The verdict is NOT READY because explicitly unverified areas remain:
+Every defect confirmed and fixed in this campaign is verified locally and re-verified on the deployed VM for the public/auth surfaces. The verdict is NOT READY because explicitly unverified areas remain:
 
-- **Blockers/unknowns:** authenticated family/partner/admin frontend routes, cross-user browser cache isolation, and the full API-error matrix were not audited (VM readiness was down for most of the session and only recovered at the end).
+- **Unknowns:** authenticated family/partner/admin frontend routes, cross-user browser cache isolation, and the full API-error matrix were not audited (VM `/ready` was down for most of the session; it recovered at the end and the deploy was then verified for public/auth routes only).
 - **External/limitation:** Firefox and WebKit engines are not installed → NOT TESTED, not PASS.
-- **Deployment:** the VM still runs the pre-fix SHA `aba3d47`; the fixes are committed locally and not deployed or pushed.
+- **Not fixed:** FE-013 heading-hierarchy skips (P3).
 
-## 9. Next actions
+## 10. Next actions
 
-1. **Me (agent), on your go-ahead:** deploy the fix commits to the sim VM (git bundle + `deploy.sh`) and re-run the audit against the deployed post-fix SHA, including the authenticated matrices now that `/ready` has recovered.
-2. **You:** approve the VM deploy/push, and decide whether to install Firefox/WebKit for cross-browser verification.
-3. **Follow-up queue:** authenticated route audit; cross-user cache isolation test; API-error state matrix; FE-013 heading hierarchy; measure bundle split before any optimization.
+1. **Me (agent), on your go-ahead:** run the authenticated VM journey matrix (`backend/tests/e2e_vm/vm_journeys.py`) now that `/ready` is healthy and the VM runs the fixed SHA — one journey per run, commit each green.
+2. **You:** decide whether to install Firefox/WebKit for cross-browser verification, and whether to push `main` to origin to run CI on the new commits.
+3. **Follow-up queue:** cross-user cache isolation test; API-error state matrix; FE-013 heading hierarchy; measure the bundle split before any optimization.
